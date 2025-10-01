@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 
 const API_KEY = Deno.env.get("API_KEY");
-const SECRET_KEY = "your-secret-key"; // Replace with your actual secret key
+const SECRET_KEY = "myscriptbyjava6284@35ok"; // Replace with your actual secret key
 
 const handler = async (req: Request) => {
   const url = new URL(req.url);
