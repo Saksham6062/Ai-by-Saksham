@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 
-// Get API key from environment variable
+// Get API key from environment variables
 const API_KEY = Deno.env.get("API_KEY");
 
 if (!API_KEY) {
@@ -8,7 +8,17 @@ if (!API_KEY) {
 }
 
 const handler = async (req: Request) => {
-  if (req.method === "POST" && req.url.endsWith("/api/generate")) {
+  const url = new URL(req.url);
+
+  // Root route
+  if (req.method === "GET" && url.pathname === "/") {
+    return new Response("Welcome to the AI Backend!", {
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
+  // API generate route
+  if (req.method === "POST" && url.pathname === "/api/generate") {
     try {
       const body = await req.json();
       const prompt = body.prompt;
@@ -39,6 +49,7 @@ const handler = async (req: Request) => {
     }
   }
 
+  // Catch all other routes
   return new Response("Not Found", { status: 404 });
 };
 
