@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google AI Models Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 4px solid #3498db;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col items-center justify-start p-4 md:p-6">
+
+<div class="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
+  <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Google AI Models Explorer</h1>
+
+  <!-- API Key -->
+  <div class="mb-4">
+    <label for="apiKey" class="block font-medium mb-1 text-gray-700">Enter Your Google AI API Key:</label>
+    <input id="apiKey" type="password" placeholder="Enter your key here" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+  </div>
+
+  <!-- Model Selection -->
+  <div class="mb-4">
+    <label for="modelSelect" class="block font-medium mb-1 text-gray-700">Select AI Model:</label>
+    <select id="modelSelect" class="w-full p-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+      <optgroup label="Text Generation (Gemini)">
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+      </optgroup>
+      <optgroup label="Text Generation (Gemma)">
+        <option value="gemma-open-weight">Gemma (Open-weight)</option>
+        <option value="gemma-3n">Gemma 3n (E4B, E2B)</option>
+        <option value="gemma-3">Gemma 3 (27B, 12B, 4B, 1B)</option>
+        <option value="gemma-2">Gemma 2 (27B, 9B, 2B)</option>
+        <option value="codegemma">CodeGemma (7B, 2B)</option>
+      </optgroup>
+      <optgroup label="Image Generation (Imagen)">
+        <option value="imagen-4">Imagen 4</option>
+        <option value="imagen-gen">Imagen for Generation</option>
+        <option value="imagen-fast">Imagen for Fast Generation</option>
+        <option value="imagen-edit">Imagen for Editing & Customization</option>
+        <option value="imagen-caption">Imagen for Captioning & VQA</option>
+      </optgroup>
+      <option value="nano-banana">Nano Banana (Image)</option>
+    </select>
+  </div>
+
+  <!-- User Prompt -->
+  <div class="mb-4">
+    <label for="userPrompt" class="block font-medium mb-1 text-gray-700">Your Question / Prompt:</label>
+    <textarea id="userPrompt" rows="4" placeholder="Type your question or image prompt..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
+  </div>
+
+  <!-- Submit -->
+  <button id="submitBtn" onclick="sendRequest()" class="bg-blue-600 text-white w-full px-4 py-2 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors duration-200 font-semibold">Submit</button>
+
+  <!-- Response -->
+  <div class="mt-6">
+    <label class="block font-medium mb-1 text-gray-700">AI Response:</label>
+    <div id="response" class="p-4 border border-gray-200 rounded bg-gray-50 min-h-[150px] whitespace-pre-wrap flex items-center justify-center text-gray-500">
+      Your response will appear here.
+    </div>
+  </div>
+</div>
+
+<footer class="text-center text-gray-500 mt-6 text-sm">
+  <p>Powered by Google AI</p>
+</footer>
+
+<script>
+async function sendRequest() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const modelValue = document.getElementById('modelSelect').value;
+  const prompt = document.getElementById('userPrompt').value.trim();
+  const responseBox = document.getElementById('response');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (!apiKey || !prompt) {
+    responseBox.textContent = 'Error: Please enter your API key and a prompt.';
+    responseBox.classList.add('text-red-500');
+    return;
+  }
+
+  responseBox.classList.remove('text-red-500');
+  responseBox.innerHTML = '<div class="loader"></div>';
+  submitBtn.disabled = true;
+
+  // MODEL MAPPING
+  const textModelMap = {
+    "gemini-2.5-pro": "gemini-2.5-pro",
+    "gemini-2.5-flash": "gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "gemini-2.5-flash-lite",
+    "gemma-open-weight": "gemma-open-weight",
+    "gemma-3n": "gemma-3n",
+    "gemma-3": "gemma-3",
+    "gemma-2": "gemma-2",
+    "codegemma": "codegemma"
+  };
+
+  const imageModelMap = {
+    "imagen-4": "imagen-4",
+    "imagen-gen": "imagen-3.0-generate-002",
+    "imagen-fast": "imagen-3.0-generate-fast",
+    "imagen-edit": "imagen-3.0-edit",
+    "imagen-caption": "imagen-3.0-caption",
+    "nano-banana": "gemini-2.5-flash-image-preview"
+  };
+
+  try {
+    let apiUrl = '';
+    let payload = {};
+
+    if (textModelMap[modelValue]) {
+      // Text Generation
+      const modelToUse = textModelMap[modelValue];
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+      payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error?.message || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      responseBox.textContent = text || 'No text received from model.';
+
+    } else if (imageModelMap[modelValue]) {
+      // Image Generation
+      const modelToUse = imageModelMap[modelValue];
+
+      if (modelValue === 'nano-banana') {
+        // Nano Banana uses generative preview endpoint
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+        payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ['TEXT','IMAGE'] }
+        };
+      } else {
+        // Imagen models
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:predict?key=${apiKey}`;
+        payload = { instances: [{ prompt: prompt }], parameters: { sampleCount: 1 } };
+      }
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error?.message || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      let base64Data;
+
+      if (modelValue === 'nano-banana') {
+        base64Data = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+      } else {
+        base64Data = data.predictions?.[0]?.bytesBase64Encoded;
+      }
+
+      if (base64Data) {
+        responseBox.innerHTML = `<img src="data:image/png;base64,${base64Data}" alt="Generated Image" class="rounded-md max-w-full h-auto mx-auto"/>`;
+      } else {
+        throw new Error('No image data found in the response.');
+      }
+
+    } else {
+      throw new Error('Selected model is not supported.');
+    }
+
+  } catch (err) {
+    console.error(err);
+    responseBox.textContent = 'Error: ' + err.message;
+    responseBox.classList.add('text-red-500');
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
