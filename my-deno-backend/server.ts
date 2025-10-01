@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 
-// Get API key from environment variables
 const API_KEY = Deno.env.get("API_KEY");
-
-if (!API_KEY) {
-  console.error("Error: API_KEY not set!");
-}
+const SECRET_KEY = "your-secret-key"; // Replace with your actual secret key
 
 const handler = async (req: Request) => {
   const url = new URL(req.url);
@@ -19,6 +15,12 @@ const handler = async (req: Request) => {
 
   // API generate route
   if (req.method === "POST" && url.pathname === "/api/generate") {
+    const clientKey = req.headers.get("Authorization");
+
+    if (clientKey !== `Bearer ${SECRET_KEY}`) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     try {
       const body = await req.json();
       const prompt = body.prompt;
