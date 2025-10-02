@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microsoft & Phi AI Interface</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+label { display: block; margin-top: 15px; font-weight: bold; }
+select, input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+button { padding: 10px 20px; margin-top: 15px; background: #0078d7; color: white; border: none; cursor: pointer; font-weight: bold; }
+button:hover { background: #005a9e; }
+#response { margin-top: 20px; padding: 15px; border: 1px solid #ddd; white-space: pre-wrap; background: #f9f9f9; }
+</style>
+</head>
+<body>
+
+<h1>Microsoft & Phi AI Multi-Model Interface</h1>
+
+<label for="api-key">API Key (Required)</label>
+<input type="password" id="api-key" placeholder="Enter your Microsoft / MAI API key">
+
+<label for="model-select">Select AI Model</label>
+<select id="model-select">
+    <optgroup label="MAI Models">
+        <option value="MAI-DS-R1">MAI-DS-R1</option>
+    </optgroup>
+    <optgroup label="Phi Models">
+        <option value="phi-1">Phi-1</option>
+        <option value="phi-2">Phi-2</option>
+        <option value="Phi-3-mini">Phi-3-mini</option>
+        <option value="Phi-3-small">Phi-3-small</option>
+        <option value="Phi-4-mini-instruct">Phi-4-mini-instruct</option>
+        <option value="Phi-4-multimodal-instruct">Phi-4-multimodal-instruct</option>
+    </optgroup>
+    <optgroup label="VALL-E (TTS)">
+        <option value="vall-e-mini">VALL-E Mini</option>
+        <option value="vall-e-pro">VALL-E Pro</option>
+    </optgroup>
+    <optgroup label="Xiaoice">
+        <option value="xiaoice-general">Xiaoice General</option>
+        <option value="xiaoice-chat">Xiaoice Chat</option>
+    </optgroup>
+</select>
+
+<label for="mode-select">Select Mode</label>
+<select id="mode-select">
+    <option value="standard">Standard Chat</option>
+    <option value="canva">Canva (Creative / Visual Design)</option>
+    <option value="deepthink">DeepThink (Reasoning)</option>
+    <option value="deepresearch">Deep Research (With Search)</option>
+</select>
+
+<label for="prompt">Your Prompt</label>
+<textarea id="prompt" rows="5" placeholder="Type your prompt here..."></textarea>
+
+<button onclick="generateResponse()">Generate Response</button>
+
+<div id="response"></div>
+
+<script>
+async function generateResponse() {
+    const apiKey = document.getElementById('api-key').value.trim();
+    const model = document.getElementById('model-select').value;
+    const mode = document.getElementById('mode-select').value;
+    const prompt = document.getElementById('prompt').value.trim();
+
+    if (!apiKey) return alert('Please enter your API key.');
+    if (!prompt) return alert('Please enter a prompt.');
+
+    const responseDiv = document.getElementById('response');
+    responseDiv.innerHTML = "Generating response...";
+
+    let systemPrompt = "";
+    switch(mode) {
+        case 'canva':
+            systemPrompt = "You are a creative assistant. Provide visual design ideas and step-by-step guidance.";
+            break;
+        case 'deepthink':
+            systemPrompt = "You are a reasoning assistant. Analyze the query step by step.";
+            break;
+        case 'deepresearch':
+            systemPrompt = "You are a research assistant. Gather and synthesize detailed information.";
+            break;
+        default:
+            systemPrompt = "You are a helpful AI assistant.";
+    }
+
+    const payload = {
+        model: model,
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+    };
+
+    try {
+        // Placeholder: Replace with actual Microsoft / MAI / Phi endpoints
+        let endpoint = "";
+        if(model.startsWith("vall-e")) endpoint = `https://api.microsoft.com/tts/${model}`;
+        else if(model.startsWith("xiaoice")) endpoint = `https://api.microsoft.com/xiaoice/${model}/chat`;
+        else if(model.startsWith("Phi")) endpoint = `https://api.microsoft.com/phi/${model}/chat`;
+        else endpoint = `https://api.microsoft.com/mai/${model}/chat`;
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
+        const data = await res.json();
+        const answer = data.choices?.[0]?.message?.content || data.output || "No response";
+        responseDiv.innerText = answer;
+
+    } catch (err) {
+        responseDiv.innerText = `Error: ${err.message}`;
+    }
+}
+</script>
+
+</body>
+</html>
