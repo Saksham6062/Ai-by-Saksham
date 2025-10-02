@@ -1,192 +1,670 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DeepSeek Playground</title>
-  <style>
-    :root{
-      --bg:#f8fafc; --panel:#ffffff; --muted:#64748b; --accent:#2563eb;
-      --glass: rgba(0,0,0,0.04);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    }
-    html,body{height:100%;margin:0;background:var(--bg); color:#111827}
-    .app{display:flex; height:100vh; gap:16px; padding:18px; box-sizing:border-box;}
-    .sidebar{
-      width:260px; background:var(--panel);
-      border-radius:12px; padding:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      display:flex; flex-direction:column; gap:12px; min-width:220px;
-    }
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
-    h1{font-size:16px;margin:0}
-    p.muted{color:var(--muted);margin:0;font-size:13px}
-    .models{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-    .model-btn{background:transparent;border:1px solid rgba(0,0,0,0.08);padding:10px;border-radius:8px;color:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
-    .model-btn.active{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,0.15);background:rgba(37,99,235,0.06)}
-    .small-muted{font-size:12px;color:var(--muted)}
-    .main{flex:1; display:grid; grid-template-columns: 1fr 360px; gap:16px; min-width:0}
-    .panel{background:var(--panel); border-radius:12px; padding:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); overflow:hidden}
-    .topbar{display:flex; gap:10px; align-items:center; justify-content:space-between}
-    .controls{display:flex; gap:8px; align-items:center}
-    button,select,input,textarea{font-family:inherit}
-    .btn{background:var(--glass); border:1px solid rgba(0,0,0,0.08); padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
-    .btn.primary{background:linear-gradient(90deg,var(--accent),#06b6d4); color:white; border:none}
-    .workspace{display:grid; grid-template-columns: 1fr; gap:12px; height:calc(100% - 54px); overflow:auto; padding-top:6px}
-    .canvas-wrap{display:flex; flex-direction:column; gap:8px; min-height:420px}
-    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    .canvas{flex:1; border-radius:10px; background:white; height:420px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0}
-    canvas#drawCanvas{width:100%; height:100%; border-radius:10px; background:#fff}
-    .right-col{display:flex; flex-direction:column; gap:12px;}
-    .card{padding:10px; border-radius:10px; background: #f9fafb; border:1px solid #e5e7eb}
-    textarea.notes{width:100%; min-height:140px; resize:vertical; padding:10px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; color:inherit}
-    .research-row{display:flex; gap:8px; align-items:center}
-    .search-input{flex:1;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;color:inherit}
-    .chat-area{display:flex; flex-direction:column; gap:8px; height:320px}
-    .messages{flex:1; overflow:auto; padding:8px; border-radius:8px; background:#f8fafc; border:1px solid #e5e7eb}
-    .message{margin:8px 0; padding:10px; border-radius:8px; max-width:80%}
-    .message.user{align-self:flex-end;background:#2563eb;color:#fff}
-    .message.model{align-self:flex-start;background:#f1f5f9; color:#111827}
-    .prompt-row{display:flex; gap:8px; align-items:center}
-    .prompt-input{flex:1;padding:10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;color:inherit}
-    footer{font-size:12px;color:var(--muted);text-align:center;padding:10px 0}
-    @media (max-width:1000px){
-      .app{padding:12px}
-      .sidebar{display:none}
-      .main{grid-template-columns:1fr}
-      .right-col{order:2}
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI Platform | Canvas & Research Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --accent: #ff006e;
+            --dark: #1a1a2e;
+            --darker: #0d0d1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #06d6a0;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--light);
+            border: 1px solid var(--gray);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .model-list {
+            list-style: none;
+        }
+
+        .model-list li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .model-list li.active {
+            background: rgba(58, 134, 255, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
+        .model-list li:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .model-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: var(--secondary);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 25px;
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .workspace-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .workspace-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.active {
+            background: var(--primary);
+        }
+
+        .canvas-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tool {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tool.active {
+            background: var(--primary);
+        }
+
+        .tool:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .canvas-area {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-rows: 1fr auto;
+            height: 500px;
+        }
+
+        .chat-messages {
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--primary);
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-sender {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            font-size: 1rem;
+        }
+
+        .chat-input button {
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #2a75f0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray);
+        }
+
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .workspace-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">DS</div>
-        <div>
-          <h1>DeepSeek</h1>
-          <p class="muted">Models Playground</p>
-        </div>
-      </div>
-
-      <div>
-        <div class="small-muted">Models</div>
-        <div class="models" id="modelList"></div>
-      </div>
-    </aside>
-
-    <!-- Main -->
-    <main class="main">
-      <!-- Left workspace -->
-      <section class="panel">
-        <div class="topbar">
-          <div class="controls">
-            <select id="modeSelect" class="btn">
-              <option value="brush">Brush</option>
-              <option value="eraser">Eraser</option>
-              <option value="rect">Rectangle</option>
-              <option value="text">Text</option>
-            </select>
-            <input type="color" id="colorPicker" value="#2563eb" />
-            <input type="range" id="sizeRange" min="1" max="40" value="6" />
-          </div>
-        </div>
-        <div class="workspace">
-          <div class="canvas-wrap card">
-            <div class="canvas"><canvas id="drawCanvas" width="1200" height="700"></canvas></div>
-          </div>
-
-          <div class="card">
-            <div><strong id="activeModelLabel">Model: R1</strong></div>
-            <div class="chat-area">
-              <div class="messages" id="messages"></div>
-              <div class="prompt-row">
-                <input id="promptInput" class="prompt-input" placeholder="Write a prompt..." />
-                <button class="btn primary" id="sendPromptBtn">Send</button>
-              </div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-brain logo-icon"></i>
+                <h1>DeepSeek AI Platform</h1>
             </div>
-          </div>
+            <div class="nav-links">
+                <a href="#" class="active">Dashboard</a>
+                <a href="#">Canvas</a>
+                <a href="#">Research</a>
+                <a href="#">Models</a>
+                <a href="#">Docs</a>
+            </div>
+            <div class="user-actions">
+                <button class="btn btn-secondary"><i class="fas fa-user"></i> Sign In</button>
+                <button class="btn btn-primary"><i class="fas fa-rocket"></i> Get Started</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-robot"></i> AI Models</h3>
+                    <ul class="model-list">
+                        <li class="active">
+                            <i class="fas fa-microchip"></i> DeepSeek R1
+                            <span class="model-badge">Latest</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-bolt"></i> DeepSeek V2
+                        </li>
+                        <li>
+                            <i class="fas fa-cogs"></i> DeepSeek V3
+                        </li>
+                        <li>
+                            <i class="fas fa-code"></i> DeepSeek V3.1
+                        </li>
+                        <li>
+                            <i class="fas fa-laptop-code"></i> DeepSeek Coder
+                        </li>
+                        <li>
+                            <i class="fas fa-eye"></i> Janus Pro
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-tools"></i> Tools</h3>
+                    <ul class="model-list">
+                        <li>
+                            <i class="fas fa-palette"></i> Canvas
+                        </li>
+                        <li>
+                            <i class="fas fa-search"></i> DeepThink
+                        </li>
+                        <li>
+                            <i class="fas fa-book"></i> Research
+                        </li>
+                        <li>
+                            <i class="fas fa-chart-line"></i> Analytics
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-folder"></i> Projects</h3>
+                    <ul class="model-list">
+                        <li>
+                            <i class="fas fa-project-diagram"></i> AI Research
+                        </li>
+                        <li>
+                            <i class="fas fa-paint-brush"></i> Creative Design
+                        </li>
+                        <li>
+                            <i class="fas fa-code"></i> Code Generation
+                        </li>
+                        <li>
+                            <i class="fas fa-chart-bar"></i> Data Analysis
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <div class="workspace-header">
+                    <div class="workspace-title">AI Canvas & Research Workspace</div>
+                    <div class="workspace-actions">
+                        <button class="btn btn-secondary"><i class="fas fa-save"></i> Save</button>
+                        <button class="btn btn-secondary"><i class="fas fa-share"></i> Share</button>
+                        <button class="btn btn-primary"><i class="fas fa-plus"></i> New Project</button>
+                    </div>
+                </div>
+
+                <div class="tab-container">
+                    <div class="tab active">Canvas</div>
+                    <div class="tab">Chat</div>
+                    <div class="tab">Research</div>
+                    <div class="tab">Analysis</div>
+                </div>
+
+                <div class="canvas-container">
+                    <div class="canvas-toolbar">
+                        <div class="tool active"><i class="fas fa-mouse-pointer"></i></div>
+                        <div class="tool"><i class="fas fa-pencil-alt"></i></div>
+                        <div class="tool"><i class="fas fa-shapes"></i></div>
+                        <div class="tool"><i class="fas fa-text-height"></i></div>
+                        <div class="tool"><i class="fas fa-eraser"></i></div>
+                        <div class="tool"><i class="fas fa-image"></i></div>
+                        <div class="tool"><i class="fas fa-code"></i></div>
+                        <div class="tool"><i class="fas fa-magic"></i></div>
+                    </div>
+                    <div class="canvas-area">
+                        <div class="canvas-grid"></div>
+                        <div style="text-align: center; color: rgba(255,255,255,0.5);">
+                            <i class="fas fa-palette" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                            <p>AI-Powered Canvas - Draw, design, and generate with DeepSeek models</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-messages">
+                        <div class="message ai-message">
+                            <div class="message-sender">DeepSeek R1</div>
+                            Hello! I'm DeepSeek R1, your AI assistant. How can I help you with your research and creative projects today?
+                        </div>
+                        <div class="message user-message">
+                            <div class="message-sender">You</div>
+                            Can you help me design a neural network architecture for image recognition?
+                        </div>
+                        <div class="message ai-message">
+                            <div class="message-sender">DeepSeek R1</div>
+                            Absolutely! I can help you design a CNN architecture. Let me generate a visualization on the canvas and provide code examples using DeepSeek Coder.
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="Ask DeepSeek AI...">
+                        <button><i class="fas fa-paper-plane"></i> Send</button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </section>
 
-      <!-- Right column -->
-      <aside class="right-col">
-        <div class="panel card">
-          <strong>DeepThink</strong>
-          <textarea id="deepthinkNotes" class="notes" placeholder="Notes..."></textarea>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-palette feature-icon"></i>
+                <h3>AI-Powered Canvas</h3>
+                <p>Create, design, and visualize ideas with AI assistance. Generate diagrams, artwork, and prototypes using DeepSeek models.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-search feature-icon"></i>
+                <h3>DeepThink Research</h3>
+                <p>Advanced research capabilities with multi-model analysis. Synthesize information from various sources and generate insights.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-code feature-icon"></i>
+                <h3>Intelligent Coding</h3>
+                <p>Leverage DeepSeek Coder for code generation, debugging, and optimization across multiple programming languages.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-bar feature-icon"></i>
+                <h3>Data Analysis</h3>
+                <p>Process and visualize complex datasets with AI-powered analytics and generate comprehensive reports.</p>
+            </div>
         </div>
-        <div class="panel card">
-          <strong>Research</strong>
-          <div class="research-row">
-            <input id="searchBox" class="search-input" placeholder="Search..." />
-            <button class="btn" id="searchBtn">Search</button>
-          </div>
-        </div>
-      </aside>
-    </main>
-  </div>
 
-  <footer>DeepSeek Playground • Models: R1, V2, V3, V3.1, DeepSeek Coder, Janus Pro</footer>
+        <footer>
+            <p>DeepSeek AI Platform &copy; 2023 | Integrating R1, V2, V3, V3.1, DeepSeek Coder, and Janus Pro</p>
+        </footer>
+    </div>
 
-  <script>
-    const models = [
-      {id:'r1', name:'R1'},
-      {id:'v2', name:'V2'},
-      {id:'v3', name:'V3'},
-      {id:'v3.1', name:'V3.1'},
-      {id:'deepseek-coder', name:'DeepSeek Coder'},
-      {id:'janus-pro', name:'Janus Pro'}
-    ];
-    let activeModel = models[0];
-    const modelListEl = document.getElementById('modelList');
-    const activeModelLabel = document.getElementById('activeModelLabel');
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // In a real app, this would switch between canvas, chat, research views
+            });
+        });
 
-    function renderModels(){
-      modelListEl.innerHTML = '';
-      models.forEach(m=>{
-        const btn = document.createElement('button');
-        btn.className = 'model-btn';
-        btn.textContent = m.name;
-        if(m.id===activeModel.id) btn.classList.add('active');
-        btn.onclick = ()=>{
-          activeModel = m;
-          document.querySelectorAll('.model-btn').forEach(x=>x.classList.remove('active'));
-          btn.classList.add('active');
-          activeModelLabel.textContent = 'Model: ' + m.name;
-        };
-        modelListEl.appendChild(btn);
-      });
-    }
-    renderModels();
+        // Model selection functionality
+        document.querySelectorAll('.model-list li').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.model-list li').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update the chat header with selected model
+                const modelName = this.textContent.trim().split('\n')[0];
+                document.querySelector('.workspace-title').textContent = `${modelName} - AI Canvas & Research Workspace`;
+            });
+        });
 
-    // Chat logic
-    const messagesEl = document.getElementById('messages');
-    const promptInput = document.getElementById('promptInput');
-    document.getElementById('sendPromptBtn').addEventListener('click', sendPrompt);
+        // Tool selection functionality
+        document.querySelectorAll('.tool').forEach(tool => {
+            tool.addEventListener('click', function() {
+                document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
 
-    function addMessage(text, who='model'){
-      const el = document.createElement('div');
-      el.className = 'message ' + (who==='user'?'user':'model');
-      el.textContent = text;
-      messagesEl.appendChild(el);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-    function sendPrompt(){
-      const val = promptInput.value.trim();
-      if(!val) return;
-      addMessage(val,'user');
-      promptInput.value = '';
-      setTimeout(()=>{
-        addMessage(`[${activeModel.name}] Response to: ` + val, 'model');
-      },500);
-    }
+        // Simulate AI response after user input
+        document.querySelector('.chat-input button').addEventListener('click', function() {
+            const input = document.querySelector('.chat-input input');
+            const message = input.value.trim();
+            
+            if (message) {
+                // Add user message
+                const chatMessages = document.querySelector('.chat-messages');
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.innerHTML = `<div class="message-sender">You</div>${message}`;
+                chatMessages.appendChild(userMessage);
+                
+                // Clear input
+                input.value = '';
+                
+                // Simulate AI thinking and response
+                setTimeout(() => {
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'message ai-message';
+                    aiMessage.innerHTML = `<div class="message-sender">DeepSeek R1</div>I understand your query about "${message}". Let me help you with that using our integrated AI models and canvas tools.`;
+                    chatMessages.appendChild(aiMessage);
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+            }
+        });
 
-    // Research
-    document.getElementById('searchBtn').addEventListener('click', ()=>{
-      const q = document.getElementById('searchBox').value.trim();
-      if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
-    });
-  </script>
+        // Allow sending message with Enter key
+        document.querySelector('.chat-input input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('.chat-input button').click();
+            }
+        });
+    </script>
 </body>
 </html>
