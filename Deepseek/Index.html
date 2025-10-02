@@ -3,54 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DeepSeek — Playground</title>
+  <title>DeepSeek Playground</title>
   <style>
     :root{
-      --bg:#0f1724; --panel:#0b1220; --muted:#94a3b8; --accent:#7c3aed;
-      --glass: rgba(255,255,255,0.03);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --bg:#f8fafc; --panel:#ffffff; --muted:#64748b; --accent:#2563eb;
+      --glass: rgba(0,0,0,0.04);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
     }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071124 0%, #0f1724 100%); color:#e6eef8}
+    html,body{height:100%;margin:0;background:var(--bg); color:#111827}
     .app{display:flex; height:100vh; gap:16px; padding:18px; box-sizing:border-box;}
     .sidebar{
-      width:260px; background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border-radius:12px; padding:16px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); display:flex; flex-direction:column;
-      gap:12px; min-width:220px;
+      width:260px; background:var(--panel);
+      border-radius:12px; padding:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      display:flex; flex-direction:column; gap:12px; min-width:220px;
     }
     .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
     h1{font-size:16px;margin:0}
     p.muted{color:var(--muted);margin:0;font-size:13px}
     .models{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-    .model-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:8px;color:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
-    .model-btn.active{border-color:rgba(124,58,237,0.9);box-shadow:0 6px 14px rgba(124,58,237,0.09);background:linear-gradient(180deg, rgba(124,58,237,0.06), transparent)}
+    .model-btn{background:transparent;border:1px solid rgba(0,0,0,0.08);padding:10px;border-radius:8px;color:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+    .model-btn.active{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,0.15);background:rgba(37,99,235,0.06)}
     .small-muted{font-size:12px;color:var(--muted)}
     .main{flex:1; display:grid; grid-template-columns: 1fr 360px; gap:16px; min-width:0}
-    .panel{background:var(--panel); border-radius:12px; padding:12px; box-shadow: 0 6px 20px rgba(2,6,23,0.6); overflow:hidden}
+    .panel{background:var(--panel); border-radius:12px; padding:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); overflow:hidden}
     .topbar{display:flex; gap:10px; align-items:center; justify-content:space-between}
     .controls{display:flex; gap:8px; align-items:center}
     button,select,input,textarea{font-family:inherit}
-    .btn{background:var(--glass); border:1px solid rgba(255,255,255,0.04); padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
+    .btn{background:var(--glass); border:1px solid rgba(0,0,0,0.08); padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
     .btn.primary{background:linear-gradient(90deg,var(--accent),#06b6d4); color:white; border:none}
     .workspace{display:grid; grid-template-columns: 1fr; gap:12px; height:calc(100% - 54px); overflow:auto; padding-top:6px}
-    /* Canvas area */
     .canvas-wrap{display:flex; flex-direction:column; gap:8px; min-height:420px}
     .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    .canvas{flex:1; border-radius:10px; background:white; height:420px; display:flex; align-items:center; justify-content:center}
+    .canvas{flex:1; border-radius:10px; background:white; height:420px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0}
     canvas#drawCanvas{width:100%; height:100%; border-radius:10px; background:#fff}
     .right-col{display:flex; flex-direction:column; gap:12px;}
-    .card{padding:10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
-    textarea.notes{width:100%; min-height:140px; resize:vertical; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
+    .card{padding:10px; border-radius:10px; background: #f9fafb; border:1px solid #e5e7eb}
+    textarea.notes{width:100%; min-height:140px; resize:vertical; padding:10px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; color:inherit}
     .research-row{display:flex; gap:8px; align-items:center}
-    .search-input{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    /* prompt/chat */
+    .search-input{flex:1;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;color:inherit}
     .chat-area{display:flex; flex-direction:column; gap:8px; height:320px}
-    .messages{flex:1; overflow:auto; padding:8px; border-radius:8px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+    .messages{flex:1; overflow:auto; padding:8px; border-radius:8px; background:#f8fafc; border:1px solid #e5e7eb}
     .message{margin:8px 0; padding:10px; border-radius:8px; max-width:80%}
-    .message.user{align-self:flex-end;background:linear-gradient(90deg,#1e293b,#14233a); color:#fff}
-    .message.model{align-self:flex-start;background:rgba(255,255,255,0.03); color:inherit}
+    .message.user{align-self:flex-end;background:#2563eb;color:#fff}
+    .message.model{align-self:flex-start;background:#f1f5f9; color:#111827}
     .prompt-row{display:flex; gap:8px; align-items:center}
-    .prompt-input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .prompt-input{flex:1;padding:10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;color:inherit}
     footer{font-size:12px;color:var(--muted);text-align:center;padding:10px 0}
     @media (max-width:1000px){
       .app{padding:12px}
@@ -61,91 +59,50 @@
   </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="DeepSeek Playground">
+  <div class="app">
     <!-- Sidebar -->
-    <aside class="sidebar" aria-label="Sidebar">
+    <aside class="sidebar">
       <div class="brand">
-        <div class="logo" aria-hidden="true">DS</div>
+        <div class="logo">DS</div>
         <div>
           <h1>DeepSeek</h1>
-          <p class="muted">Multi-model playground & creative studio</p>
+          <p class="muted">Models Playground</p>
         </div>
       </div>
 
       <div>
         <div class="small-muted">Models</div>
-        <div class="models" id="modelList" role="tablist" aria-label="Model Selector">
-          <!-- JS will fill -->
-        </div>
-      </div>
-
-      <div>
-        <div class="small-muted">Quick actions</div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn" id="newCanvasBtn" title="Clear canvas">New Canvas</button>
-          <button class="btn" id="exportAllBtn" title="Export projects">Export</button>
-        </div>
-      </div>
-
-      <div style="margin-top:auto">
-        <div class="small-muted">Usage</div>
-        <p class="muted" style="margin-top:6px">Select a model, sketch in the canvas, jot in DeepThink, use Research to fetch sources, then send prompts to models.</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn" id="saveBtn">Save</button>
-          <button class="btn" id="loadBtn">Load</button>
-        </div>
+        <div class="models" id="modelList"></div>
       </div>
     </aside>
 
     <!-- Main -->
-    <main class="main" aria-live="polite">
-      <!-- Left: Canvas + Prompt -->
-      <section class="panel" aria-label="Workspace">
+    <main class="main">
+      <!-- Left workspace -->
+      <section class="panel">
         <div class="topbar">
           <div class="controls">
-            <div class="small-muted">Mode:</div>
-            <select id="modeSelect" class="btn" aria-label="Canvas Mode">
+            <select id="modeSelect" class="btn">
               <option value="brush">Brush</option>
               <option value="eraser">Eraser</option>
               <option value="rect">Rectangle</option>
               <option value="text">Text</option>
-              <option value="select">Select</option>
             </select>
-            <input type="color" id="colorPicker" value="#0f1724" title="Color" aria-label="Color picker" />
-            <input type="range" id="sizeRange" min="1" max="60" value="6" title="brush size" />
-          </div>
-          <div>
-            <button class="btn" id="undoBtn" title="Undo">Undo</button>
-            <button class="btn" id="downloadCanvasBtn" title="Download">Download</button>
+            <input type="color" id="colorPicker" value="#2563eb" />
+            <input type="range" id="sizeRange" min="1" max="40" value="6" />
           </div>
         </div>
-
         <div class="workspace">
-          <div class="canvas-wrap card" aria-label="Canvas editor">
-            <div class="toolbar small-muted">Canvas editor — Draw, shape, add text. Works on desktop & touch devices.</div>
-            <div class="canvas" id="canvasContainer">
-              <canvas id="drawCanvas" width="1200" height="700" aria-label="Drawing canvas"></canvas>
-            </div>
-            <div style="display:flex; gap:8px; justify-content:flex-end">
-              <button class="btn" id="addImageBtn">Insert Image</button>
-              <button class="btn" id="clearCanvasBtn">Clear</button>
-            </div>
+          <div class="canvas-wrap card">
+            <div class="canvas"><canvas id="drawCanvas" width="1200" height="700"></canvas></div>
           </div>
 
-          <!-- Chat / Prompt -->
           <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong id="activeModelLabel">Model: R1</strong> <span class="small-muted" id="modelVersionInfo"></span></div>
-              <div class="small-muted">Use prompt for generation / code / research</div>
-            </div>
-
-            <div class="chat-area" aria-live="polite">
-              <div class="messages" id="messages" role="log" aria-relevant="additions">
-                <!-- messages go here -->
-              </div>
-
+            <div><strong id="activeModelLabel">Model: R1</strong></div>
+            <div class="chat-area">
+              <div class="messages" id="messages"></div>
               <div class="prompt-row">
-                <input id="promptInput" class="prompt-input" placeholder="Write a prompt for the selected model..." aria-label="Prompt input" />
+                <input id="promptInput" class="prompt-input" placeholder="Write a prompt..." />
                 <button class="btn primary" id="sendPromptBtn">Send</button>
               </div>
             </div>
@@ -153,506 +110,83 @@
         </div>
       </section>
 
-      <!-- Right column: DeepThink + Research -->
-      <aside class="right-col" aria-label="Side tools">
-        <div class="panel card" aria-label="DeepThink">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <strong>DeepThink</strong>
-            <div class="small-muted">Notes & ideas</div>
-          </div>
-          <textarea id="deepthinkNotes" class="notes" placeholder="Write notes, ideas, or a plan here..."></textarea>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button class="btn" id="togglePreviewBtn">Preview</button>
-            <button class="btn" id="clearNotesBtn">Clear</button>
-          </div>
-          <div id="previewArea" style="display:none;margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);max-height:200px;overflow:auto"></div>
+      <!-- Right column -->
+      <aside class="right-col">
+        <div class="panel card">
+          <strong>DeepThink</strong>
+          <textarea id="deepthinkNotes" class="notes" placeholder="Notes..."></textarea>
         </div>
-
-        <div class="panel card" aria-label="Research">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <strong>Research</strong>
-            <div class="small-muted">Open web search</div>
-          </div>
-
-          <div class="research-row" style="margin-top:8px">
-            <input id="searchBox" class="search-input" placeholder="Search query (opens in new tab)" aria-label="Research search" />
+        <div class="panel card">
+          <strong>Research</strong>
+          <div class="research-row">
+            <input id="searchBox" class="search-input" placeholder="Search..." />
             <button class="btn" id="searchBtn">Search</button>
           </div>
-
-          <div style="margin-top:10px" class="small-muted">
-            Tip: integrate a server-side search or an internal knowledge base to return structured results.
-          </div>
         </div>
-
-        <div class="panel card" aria-label="Project">
-          <strong>Project</strong>
-          <div style="margin-top:8px" class="small-muted">Save and export your work. Projects are stored in localStorage in this demo.</div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="projectName" placeholder="Project name" class="prompt-input" />
-            <button class="btn" id="saveProjectBtn">Save</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <select id="projectList" class="prompt-input"></select>
-            <button class="btn" id="loadProjectBtn">Load</button>
-            <button class="btn" id="deleteProjectBtn">Delete</button>
-          </div>
-        </div>
-
       </aside>
     </main>
   </div>
 
-  <footer>DeepSeek demo • Models: R1, V2, V3, V3.1, DeepSeek Coder — replace client placeholders with your real API endpoints.</footer>
+  <footer>DeepSeek Playground • Models: R1, V2, V3, V3.1, DeepSeek Coder, Janus Pro</footer>
 
   <script>
-    /****************************************************************
-     * DeepSeek Playground - front-end logic (single file demo)
-     * - Plug your model API into `sendToModel()` below.
-     * - Canvas supports draw, eraser, rectangle, and text.
-     ****************************************************************/
-
-    // ========== Model list ==========
     const models = [
-      {id:'r1', name:'R1', desc:'General purpose creative model'},
-      {id:'v2', name:'V2', desc:'Vision-focused model'},
-      {id:'v3', name:'V3', desc:'High-capacity multimodal'},
-      {id:'v3.1', name:'V3.1', desc:'Latest tuned variant'},
-      {id:'deepseek-coder', name:'DeepSeek Coder', desc:'Code assistant & runner'}
+      {id:'r1', name:'R1'},
+      {id:'v2', name:'V2'},
+      {id:'v3', name:'V3'},
+      {id:'v3.1', name:'V3.1'},
+      {id:'deepseek-coder', name:'DeepSeek Coder'},
+      {id:'janus-pro', name:'Janus Pro'}
     ];
-
+    let activeModel = models[0];
     const modelListEl = document.getElementById('modelList');
     const activeModelLabel = document.getElementById('activeModelLabel');
-    const modelVersionInfo = document.getElementById('modelVersionInfo');
-    let activeModel = models[0];
 
     function renderModels(){
       modelListEl.innerHTML = '';
       models.forEach(m=>{
         const btn = document.createElement('button');
         btn.className = 'model-btn';
-        btn.setAttribute('role','tab');
-        btn.innerHTML = `<div style="display:flex;flex-direction:column;align-items:flex-start">
-                          <strong>${m.name}</strong>
-                          <span class="small-muted" style="font-size:12px">${m.desc}</span>
-                        </div>
-                        <div class="small-muted" style="font-size:12px">${m.id}</div>`;
+        btn.textContent = m.name;
         if(m.id===activeModel.id) btn.classList.add('active');
         btn.onclick = ()=>{
           activeModel = m;
           document.querySelectorAll('.model-btn').forEach(x=>x.classList.remove('active'));
           btn.classList.add('active');
           activeModelLabel.textContent = 'Model: ' + m.name;
-          modelVersionInfo.textContent = m.id;
         };
         modelListEl.appendChild(btn);
       });
     }
     renderModels();
 
-    // ========== Canvas ==========
-    const canvas = document.getElementById('drawCanvas');
-    const ctx = canvas.getContext('2d', { alpha: true });
-    const container = document.getElementById('canvasContainer');
-    const colorPicker = document.getElementById('colorPicker');
-    const sizeRange = document.getElementById('sizeRange');
-    const modeSelect = document.getElementById('modeSelect');
-    const undoStack = [];
-    const redoStack = [];
-    let drawing = false;
-    let last = {x:0,y:0};
-    let currentTextTool = {active:false, text:''};
-
-    // ensure crisp drawing by managing devicePixelRatio
-    function resizeCanvasToDisplaySize() {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
-        // save current
-        const data = ctx.getImageData(0,0,canvas.width,canvas.height);
-        canvas.width = Math.round(rect.width * dpr);
-        canvas.height = Math.round(rect.height * dpr);
-        canvas.style.width = rect.width + 'px';
-        canvas.style.height = rect.height + 'px';
-        ctx.scale(dpr, dpr);
-        // restore blank background
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0,0,rect.width,rect.height);
-        // try to put back image if available (basic)
-        try { ctx.putImageData(data,0,0); } catch(e){}
-      }
-    }
-    window.addEventListener('resize', resizeCanvasToDisplaySize);
-    resizeCanvasToDisplaySize();
-
-    // initialize white bg
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    function saveStateForUndo(){
-      try {
-        undoStack.push(canvas.toDataURL());
-        if(undoStack.length>30) undoStack.shift();
-        redoStack.length = 0;
-      } catch(e){}
-    }
-
-    function restoreStateFromDataURL(dataURL){
-      const img = new Image();
-      img.onload = ()=>{
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        // scale drawing to canvas display size
-        const rect = canvas.getBoundingClientRect();
-        ctx.drawImage(img,0,0,rect.width,rect.height);
-      };
-      img.src = dataURL;
-    }
-
-    function pointerPos(e){
-      const rect = canvas.getBoundingClientRect();
-      const isTouch = e.touches && e.touches[0];
-      const clientX = isTouch ? e.touches[0].clientX : e.clientX;
-      const clientY = isTouch ? e.touches[0].clientY : e.clientY;
-      return {x: clientX - rect.left, y: clientY - rect.top};
-    }
-
-    function startDrawing(e){
-      drawing = true;
-      last = pointerPos(e);
-      saveStateForUndo();
-      if(modeSelect.value === 'text'){
-        // place text input prompt
-        const pos = last;
-        const txt = prompt('Enter text to insert at this position:');
-        if(txt){
-          ctx.fillStyle = colorPicker.value;
-          ctx.font = `${Math.max(12, Number(sizeRange.value)*2)}px sans-serif`;
-          ctx.fillText(txt, pos.x, pos.y + 6);
-        }
-        drawing = false;
-      } else if (modeSelect.value === 'rect'){
-        // start rect
-        currentTextTool = {rectStart: last, rectActive:true};
-      }
-    }
-
-    function draw(e){
-      if(!drawing) return;
-      const p = pointerPos(e);
-      if(modeSelect.value === 'brush' || modeSelect.value === 'eraser'){
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = modeSelect.value === 'eraser' ? '#fff' : colorPicker.value;
-        ctx.lineWidth = Number(sizeRange.value);
-        ctx.beginPath();
-        ctx.moveTo(last.x, last.y);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-        last = p;
-      } else if(modeSelect.value === 'rect' && currentTextTool.rectActive){
-        // visual preview — we'll draw on a temp overlay by restoring last saved state to keep simple:
-        restoreLastForRectPreview();
-        ctx.strokeStyle = colorPicker.value;
-        ctx.lineWidth = Math.max(1, Number(sizeRange.value)/2);
-        const sx = currentTextTool.rectStart.x, sy = currentTextTool.rectStart.y;
-        ctx.strokeRect(sx, sy, p.x - sx, p.y - sy);
-      }
-    }
-
-    function restoreLastForRectPreview(){
-      // quick and dirty: use the last undo state if available; otherwise just leave
-      // (This keeps preview from permanently drawing until mouseup)
-      if(undoStack.length){
-        restoreStateFromDataURL(undoStack[undoStack.length-1]);
-      } else {
-        // no undo snapshot; nothing to restore
-      }
-    }
-
-    function endDrawing(e){
-      if(!drawing) return;
-      drawing = false;
-      const p = pointerPos(e);
-      if(modeSelect.value === 'rect' && currentTextTool.rectActive){
-        const sx = currentTextTool.rectStart.x, sy = currentTextTool.rectStart.y;
-        ctx.strokeStyle = colorPicker.value;
-        ctx.lineWidth = Math.max(1, Number(sizeRange.value)/2);
-        ctx.strokeRect(sx, sy, p.x - sx, p.y - sy);
-        currentTextTool.rectActive = false;
-      }
-    }
-
-    // event binding (pointer-friendly)
-    canvas.addEventListener('pointerdown', (e)=>{ startDrawing(e); });
-    canvas.addEventListener('pointermove', (e)=>{ draw(e); });
-    window.addEventListener('pointerup', (e)=>{ endDrawing(e); });
-
-    document.getElementById('clearCanvasBtn').addEventListener('click', ()=>{
-      saveStateForUndo();
-      const rect = canvas.getBoundingClientRect();
-      ctx.fillStyle = '#fff';
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.fillRect(0,0,rect.width,rect.height);
-    });
-
-    document.getElementById('newCanvasBtn').addEventListener('click', ()=>{
-      if(confirm('Start a new blank canvas? This will clear current canvas (you can Undo).')){
-        saveStateForUndo();
-        const rect = canvas.getBoundingClientRect();
-        ctx.fillStyle = '#fff';
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillRect(0,0,rect.width,rect.height);
-      }
-    });
-
-    document.getElementById('undoBtn').addEventListener('click', ()=>{
-      if(undoStack.length){
-        const lastData = undoStack.pop();
-        redoStack.push(canvas.toDataURL());
-        restoreStateFromDataURL(lastData);
-      } else {
-        alert('Nothing to undo');
-      }
-    });
-
-    document.getElementById('downloadCanvasBtn').addEventListener('click', ()=>{
-      const link = document.createElement('a');
-      link.download = 'deepseek-canvas.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
-
-    document.getElementById('addImageBtn').addEventListener('click', ()=>{
-      const url = prompt('Image URL to insert (CORS may block some hosts):');
-      if(url){
-        saveStateForUndo();
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = ()=> {
-          const rect = canvas.getBoundingClientRect();
-          // draw centered scaled
-          const maxW = rect.width * 0.9, maxH = rect.height * 0.9;
-          const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
-          const w = img.width * ratio, h = img.height * ratio;
-          ctx.drawImage(img, (rect.width - w)/2, (rect.height - h)/2, w, h);
-        };
-        img.onerror = ()=> alert('Could not load image (CORS or invalid URL).');
-        img.src = url;
-      }
-    });
-
-    // ========== DeepThink ==========
-    const deepthinkNotes = document.getElementById('deepthinkNotes');
-    const previewArea = document.getElementById('previewArea');
-    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
-
-    let previewVisible = false;
-    togglePreviewBtn.addEventListener('click', ()=>{
-      previewVisible = !previewVisible;
-      previewArea.style.display = previewVisible ? 'block' : 'none';
-      if(previewVisible) renderPreview();
-    });
-
-    deepthinkNotes.addEventListener('input', ()=>{
-      localStorage.setItem('deepseek_deepthink_notes', deepthinkNotes.value);
-      if(previewVisible) renderPreview();
-    });
-
-    document.getElementById('clearNotesBtn').addEventListener('click', ()=>{
-      if(confirm('Clear DeepThink notes?')) { deepthinkNotes.value = ''; localStorage.removeItem('deepseek_deepthink_notes'); renderPreview(); }
-    });
-
-    function renderPreview(){
-      // simple markdown-like converter: headings & line breaks
-      let t = deepthinkNotes.value
-        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-        .replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/gm, '<em>$1</em>')
-        .replace(/\n/g, '<br/>');
-      previewArea.innerHTML = t || '<span class="small-muted">Preview will appear here</span>';
-    }
-
-    // load saved notes on start
-    deepthinkNotes.value = localStorage.getItem('deepseek_deepthink_notes') || '';
-
-    // ========== Research ==========
-    const searchBox = document.getElementById('searchBox');
-    document.getElementById('searchBtn').addEventListener('click', ()=>{
-      const q = searchBox.value.trim();
-      if(!q) { alert('Enter a search query'); return; }
-      // Opens a new tab. Replace with server-side integrated research when available.
-      const url = 'https://www.google.com/search?q=' + encodeURIComponent(q);
-      window.open(url, '_blank');
-    });
-
-    // ========== Projects (localStorage) ==========
-    const projectNameEl = document.getElementById('projectName');
-    const projectListEl = document.getElementById('projectList');
-    function refreshProjectList(){
-      projectListEl.innerHTML = '';
-      const keys = Object.keys(localStorage).filter(k=>k.startsWith('deepseek_project:'));
-      if(keys.length===0){
-        const opt = document.createElement('option'); opt.value=''; opt.textContent='— no projects —'; projectListEl.appendChild(opt);
-        return;
-      }
-      keys.forEach(k=>{
-        const p = JSON.parse(localStorage.getItem(k));
-        const opt = document.createElement('option'); opt.value = k; opt.textContent = p.name + ' • ' + new Date(p.savedAt).toLocaleString();
-        projectListEl.appendChild(opt);
-      });
-    }
-    refreshProjectList();
-
-    document.getElementById('saveProjectBtn').addEventListener('click', ()=>{
-      const name = (projectNameEl.value || 'Untitled').trim();
-      const key = 'deepseek_project:' + name.replace(/\s+/g,'_').toLowerCase();
-      // save canvas as image dataURL + notes + model
-      const project = {
-        name,
-        savedAt: Date.now(),
-        model: activeModel.id,
-        notes: deepthinkNotes.value,
-        canvas: canvas.toDataURL()
-      };
-      localStorage.setItem(key, JSON.stringify(project));
-      refreshProjectList();
-      alert('Saved project: ' + name);
-    });
-
-    document.getElementById('loadProjectBtn').addEventListener('click', ()=>{
-      if(!projectListEl.value){ alert('Choose a project'); return; }
-      const p = JSON.parse(localStorage.getItem(projectListEl.value));
-      if(!p) { alert('Project not found'); return; }
-      deepthinkNotes.value = p.notes || '';
-      localStorage.setItem('deepseek_deepthink_notes', deepthinkNotes.value);
-      if(p.canvas) restoreStateFromDataURL(p.canvas);
-      alert('Loaded project: ' + p.name);
-    });
-
-    document.getElementById('deleteProjectBtn').addEventListener('click', ()=>{
-      if(!projectListEl.value){ alert('Choose a project'); return; }
-      if(confirm('Delete selected project?')){
-        localStorage.removeItem(projectListEl.value);
-        refreshProjectList();
-      }
-    });
-
-    // quick load/save buttons
-    document.getElementById('saveBtn').addEventListener('click', ()=>{ localStorage.setItem('deepseek_quick_canvas', canvas.toDataURL()); localStorage.setItem('deepseek_quick_notes', deepthinkNotes.value); alert('Quick save done'); });
-    document.getElementById('loadBtn').addEventListener('click', ()=>{
-      const canvasData = localStorage.getItem('deepseek_quick_canvas');
-      const notes = localStorage.getItem('deepseek_quick_notes');
-      if(notes) { deepthinkNotes.value = notes; localStorage.setItem('deepseek_deepthink_notes', notes); }
-      if(canvasData) restoreStateFromDataURL(canvasData);
-      alert('Quick load done');
-    });
-
-    // ========== Chat / Model interaction ==========
+    // Chat logic
     const messagesEl = document.getElementById('messages');
     const promptInput = document.getElementById('promptInput');
     document.getElementById('sendPromptBtn').addEventListener('click', sendPrompt);
-    promptInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }});
 
     function addMessage(text, who='model'){
       const el = document.createElement('div');
-      el.className = 'message ' + (who==='user' ? 'user' : 'model');
+      el.className = 'message ' + (who==='user'?'user':'model');
       el.textContent = text;
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
-
-    async function sendPrompt(){
-      const prompt = promptInput.value.trim();
-      if(!prompt) return alert('Enter a prompt.');
-      addMessage(prompt, 'user');
+    function sendPrompt(){
+      const val = promptInput.value.trim();
+      if(!val) return;
+      addMessage(val,'user');
       promptInput.value = '';
-      addMessage('Thinking...', 'model');
-
-      // --- This is the PLACEHOLDER where you call your backend/model:
-      // Replace this block with a fetch() to your API that sends:
-      // { model: activeModel.id, prompt: prompt, canvasBase64: canvas.toDataURL(), notes: deepthinkNotes.value }
-      // Example:
-      // const resp = await fetch('/api/deepseek/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model: activeModel.id, prompt}) });
-      // const data = await resp.json(); addMessage(data.output, 'model');
-
-      // Demo simulation: create a pseudo-response depending on model type (for offline demo)
-      await new Promise(r=>setTimeout(r, 800)); // simulate latency
-      const simulated = pseudoModelResponse(activeModel.id, prompt);
-      // remove last "Thinking..." and append response
-      const thinking = messagesEl.querySelector('.message.model:last-child');
-      if(thinking && thinking.textContent === 'Thinking...') thinking.remove();
-      addMessage(simulated, 'model');
+      setTimeout(()=>{
+        addMessage(`[${activeModel.name}] Response to: ` + val, 'model');
+      },500);
     }
 
-    function pseudoModelResponse(modelId, prompt){
-      // Simple deterministic demo text for each model
-      switch(modelId){
-        case 'r1':
-          return `R1 Response — concise summary of prompt:\n\n${shorten(prompt,160)}`;
-        case 'v2':
-          return `V2 Vision Assistant (text): If an image was provided, V2 would analyze it. Prompt echo:\n${shorten(prompt,260)}`;
-        case 'v3':
-          return `V3 (multimodal) — detailed answer with suggestions and next steps. Prompt:\n${shorten(prompt,800)}`;
-        case 'v3.1':
-          return `V3.1 — refined output with improved coherence. Suggestion: try "Explain step-by-step".\n\n${shorten(prompt,400)}`;
-        case 'deepseek-coder':
-          return `DeepSeek Coder suggests code or edits. Example (JS):\nconsole.log('Hello from DeepSeek Coder');\n\n(Attach your repo or use the canvas to sketch UI)`;
-        default:
-          return `Model ${modelId} — echo: ${shorten(prompt,200)}`;
-      }
-    }
-
-    function shorten(s, n){
-      if(s.length <= n) return s;
-      return s.slice(0,n).trim() + '…';
-    }
-
-    // ========== Persistence for canvas image on page load ==========
-    (function loadInitialState(){
-      const quickNotes = localStorage.getItem('deepseek_deepthink_notes');
-      if(quickNotes) deepthinkNotes.value = quickNotes;
-      const quickCanvas = localStorage.getItem('deepseek_quick_canvas');
-      if(quickCanvas) restoreStateFromDataURL(quickCanvas);
-      renderPreview();
-    })();
-
-    // keyboard shortcuts
-    window.addEventListener('keydown', (e)=>{
-      if(e.ctrlKey && e.key === 's'){ e.preventDefault(); document.getElementById('saveBtn').click(); }
-      if(e.ctrlKey && e.key === 'z'){ e.preventDefault(); document.getElementById('undoBtn').click(); }
+    // Research
+    document.getElementById('searchBtn').addEventListener('click', ()=>{
+      const q = document.getElementById('searchBox').value.trim();
+      if(q) window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
     });
-
-    // helpful UX: warn before leaving if unsaved changes (simple heuristic)
-    let hasUnsaved = false;
-    ['input','change'].forEach(ev=>{
-      document.addEventListener(ev, ()=> hasUnsaved = true);
-    });
-    window.addEventListener('beforeunload', (e)=>{
-      if(hasUnsaved){
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
-
-    // helpful: populate project list on start
-    refreshProjectList();
-
-    /***********
-     * Integration notes:
-     *
-     * - To call your real DeepSeek models, replace the pseudo handler in sendPrompt()
-     *   with a fetch() to your backend. Send JSON with fields:
-     *     { model: activeModel.id, prompt, canvasDataUrl: canvas.toDataURL(), notes: deepthinkNotes.value }
-     *
-     * - Server should call the respective model(s) (R1, V2, V3, V3.1, deepseek-coder)
-     *   and return a JSON shape like: { output: "text answer", data: {...} }
-     *
-     * - For image inputs to vision-enabled models, you can send the canvas base64 or an image file.
-     *
-     * - If you want multi-step workflows (e.g., research -> code -> render), orchestrate server-side and
-     *   return structured blocks; the front-end can then render code blocks or images accordingly.
-     ***********/
   </script>
 </body>
 </html>
