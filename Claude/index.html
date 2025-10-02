@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Claude / Opus / Sonnet — Multi-mode Explorer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* small loader */
+  .loader{border:4px solid #f3f3f3;border-radius:50%;border-top:4px solid #2563eb;width:36px;height:36px;animation:spin 1s linear infinite;margin:auto}
+  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  .mode-panel{display:none}
+  .mode-panel.active{display:block}
+  pre.response{white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex items-start justify-center p-6">
+
+<main class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-6">
+  <header class="mb-4">
+    <h1 class="text-2xl font-bold text-center">Claude / Opus / Sonnet — Multi-mode Explorer</h1>
+    <p class="text-sm text-gray-600 mt-1 text-center">Switch models (real Anthropic models) and modes. Requires a real Anthropic API key.</p>
+  </header>
+
+  <!-- top controls -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Anthropic API Key</label>
+      <input id="apiKey" type="password" placeholder="Paste your Anthropic API key" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2" />
+      <p class="text-xs text-gray-500 mt-1">Tip: keep key on your server and use proxy; putting key in browser is not safe.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Model (choose a real Anthropic model)</label>
+      <select id="modelSelect" class="mt-1 block w-full rounded border-gray-300 p-2">
+        <optgroup label="Sonnet (latest) ">
+          <option value="claude-sonnet-4-5">claude-sonnet-4-5 (Sonnet 4.5)</option>
+          <option value="claude-3-7-sonnet">claude-3-7-sonnet</option>
+        </optgroup>
+        <optgroup label="Opus">
+          <option value="claude-opus-4-1">claude-opus-4-1 (Opus 4.1)</option>
+          <option value="claude-opus-4">claude-opus-4</option>
+        </optgroup>
+        <optgroup label="Classic / other">
+          <option value="claude-3-5-sonnet">claude-3-5-sonnet</option>
+          <option value="claude-2.1">claude-2.1</option>
+        </optgroup>
+      </select>
+      <p class="text-xs text-gray-500 mt-1">These are the model identifiers used with Anthropic's Messages API. See Anthropic docs for the latest names/availability. pi.anthropic.com` directly from browsers frequently hits CORS policy restrictions — use the recommended **server-side proxy** that adds your API key to the request header. (I included an example Express proxy snippet in the HTML comments.)  [oai_citation:2‡Stack Overflow](https://stackoverflow.com/questions/78741384/cors-error-on-https-api-anthropic-com-v1-messages-api-with-reacrt-js?utm_source=chatgpt.com)  
+- The sample includes a small **system instruction** for Canva/DeepThink/DeepResearch to steer outputs. You can modify system prompts to match your workflow.  
+- Export buttons do basic downloads (DOCX/PPTX wrappers are simplistic). For production-grade exports (styled DOCX/PPTX) integrate a server-side library (e.g. `docx` / `PptxGenJS` / `python-docx`) and generate real files server-side.
+
+If you want, I can:
+- Provide the **Express server proxy** file ready to drop into a Node server (safe, env-driven API key).
+- Improve exports to generate **real PPTX** (using `PptxGenJS`) and **real DOCX** (using `docx` or server-side Python `python-docx`) and include sample code generation templates.
+- Add **language / code generation** quick prompts or a programming-language dropdown so user can request code in a specific language.
+
+Which of these would you like next?
