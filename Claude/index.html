@@ -1,58 +1,496 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Claude / Opus / Sonnet — Multi-mode Explorer</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  /* small loader */
-  .loader{border:4px solid #f3f3f3;border-radius:50%;border-top:4px solid #2563eb;width:36px;height:36px;animation:spin 1s linear infinite;margin:auto}
-  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-  .mode-panel{display:none}
-  .mode-panel.active{display:block}
-  pre.response{white-space:pre-wrap;word-break:break-word}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Multi-Model Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .header p {
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 30px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .control-group label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+
+    select, input {
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+        background: white;
+    }
+
+    select:focus, input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .api-key-group {
+        grid-column: 1 / -1;
+    }
+
+    .api-key-group input {
+        width: 100%;
+    }
+
+    .chat-container {
+        height: 500px;
+        overflow-y: auto;
+        padding: 30px;
+        background: #ffffff;
+    }
+
+    .message {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 12px;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .user .message-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .assistant .message-avatar {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 15px 20px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .user .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .assistant .message-content {
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid #e0e0e0;
+    }
+
+    .model-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .input-container {
+        padding: 20px 30px;
+        background: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+    }
+
+    .input-container textarea {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: none;
+        height: 60px;
+    }
+
+    .input-container textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .input-container button {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .input-container button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .input-container button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 20px 30px;
+    }
+
+    .loading {
+        display: flex;
+        gap: 8px;
+        padding: 15px;
+    }
+
+    .loading span {
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading span:nth-child(1) { animation-delay: -0.32s; }
+    .loading span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+
+    .mode-description {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .controls {
+            grid-template-columns: 1fr;
+        }
+        
+        .message-content {
+            max-width: 85%;
+        }
+    }
 </style>
+```
+
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex items-start justify-center p-6">
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Claude Multi-Model Interface</h1>
+            <p>Switch between different Claude models and interaction modes</p>
+        </div>
 
-<main class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-6">
-  <header class="mb-4">
-    <h1 class="text-2xl font-bold text-center">Claude / Opus / Sonnet — Multi-mode Explorer</h1>
-    <p class="text-sm text-gray-600 mt-1 text-center">Switch models (real Anthropic models) and modes. Requires a real Anthropic API key.</p>
-  </header>
+```
+    <div class="controls">
+        <div class="control-group">
+            <label for="model-select">Model</label>
+            <select id="model-select">
+                <option value="claude-opus-4-20250514">Claude Opus 4</option>
+                <option value="claude-4-20250513">Claude Opus 4.1</option>
+                <option value="claude-sonnet-4-5-20250929" selected>Claude Sonnet 4.5</option>
+                <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+            </select>
+        </div>
 
-  <!-- top controls -->
-  <section class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Anthropic API Key</label>
-      <input id="apiKey" type="password" placeholder="Paste your Anthropic API key" class="mt-1 block w-full rounded border-gray-300 shadow-sm p-2" />
-      <p class="text-xs text-gray-500 mt-1">Tip: keep key on your server and use proxy; putting key in browser is not safe.</p>
+        <div class="control-group">
+            <label for="mode-select">Mode</label>
+            <select id="mode-select">
+                <option value="normal" selected>Normal</option>
+                <option value="canvas">Canvas Mode</option>
+                <option value="deepthink">Deep Think</option>
+                <option value="deep-research">Deep Research</option>
+            </select>
+            <div class="mode-description" id="mode-description">Standard conversational mode</div>
+        </div>
+
+        <div class="control-group api-key-group">
+            <label for="api-key">Anthropic API Key</label>
+            <input type="password" id="api-key" placeholder="sk-ant-api03-...">
+        </div>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Model (choose a real Anthropic model)</label>
-      <select id="modelSelect" class="mt-1 block w-full rounded border-gray-300 p-2">
-        <optgroup label="Sonnet (latest) ">
-          <option value="claude-sonnet-4-5">claude-sonnet-4-5 (Sonnet 4.5)</option>
-          <option value="claude-3-7-sonnet">claude-3-7-sonnet</option>
-        </optgroup>
-        <optgroup label="Opus">
-          <option value="claude-opus-4-1">claude-opus-4-1 (Opus 4.1)</option>
-          <option value="claude-opus-4">claude-opus-4</option>
-        </optgroup>
-        <optgroup label="Classic / other">
-          <option value="claude-3-5-sonnet">claude-3-5-sonnet</option>
-          <option value="claude-2.1">claude-2.1</option>
-        </optgroup>
-      </select>
-      <p class="text-xs text-gray-500 mt-1">These are the model identifiers used with Anthropic's Messages API. See Anthropic docs for the latest names/availability. pi.anthropic.com` directly from browsers frequently hits CORS policy restrictions — use the recommended **server-side proxy** that adds your API key to the request header. (I included an example Express proxy snippet in the HTML comments.)  [oai_citation:2‡Stack Overflow](https://stackoverflow.com/questions/78741384/cors-error-on-https-api-anthropic-com-v1-messages-api-with-reacrt-js?utm_source=chatgpt.com)  
-- The sample includes a small **system instruction** for Canva/DeepThink/DeepResearch to steer outputs. You can modify system prompts to match your workflow.  
-- Export buttons do basic downloads (DOCX/PPTX wrappers are simplistic). For production-grade exports (styled DOCX/PPTX) integrate a server-side library (e.g. `docx` / `PptxGenJS` / `python-docx`) and generate real files server-side.
+    <div class="chat-container" id="chat-container">
+        <div class="message assistant">
+            <div class="message-avatar">C</div>
+            <div class="message-content">
+                <div class="model-badge">Claude Sonnet 4.5 - Normal Mode</div>
+                Hello! I'm Claude. Select a model and mode above, enter your API key, and start chatting. Each model has different capabilities and performance characteristics.
+            </div>
+        </div>
+    </div>
 
-If you want, I can:
-- Provide the **Express server proxy** file ready to drop into a Node server (safe, env-driven API key).
-- Improve exports to generate **real PPTX** (using `PptxGenJS`) and **real DOCX** (using `docx` or server-side Python `python-docx`) and include sample code generation templates.
-- Add **language / code generation** quick prompts or a programming-language dropdown so user can request code in a specific language.
+    <div class="input-container">
+        <textarea id="user-input" placeholder="Type your message here..."></textarea>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
 
-Which of these would you like next?
+<script>
+    const API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+    let conversationHistory = [];
+
+    const modeDescriptions = {
+        normal: 'Standard conversational mode',
+        canvas: 'Enhanced creative and document editing mode',
+        deepthink: 'Extended reasoning with detailed thinking process',
+        'deep-research': 'Comprehensive research with web search and analysis'
+    };
+
+    document.getElementById('mode-select').addEventListener('change', function() {
+        const mode = this.value;
+        document.getElementById('mode-description').textContent = modeDescriptions[mode];
+    });
+
+    document.getElementById('user-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function addMessage(role, content, model, mode) {
+        const chatContainer = document.getElementById('chat-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = role === 'user' ? 'U' : 'C';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        if (role === 'assistant') {
+            const badge = document.createElement('div');
+            badge.className = 'model-badge';
+            badge.textContent = `${model} - ${mode}`;
+            messageContent.appendChild(badge);
+        }
+        
+        const text = document.createElement('div');
+        text.textContent = content;
+        messageContent.appendChild(text);
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function addLoadingIndicator() {
+        const chatContainer = document.getElementById('chat-container');
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'message assistant';
+        loadingDiv.id = 'loading-indicator';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = 'C';
+        
+        const loadingContent = document.createElement('div');
+        loadingContent.className = 'message-content loading';
+        loadingContent.innerHTML = '<span></span><span></span><span></span>';
+        
+        loadingDiv.appendChild(avatar);
+        loadingDiv.appendChild(loadingContent);
+        chatContainer.appendChild(loadingDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function removeLoadingIndicator() {
+        const loading = document.getElementById('loading-indicator');
+        if (loading) loading.remove();
+    }
+
+    function showError(message) {
+        const chatContainer = document.getElementById('chat-container');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = message;
+        chatContainer.appendChild(errorDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const apiKey = document.getElementById('api-key').value.trim();
+        const model = document.getElementById('model-select').value;
+        const mode = document.getElementById('mode-select').value;
+        const message = input.value.trim();
+
+        if (!message) return;
+        if (!apiKey) {
+            showError('Please enter your Anthropic API key');
+            return;
+        }
+
+        const sendBtn = document.getElementById('send-btn');
+        sendBtn.disabled = true;
+        input.disabled = true;
+
+        const modelName = document.getElementById('model-select').selectedOptions[0].text;
+        const modeName = document.getElementById('mode-select').selectedOptions[0].text;
+        
+        addMessage('user', message, modelName, modeName);
+        input.value = '';
+
+        conversationHistory.push({
+            role: 'user',
+            content: message
+        });
+
+        addLoadingIndicator();
+
+        try {
+            let systemPrompt = '';
+            
+            switch(mode) {
+                case 'canvas':
+                    systemPrompt = 'You are in Canvas mode. Focus on creating, editing, and refining documents, code, and creative content. Provide structured, well-formatted responses suitable for document editing.';
+                    break;
+                case 'deepthink':
+                    systemPrompt = 'You are in Deep Think mode. Take your time to reason through problems step-by-step. Show your thinking process and consider multiple angles before providing your answer.';
+                    break;
+                case 'deep-research':
+                    systemPrompt = 'You are in Deep Research mode. Provide comprehensive, well-researched responses with detailed analysis. Include multiple perspectives and cite reasoning where applicable.';
+                    break;
+            }
+
+            const requestBody = {
+                model: model,
+                max_tokens: 4096,
+                messages: conversationHistory
+            };
+
+            if (systemPrompt) {
+                requestBody.system = systemPrompt;
+            }
+
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            removeLoadingIndicator();
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'API request failed');
+            }
+
+            const data = await response.json();
+            const assistantMessage = data.content[0].text;
+
+            conversationHistory.push({
+                role: 'assistant',
+                content: assistantMessage
+            });
+
+            addMessage('assistant', assistantMessage, modelName, modeName);
+
+        } catch (error) {
+            removeLoadingIndicator();
+            showError(`Error: ${error.message}`);
+            conversationHistory.pop();
+        } finally {
+            sendBtn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+</script>
+```
+
+</body>
+</html>
