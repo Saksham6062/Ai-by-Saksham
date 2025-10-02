@@ -1,138 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenAI Models Explorer</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #f9fafb;
-    }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-    }
-    textarea, select, input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button {
-      padding: 10px 16px;
-      margin-top: 10px;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background: #2563eb;
-      color: #fff;
-    }
-    button:hover { background: #1e40af; }
-    pre {
-      background: #111827;
-      color: #f3f4f6;
-      padding: 14px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    label { font-weight: 600; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenAI Multi-Model Interface</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+.header {
+    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
+    color: white;
+    padding: 40px;
+    text-align: center;
+}
+.header h1 { font-size:36px; margin-bottom:12px; font-weight:700; }
+.header p { opacity:0.95; font-size:15px; }
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:30px;
+    background:#f7f7f8;
+    border-bottom:2px solid #e5e5e5;
+}
+.control-group { display:flex; flex-direction:column; gap:10px; }
+.control-group label { font-weight:600; color:#1a1a1a; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; }
+select, input {
+    padding:14px;
+    border:2px solid #e5e5e5;
+    border-radius:10px;
+    font-size:14px;
+    transition: all 0.3s;
+    background:white;
+    font-family:inherit;
+}
+select:focus, input:focus { outline:none; border-color:#10a37f; box-shadow:0 0 0 3px rgba(16,163,127,0.1); }
+.api-key-group { grid-column:1/-1; }
+.api-key-group input { width:100%; }
+.chat-container {
+    height:550px;
+    overflow-y:auto;
+    padding:30px;
+    background:#ffffff;
+    scroll-behavior:smooth;
+}
+.message { margin-bottom:24px; display:flex; gap:14px; animation:slideIn 0.4s ease-out; }
+@keyframes slideIn { from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);} }
+.message.user { flex-direction:row-reverse; }
+.message-avatar {
+    width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:bold; color:white; flex-shrink:0; font-size:18px;
+}
+.user .message-avatar { background: linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); }
+.assistant .message-avatar { background: linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%); }
+.message-content { max-width:75%; padding:16px 22px; border-radius:14px; line-height:1.6; font-size:15px; }
+.user .message-content { background: linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); color:white; border-bottom-right-radius:4px; }
+.assistant .message-content { background:#f7f7f8; color:#1a1a1a; border:1px solid #e5e5e5; border-bottom-left-radius:4px; }
+.model-badge { display:inline-block; padding:5px 12px; background: rgba(16,163,127,0.12); color:#10a37f; border-radius:16px; font-size:11px; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+.input-container { padding:24px 30px; background:#f7f7f8; border-top:2px solid #e5e5e5; display:flex; gap:14px; align-items:flex-end; }
+.input-container textarea { flex:1; padding:14px; border:2px solid #e5e5e5; border-radius:12px; font-size:15px; font-family:inherit; resize:none; min-height:60px; max-height:150px; }
+.input-container textarea:focus { outline:none; border-color:#10a37f; box-shadow:0 0 0 3px rgba(16,163,127,0.1); }
+.input-container button { padding:14px 32px; background:linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; transition: all 0.3s; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; }
+.input-container button:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 20px rgba(16,163,127,0.3); }
+.input-container button:disabled { opacity:0.5; cursor:not-allowed; }
+.error { background:#fee; border-left:4px solid #f44; color:#c33; padding:16px; border-radius:8px; margin:20px 30px; font-weight:500; }
+.success { background:#efe; border-left:4px solid #4f4; color:#3a3; padding:16px; border-radius:8px; margin:20px 30px; font-weight:500; }
+.loading { display:flex; gap:10px; padding:18px; align-items:center; }
+.loading span { width:10px; height:10px; background:#10a37f; border-radius:50%; animation:bounce 1.4s infinite ease-in-out both; }
+.loading span:nth-child(1){ animation-delay:-0.32s; }
+.loading span:nth-child(2){ animation-delay:-0.16s; }
+@keyframes bounce { 0%,80%,100%{ transform:scale(0);} 40%{ transform:scale(1);} }
+.mode-description { font-size:12px; color:#666; margin-top:6px; font-style:italic; line-height:1.4; }
+.media-output { margin-top:16px; border-radius:12px; overflow:hidden; max-width:100%; }
+.media-output img { max-width:100%; display:block; border-radius:8px; }
+.media-output audio { width:100%; margin-top:10px; }
+@media(max-width:768px){ .controls{grid-template-columns:1fr;} .message-content{max-width:90%;} .header h1{font-size:28px;} }
+</style>
 </head>
 <body>
-  <h1>OpenAI Models Explorer</h1>
-  <p>Enter your <b>OpenAI API Key</b>, fetch available models, then try prompts.</p>
+<div class="container">
+    <div class="header">
+        <h1>🤖 OpenAI Multi-Model Interface</h1>
+        <p>Access GPT, O-Series, Image, Audio, Video, and Reasoning models with advanced modes</p>
+    </div>
 
-  <label>API Key (sk-...)</label>
-  <input id="apiKey" type="text" placeholder="Paste your API key here">
+    <div class="controls">
+        <div class="control-group">
+            <label for="model-select">🎯 Select Model</label>
+            <select id="model-select">
+                <optgroup label="💬 GPT Text Models">
+                    <option value="gpt-5">GPT-5</option>
+                    <option value="gpt-4.1">GPT-4.1</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-4-turbo" selected>GPT-4 Turbo</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="gpt-4o">GPT-4o (Omnimodal)</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="gpt-4o-mini-high">GPT-4o Mini High</option>
+                    <option value="gpt-4o-pro">GPT-4o Pro</option>
+                    <option value="gpt-4o-mini-pro">GPT-4o Mini Pro</option>
+                </optgroup>
+                <optgroup label="🧠 O-Series Reasoning Models">
+                    <option value="o1">O1</option>
+                    <option value="o1-mini">O1 Mini</option>
+                    <option value="o1-pro">O1 Pro</option>
+                    <option value="o3">O3</option>
+                    <option value="o3-mini">O3 Mini</option>
+                    <option value="o3-pro">O3 Pro</option>
+                    <option value="o4-mini">O4 Mini</option>
+                    <option value="o4-mini-high">O4 Mini High</option>
+                    <option value="gpt-oss-120b">GPT-OSS-120B</option>
+                    <option value="gpt-oss-20b">GPT-OSS-20B</option>
+                </optgroup>
+                <optgroup label="👁️ Vision Models">
+                    <option value="gpt-4o-mini-vision">GPT-4o Mini Vision</option>
+                    <option value="gpt-4o-vision">GPT-4o Vision</option>
+                    <option value="gpt-4o-mini-reasoning">GPT-4o Mini Reasoning</option>
+                    <option value="gpt-4o-reasoning">GPT-4o Reasoning</option>
+                </optgroup>
+                <optgroup label="🖼️ Image Generation Models">
+                    <option value="gpt-image-1">GPT Image 1</option>
+                    <option value="dall-e-3">DALL·E 3</option>
+                    <option value="gpt-4o-image-gen">GPT-4o Image Generation</option>
+                    <option value="gpt-4o-mini-image-gen">GPT-4o Mini Image Generation</option>
+                    <option value="gpt-4o-image-gen-pro">GPT-4o Image Generation Pro</option>
+                </optgroup>
+                <optgroup label="🎤 Audio & TTS Models">
+                    <option value="tts-1">TTS-1</option>
+                    <option value="tts-1-hd">TTS-1 HD</option>
+                    <option value="gpt-4o-mini-tts">GPT-4o Mini TTS</option>
+                    <option value="gpt-4o-tts">GPT-4o TTS</option>
+                    <option value="gpt-4o-mini-transcribe">GPT-4o Mini Transcribe</option>
+                    <option value="gpt-4o-transcribe">GPT-4o Transcribe</option>
+                    <option value="gpt-4o-mini-audio">GPT-4o Mini Audio</option>
+                    <option value="gpt-4o-audio">GPT-4o Audio</option>
+                    <option value="gpt-4o-mini-speech">GPT-4o Mini Speech</option>
+                    <option value="gpt-4o-speech">GPT-4o Speech</option>
+                </optgroup>
+                <optgroup label="🎥 Video Generation Models">
+                    <option value="sora-2">Sora 2</option>
+                </optgroup>
+            </select>
+        </div>
 
-  <button id="fetchModels">Fetch Models</button>
-  <select id="modelsSelect"></select>
+        <div class="control-group">
+            <label for="mode-select">⚙️ Interaction Mode</label>
+            <select id="mode-select">
+                <option value="normal" selected>Normal Chat</option>
+                <option value="canvas">Canvas Mode</option>
+                <option value="deepthink">Deep Think</option>
+                <option value="deep-research">Deep Research</option>
+            </select>
+            <div class="mode-description" id="mode-description">Standard conversational mode with real-time responses</div>
+        </div>
 
-  <label>Prompt</label>
-  <textarea id="prompt">Say hello in 3 creative ways.</textarea>
-  <button id="sendPrompt">Send Prompt</button>
+        <div class="control-group api-key-group">
+            <label for="api-key">🔑 OpenAI API Key</label>
+            <input type="password" id="api-key" placeholder="sk-...">
+        </div>
+    </div>
 
-  <h3>Response:</h3>
-  <pre id="output">...</pre>
+    <div class="chat-container" id="chat-container">
+        <div class="message assistant">
+            <div class="message-avatar">AI</div>
+            <div class="message-content">
+                <div class="model-badge">GPT-4 Turbo - Normal Mode</div>
+                Welcome! I'm your OpenAI assistant with access to multiple model families. Select your preferred model and mode above, enter your OpenAI API key, and let's get started!
+            </div>
+        </div>
+    </div>
 
-  <script>
-    async function requestJson(url, opts) {
-      const res = await fetch(url, opts);
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(res.status + " " + res.statusText + "\\n" + t);
-      }
-      return await res.json();
+    <div class="input-container">
+        <textarea id="user-input" placeholder="Type your message here... (Shift+Enter for new line)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+const IMAGE_API_ENDPOINT = 'https://api.openai.com/v1/images/generations';
+const TTS_API_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
+
+let conversationHistory = [];
+
+const modeDescriptions = {
+    normal: 'Standard conversational mode with real-time responses',
+    canvas: 'Enhanced creative mode for documents, code, and structured content creation',
+    deepthink: 'Extended reasoning with detailed step-by-step analytical thinking process',
+    'deep-research': 'Comprehensive research mode with in-depth analysis and multi-perspective insights'
+};
+
+const modelMappings = {
+    'gpt-5':'gpt-5','gpt-4.1':'gpt-4.1','gpt-4':'gpt-4','gpt-4-turbo':'gpt-4-turbo','gpt-3.5-turbo':'gpt-3.5-turbo','gpt-4o':'gpt-4o','gpt-4o-mini':'gpt-4o-mini','gpt-4o-mini-high':'gpt-4o-mini-high','gpt-4o-pro':'gpt-4o-pro','gpt-4o-mini-pro':'gpt-4o-mini-pro',
+    'o1':'o1','o1-mini':'o1-mini','o1-pro':'o1-pro','o3':'o3','o3-mini':'o3-mini','o3-pro':'o3-pro','o4-mini':'o4-mini','o4-mini-high':'o4-mini-high','gpt-oss-120b':'gpt-oss-120b','gpt-oss-20b':'gpt-oss-20b',
+    'gpt-4o-mini-vision':'gpt-4o-mini-vision','gpt-4o-vision':'gpt-4o-vision','gpt-4o-mini-reasoning':'gpt-4o-mini-reasoning','gpt-4o-reasoning':'gpt-4o-reasoning',
+    'gpt-image-1':'gpt-image-1','dall-e-3':'dall-e-3','gpt-4o-image-gen':'gpt-4o-image-gen','gpt-4o-mini-image-gen':'gpt-4o-mini-image-gen','gpt-4o-image-gen-pro':'gpt-4o-image-gen-pro',
+    'tts-1':'tts-1','tts-1-hd':'tts-1-hd','gpt-4o-mini-tts':'gpt-4o-mini-tts','gpt-4o-tts':'gpt-4o-tts','gpt-4o-mini-transcribe':'gpt-4o-mini-transcribe','gpt-4o-transcribe':'gpt-4o-transcribe',
+    'gpt-4o-mini-audio':'gpt-4o-mini-audio','gpt-4o-audio':'gpt-4o-audio','gpt-4o-mini-speech':'gpt-4o-mini-speech','gpt-4o-speech':'gpt-4o-speech',
+    'sora-2':'sora-2'
+};
+
+document.getElementById('mode-select').addEventListener('change', function() {
+    document.getElementById('mode-description').textContent = modeDescriptions[this.value];
+});
+
+document.getElementById('user-input').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+
+function getModelType(model){
+    if(model.includes('image') || model.includes('dall-e')) return 'image';
+    if(model.includes('tts') || model.includes('speech')) return 'tts';
+    if(model.includes('sora')) return 'video';
+    return 'chat';
+}
+
+function addMessage(role, content, model, mode, mediaUrl=null){
+    const chatContainer=document.getElementById('chat-container');
+    const messageDiv=document.createElement('div');
+    messageDiv.className=`message ${role}`;
+    const avatar=document.createElement('div');
+    avatar.className='message-avatar';
+    avatar.textContent=role==='user'?'U':'AI';
+    const messageContent=document.createElement('div');
+    messageContent.className='message-content';
+    if(role==='assistant'){
+        const badge=document.createElement('div');
+        badge.className='model-badge';
+        badge.textContent=`${model} - ${mode}`;
+        messageContent.appendChild(badge);
+    }
+    const text=document.createElement('div');
+    text.textContent=content;
+    messageContent.appendChild(text);
+
+    if(mediaUrl){
+        const mediaDiv=document.createElement('div');
+        mediaDiv.className='media-output';
+        if(mediaUrl.endsWith('.mp3') || mediaUrl.endsWith('.wav')){
+            const audio=document.createElement('audio');
+            audio.controls=true;
+            audio.src=mediaUrl;
+            mediaDiv.appendChild(audio);
+        } else {
+            const img=document.createElement('img');
+            img.src=mediaUrl;
+            mediaDiv.appendChild(img);
+        }
+        messageContent.appendChild(mediaDiv);
     }
 
-    document.getElementById('fetchModels').onclick = async () => {
-      const key = document.getElementById('apiKey').value.trim();
-      if (!key) { alert("Paste API key first"); return; }
-      try {
-        const modelsData = await requestJson("https://api.openai.com/v1/models", {
-          headers: { "Authorization": "Bearer " + key }
-        });
-        const select = document.getElementById("modelsSelect");
-        select.innerHTML = "";
-        (modelsData.data || []).forEach(m => {
-          const opt = document.createElement("option");
-          opt.value = m.id;
-          opt.textContent = m.id;
-          select.appendChild(opt);
-        });
-        if (select.options.length === 0) {
-          select.innerHTML = "<option>(no models returned)</option>";
-        }
-      } catch (e) {
-        alert("Error fetching models:\\n" + e.message);
-      }
-    };
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(messageContent);
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop=chatContainer.scrollHeight;
+}
 
-    document.getElementById('sendPrompt').onclick = async () => {
-      const key = document.getElementById('apiKey').value.trim();
-      const model = document.getElementById('modelsSelect').value;
-      const prompt = document.getElementById('prompt').value;
-      if (!key || !model) { alert("Need API key and model"); return; }
-      document.getElementById('output').textContent = "Calling API...";
-      try {
-        const payload = { model: model, input: prompt };
-        const res = await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + key,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error(res.status + " " + t);
-        }
-        const data = await res.json();
-        let out = data.output_text || JSON.stringify(data, null, 2);
-        if (data.output && data.output.length && data.output[0].content) {
-          try {
-            const parts = [];
-            for (const c of (Array.isArray(data.output[0].content) ? data.output[0].content : [data.output[0].content])) {
-              if (c.type === "output_text") parts.push(c.text || c.value || "");
-              else if (typeof c === "string") parts.push(c);
+async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const apiKey = document.getElementById('api-key').value.trim();
+    if (!apiKey) { alert('Please enter your API key'); return; }
+    const userText = input.value.trim();
+    if (!userText) return;
+    input.value = '';
+    const modelSelect = document.getElementById('model-select').value;
+    const modeSelect = document.getElementById('mode-select').value;
+    const realModel = modelMappings[modelSelect] || modelSelect;
+    addMessage('user', userText, modelSelect, modeSelect);
+
+    const modelType = getModelType(realModel);
+
+    try {
+        if (modelType === 'chat') {
+            let messages = [...conversationHistory, { role: 'user', content: userText }];
+            if (modeSelect === 'deepthink') {
+                messages.unshift({ role: 'system', content: 'Provide detailed step-by-step reasoning for every query.' });
+            } else if (modeSelect === 'deep-research') {
+                messages.unshift({ role: 'system', content: 'Answer with multi-perspective insights and in-depth analysis.' });
             }
-            if (parts.length) out = parts.join("\\n");
-          } catch (e) {}
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: realModel, messages: messages, temperature:0.7 })
+            });
+            const data = await response.json();
+            const reply = data.choices?.[0]?.message?.content || 'No response';
+            conversationHistory.push({ role: 'user', content: userText });
+            conversationHistory.push({ role: 'assistant', content: reply });
+            addMessage('assistant', reply, modelSelect, modeSelect);
+        } else if (modelType === 'image') {
+            const response = await fetch(IMAGE_API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: realModel, prompt: userText, size: "1024x1024" })
+            });
+            const data = await response.json();
+            const imageUrl = data.data?.[0]?.url || null;
+            if (imageUrl) addMessage('assistant', 'Here is your generated image:', modelSelect, modeSelect, imageUrl);
+            else addMessage('assistant', 'Image generation failed.', modelSelect, modeSelect);
+        } else if (modelType === 'tts') {
+            const response = await fetch(TTS_API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: realModel, voice: "alloy", input: userText })
+            });
+            const data = await response.json();
+            const audioUrl = data.url || null;
+            if (audioUrl) addMessage('assistant', 'Here is your audio:', modelSelect, modeSelect, audioUrl);
+            else addMessage('assistant', 'Audio generation failed.', modelSelect, modeSelect);
+        } else if (modelType === 'video') {
+            addMessage('assistant', 'Video generation is not implemented yet.', modelSelect, modeSelect);
         }
-        document.getElementById('output').textContent = out;
-      } catch (e) {
-        document.getElementById('output').textContent = "Error:\\n" + e.message;
-      }
-    };
-  </script>
+    } catch (err) {
+        console.error(err);
+        addMessage('assistant', 'Error: ' + err.message, modelSelect, modeSelect);
+    }
+}
+</script>
 </body>
 </html>
