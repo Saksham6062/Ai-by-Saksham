@@ -16,309 +16,90 @@
             --shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--white);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--white); color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
         header {
-            padding: 15px 0;
-            border-bottom: 1px solid var(--medium-gray);
-            background-color: var(--white);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 15px 0; border-bottom: 1px solid var(--medium-gray);
+            background-color: var(--white); position: sticky; top: 0; z-index: 100;
         }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo h1 {
-            font-size: 22px;
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-        
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo h1 { font-size: 22px; font-weight: 500; color: var(--primary-color); }
         .logo-icon {
-            width: 32px;
-            height: 32px;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
+            width: 32px; height: 32px; background-color: var(--primary-color);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold;
         }
-        
-        .api-key-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
+        .api-key-section { display: flex; align-items: center; gap: 10px; }
         .api-key-input {
-            padding: 8px 12px;
-            border: 1px solid var(--medium-gray);
-            border-radius: 4px;
-            width: 250px;
-            font-size: 14px;
+            padding: 8px 12px; border: 1px solid var(--medium-gray);
+            border-radius: 4px; width: 250px; font-size: 14px;
         }
-        
         .api-key-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+            background-color: var(--primary-color); color: white; border: none;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;
         }
-        
-        .api-key-btn:hover {
-            background-color: var(--secondary-color);
+        .api-key-btn:hover { background-color: var(--secondary-color); }
+
+        main { padding: 30px 0; min-height: calc(100vh - 140px); }
+
+        .model-selector, .mode-selector { margin-bottom: 30px; }
+        .model-selector h2, .mode-selector h2 { font-size: 18px; margin-bottom: 15px; font-weight: 500; }
+        .model-buttons, .mode-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .model-btn, .mode-btn {
+            padding: 10px 20px; background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray); border-radius: 20px;
+            cursor: pointer; font-size: 14px; transition: all 0.2s;
         }
-        
-        main {
-            padding: 30px 0;
-            min-height: calc(100vh - 140px);
+        .model-btn.active, .mode-btn.active {
+            background-color: var(--primary-color); color: white; border-color: var(--primary-color);
         }
-        
-        .model-selector {
-            margin-bottom: 30px;
-        }
-        
-        .model-selector h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        
-        .model-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .model-btn {
-            padding: 10px 20px;
-            background-color: var(--light-gray);
-            border: 1px solid var(--medium-gray);
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .model-btn.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .mode-selector {
-            margin-bottom: 30px;
-        }
-        
-        .mode-selector h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        
-        .mode-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .mode-btn {
-            padding: 10px 20px;
-            background-color: var(--light-gray);
-            border: 1px solid var(--medium-gray);
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .mode-btn.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .chat-input-container {
-            position: relative;
-        }
-        
+
+        .chat-container { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+        .chat-input-container { position: relative; }
         .chat-input {
-            width: 100%;
-            padding: 15px 50px 15px 20px;
-            border: 1px solid var(--medium-gray);
-            border-radius: 24px;
-            font-size: 16px;
-            resize: none;
-            min-height: 50px;
-            max-height: 150px;
-            box-shadow: var(--shadow);
+            width: 100%; padding: 15px 50px 15px 20px;
+            border: 1px solid var(--medium-gray); border-radius: 24px;
+            font-size: 16px; resize: none; min-height: 50px; max-height: 150px; box-shadow: var(--shadow);
         }
-        
         .send-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--primary-color);
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: var(--primary-color);
         }
-        
-        .chat-history {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
+
+        .chat-history { display: flex; flex-direction: column; gap: 20px; }
         .message {
-            padding: 15px 20px;
-            border-radius: 12px;
-            max-width: 80%;
+            padding: 15px 20px; border-radius: 12px; max-width: 80%;
         }
-        
-        .user-message {
-            align-self: flex-end;
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .ai-message {
-            align-self: flex-start;
-            background-color: var(--light-gray);
-            border: 1px solid var(--medium-gray);
-        }
-        
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .model-indicator {
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-        
-        .mode-indicator {
-            color: var(--dark-gray);
-        }
-        
-        .message-content {
-            line-height: 1.5;
-        }
-        
+        .user-message { align-self: flex-end; background-color: var(--primary-color); color: white; }
+        .ai-message { align-self: flex-start; background-color: var(--light-gray); border: 1px solid var(--medium-gray); }
+
+        .message-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+        .model-indicator { font-weight: 500; color: var(--primary-color); }
+        .mode-indicator { color: var(--dark-gray); }
+        .message-content { line-height: 1.5; }
+
         .loading {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px 20px;
-            background-color: var(--light-gray);
-            border-radius: 12px;
-            align-self: flex-start;
-            max-width: 80%;
+            display: flex; align-items: center; gap: 10px; padding: 15px 20px;
+            background-color: var(--light-gray); border-radius: 12px; align-self: flex-start; max-width: 80%;
         }
-        
-        .loading-dots {
-            display: flex;
-            gap: 4px;
-        }
-        
+        .loading-dots { display: flex; gap: 4px; }
         .loading-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--dark-gray);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite ease-in-out;
+            width: 8px; height: 8px; background-color: var(--dark-gray);
+            border-radius: 50%; animation: pulse 1.5s infinite ease-in-out;
         }
-        
-        .loading-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .loading-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-        }
-        
-        footer {
-            padding: 20px 0;
-            border-top: 1px solid var(--medium-gray);
-            text-align: center;
-            color: var(--dark-gray);
-            font-size: 14px;
-        }
-        
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+
+        footer { padding: 20px 0; border-top: 1px solid var(--medium-gray); text-align: center; color: var(--dark-gray); font-size: 14px; }
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .api-key-section {
-                width: 100%;
-            }
-            
-            .api-key-input {
-                flex: 1;
-            }
-            
-            .message {
-                max-width: 90%;
-            }
+            .header-content { flex-direction: column; gap: 15px; align-items: flex-start; }
+            .api-key-section { width: 100%; }
+            .api-key-input { flex: 1; }
+            .message { max-width: 90%; }
         }
     </style>
 </head>
@@ -347,6 +128,7 @@
                     <button class="model-btn">V2</button>
                     <button class="model-btn">V3</button>
                     <button class="model-btn">V3.1</button>
+                    <button class="model-btn">V3.2-exp</button>
                     <button class="model-btn">DeepSeek Coder</button>
                     <button class="model-btn">Janus Pro</button>
                 </div>
@@ -362,34 +144,7 @@
             </div>
             
             <div class="chat-container">
-                <div class="chat-history">
-                    <div class="message ai-message">
-                        <div class="message-header">
-                            <span class="model-indicator">DeepSeek R1</span>
-                            <span class="mode-indicator">• DeepThink</span>
-                        </div>
-                        <div class="message-content">
-                            Hello! I'm DeepSeek AI. How can I assist you today? You can switch between different models and modes to get the most suitable response for your needs.
-                        </div>
-                    </div>
-                    
-                    <div class="message user-message">
-                        <div class="message-content">
-                            Can you explain the difference between the DeepThink and Research modes?
-                        </div>
-                    </div>
-                    
-                    <div class="message ai-message">
-                        <div class="message-header">
-                            <span class="model-indicator">DeepSeek R1</span>
-                            <span class="mode-indicator">• DeepThink</span>
-                        </div>
-                        <div class="message-content">
-                            Certainly! DeepThink mode is designed for analytical reasoning and complex problem-solving, focusing on step-by-step logical analysis. Research mode is optimized for gathering and synthesizing information from various sources, providing comprehensive overviews with citations and references when available.
-                        </div>
-                    </div>
-                </div>
-                
+                <div class="chat-history"></div>
                 <div class="chat-input-container">
                     <textarea class="chat-input" placeholder="Ask me anything..."></textarea>
                     <button class="send-btn">
@@ -405,145 +160,144 @@
     
     <footer>
         <div class="container">
-            <p>DeepSeek AI Platform &copy; 2023 | All models require a valid API key</p>
+            <p>DeepSeek AI Platform &copy; 2025 | All models require a valid API key</p>
         </div>
     </footer>
 
-   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let savedApiKey = "";
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let savedApiKey = "";
 
-        // UI label → DeepSeek API model mapping
-        const modelMap = {
-            "R1": "deepseek-reasoner",
-            "V2": "deepseek-v2",
-            "V3": "deepseek-v3",
-            "V3.1": "deepseek-v3.1",
-            "V3.2-exp": "deepseek-v3.2-exp",
-            "DeepSeek Coder": "deepseek-coder",
-            "Janus Pro": "janus-pro"
-        };
+            // UI → API Model mapping
+            const modelMap = {
+                "R1": "deepseek-reasoner",
+                "V2": "deepseek-v2",
+                "V3": "deepseek-v3",
+                "V3.1": "deepseek-v3.1",
+                "V3.2-exp": "deepseek-v3.2-exp",
+                "DeepSeek Coder": "deepseek-coder",
+                "Janus Pro": "janus-pro"
+            };
 
-        // Model selection
-        const modelButtons = document.querySelectorAll('.model-btn');
-        modelButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                modelButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Mode selection
-        const modeButtons = document.querySelectorAll('.mode-btn');
-        modeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                modeButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // API key handling
-        const apiKeyBtn = document.querySelector('.api-key-btn');
-        const apiKeyInput = document.querySelector('.api-key-input');
-
-        apiKeyBtn.addEventListener('click', function() {
-            const apiKey = apiKeyInput.value.trim();
-            if (apiKey) {
-                savedApiKey = apiKey;
-                alert('API key saved successfully!');
-            } else {
-                alert('Please enter a valid API key');
-            }
-        });
-
-        // Chat functionality
-        const chatInput = document.querySelector('.chat-input');
-        const sendBtn = document.querySelector('.send-btn');
-        const chatHistory = document.querySelector('.chat-history');
-
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
-            if (!savedApiKey) {
-                alert("Please enter your API key first!");
-                return;
-            }
-
-            // Add user message
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'message user-message';
-            userMessageDiv.innerHTML = `<div class="message-content">${message}</div>`;
-            chatHistory.appendChild(userMessageDiv);
-            chatInput.value = '';
-
-            // Show loading
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading';
-            loadingDiv.innerHTML = `
-                <div>Thinking</div>
-                <div class="loading-dots">
-                    <div class="loading-dot"></div>
-                    <div class="loading-dot"></div>
-                    <div class="loading-dot"></div>
-                </div>`;
-            chatHistory.appendChild(loadingDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            try {
-                // Get selected model + mode
-                const currentModelUI = document.querySelector('.model-btn.active').textContent.trim();
-                const currentMode = document.querySelector('.mode-btn.active').textContent.trim();
-                const modelId = modelMap[currentModelUI] || "deepseek-chat"; // fallback
-
-                // Call DeepSeek API
-                const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${savedApiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: modelId,
-                        messages: [{ role: "user", content: message }]
-                    })
+            // Model selector
+            const modelButtons = document.querySelectorAll('.model-btn');
+            modelButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    modelButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
                 });
+            });
 
-                const data = await response.json();
-                loadingDiv.remove();
+            // Mode selector
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            modeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    modeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
 
-                // Display AI response
-                const aiMessageDiv = document.createElement('div');
-                aiMessageDiv.className = 'message ai-message';
-                aiMessageDiv.innerHTML = `
-                    <div class="message-header">
-                        <span class="model-indicator">DeepSeek ${currentModelUI}</span>
-                        <span class="mode-indicator">• ${currentMode}</span>
-                    </div>
-                    <div class="message-content">
-                        ${data.choices && data.choices.length > 0 
-                            ? data.choices[0].message.content 
-                            : "⚠️ No response from API."}
+            // API key save
+            const apiKeyBtn = document.querySelector('.api-key-btn');
+            const apiKeyInput = document.querySelector('.api-key-input');
+            apiKeyBtn.addEventListener('click', function() {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey) {
+                    savedApiKey = apiKey;
+                    alert('API key saved successfully!');
+                } else {
+                    alert('Please enter a valid API key');
+                }
+            });
+
+            // Chat logic
+            const chatInput = document.querySelector('.chat-input');
+            const sendBtn = document.querySelector('.send-btn');
+            const chatHistory = document.querySelector('.chat-history');
+
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                if (!savedApiKey) {
+                    alert("Please enter your API key first!");
+                    return;
+                }
+
+                // User message
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user-message';
+                userMessageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+                chatHistory.appendChild(userMessageDiv);
+                chatInput.value = '';
+
+                // Loading
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading';
+                loadingDiv.innerHTML = `
+                    <div>Thinking</div>
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
                     </div>`;
-                chatHistory.appendChild(aiMessageDiv);
+                chatHistory.appendChild(loadingDiv);
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            } catch (error) {
-                loadingDiv.remove();
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'message ai-message';
-                errorDiv.innerHTML = `<div class="message-content">❌ Error: ${error.message}</div>`;
-                chatHistory.appendChild(errorDiv);
-            }
-        }
+                try {
+                    // Current model + mode
+                    const currentModelUI = document.querySelector('.model-btn.active').textContent.trim();
+                    const currentMode = document.querySelector('.mode-btn.active').textContent.trim();
+                    const modelId = modelMap[currentModelUI] || "deepseek-chat";
 
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+                    // DeepSeek API call
+                    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${savedApiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: modelId,
+                            messages: [{ role: "user", content: message }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    loadingDiv.remove();
+
+                    // AI message
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.className = 'message ai-message';
+                    aiMessageDiv.innerHTML = `
+                        <div class="message-header">
+                            <span class="model-indicator">DeepSeek ${currentModelUI}</span>
+                            <span class="mode-indicator">• ${currentMode}</span>
+                        </div>
+                        <div class="message-content">
+                            ${data.choices && data.choices.length > 0 
+                                ? data.choices[0].message.content 
+                                : "⚠️ No response from API."}
+                        </div>`;
+                    chatHistory.appendChild(aiMessageDiv);
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                } catch (error) {
+                    loadingDiv.remove();
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'message ai-message';
+                    errorDiv.innerHTML = `<div class="message-content">❌ Error: ${error.message}</div>`;
+                    chatHistory.appendChild(errorDiv);
+                }
             }
+
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
         });
-    });
-</script>
+    </script>
 </body>
 </html>
