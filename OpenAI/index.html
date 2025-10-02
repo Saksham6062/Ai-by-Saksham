@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAI Models Explorer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    textarea, select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      padding: 10px 16px;
+      margin-top: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+    }
+    button:hover { background: #1e40af; }
+    pre {
+      background: #111827;
+      color: #f3f4f6;
+      padding: 14px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    label { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>OpenAI Models Explorer</h1>
+  <p>Enter your <b>OpenAI API Key</b>, fetch available models, then try prompts.</p>
+
+  <label>API Key (sk-...)</label>
+  <input id="apiKey" type="text" placeholder="Paste your API key here">
+
+  <button id="fetchModels">Fetch Models</button>
+  <select id="modelsSelect"></select>
+
+  <label>Prompt</label>
+  <textarea id="prompt">Say hello in 3 creative ways.</textarea>
+  <button id="sendPrompt">Send Prompt</button>
+
+  <h3>Response:</h3>
+  <pre id="output">...</pre>
+
+  <script>
+    async function requestJson(url, opts) {
+      const res = await fetch(url, opts);
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(res.status + " " + res.statusText + "\\n" + t);
+      }
+      return await res.json();
+    }
+
+    document.getElementById('fetchModels').onclick = async () => {
+      const key = document.getElementById('apiKey').value.trim();
+      if (!key) { alert("Paste API key first"); return; }
+      try {
+        const modelsData = await requestJson("https://api.openai.com/v1/models", {
+          headers: { "Authorization": "Bearer " + key }
+        });
+        const select = document.getElementById("modelsSelect");
+        select.innerHTML = "";
+        (modelsData.data || []).forEach(m => {
+          const opt = document.createElement("option");
+          opt.value = m.id;
+          opt.textContent = m.id;
+          select.appendChild(opt);
+        });
+        if (select.options.length === 0) {
+          select.innerHTML = "<option>(no models returned)</option>";
+        }
+      } catch (e) {
+        alert("Error fetching models:\\n" + e.message);
+      }
+    };
+
+    document.getElementById('sendPrompt').onclick = async () => {
+      const key = document.getElementById('apiKey').value.trim();
+      const model = document.getElementById('modelsSelect').value;
+      const prompt = document.getElementById('prompt').value;
+      if (!key || !model) { alert("Need API key and model"); return; }
+      document.getElementById('output').textContent = "Calling API...";
+      try {
+        const payload = { model: model, input: prompt };
+        const res = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(res.status + " " + t);
+        }
+        const data = await res.json();
+        let out = data.output_text || JSON.stringify(data, null, 2);
+        if (data.output && data.output.length && data.output[0].content) {
+          try {
+            const parts = [];
+            for (const c of (Array.isArray(data.output[0].content) ? data.output[0].content : [data.output[0].content])) {
+              if (c.type === "output_text") parts.push(c.text || c.value || "");
+              else if (typeof c === "string") parts.push(c);
+            }
+            if (parts.length) out = parts.join("\\n");
+          } catch (e) {}
+        }
+        document.getElementById('output').textContent = out;
+      } catch (e) {
+        document.getElementById('output').textContent = "Error:\\n" + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
