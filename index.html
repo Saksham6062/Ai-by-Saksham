@@ -8,7 +8,14 @@
     body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f6f9; color:#333; }
     header { background:#2c3e50; color:white; text-align:center; padding:20px; }
     .container { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; padding:20px; }
-    .card { background:white; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); padding:20px; text-align:center; transition:transform 0.2s; }
+    .card { 
+      background:white; border-radius:8px; 
+      box-shadow:0 2px 5px rgba(0,0,0,0.1); 
+      padding:20px; text-align:center; 
+      transition:transform 0.2s; 
+      text-decoration:none; color:inherit; 
+      display:block; 
+    }
     .card:hover { transform:translateY(-5px); }
     .card h2 { margin:10px 0; color:#2c3e50; }
     .card p { font-size:14px; color:#666; }
@@ -16,31 +23,64 @@
 </head>
 <body>
   <header>
-    <h1>🚀Saksham's AI Models</h1>
-    <p>Showcasing my own AI models</p>
+    <h1>🚀 Saksham's AI Models</h1>
+    <p>Showcasing my own and global AI models</p>
   </header>
 
   <main class="container">
-    <div class="card">
-  <a href="GoogleAi/index.html">Google AI</a>
-    <h2>Google AI</h2>
-    <p>Click to explore Google AI models</p>
-  </a>
-</div>
+    <!-- Saksham Specialised Model -->
+    <a href="Saksham/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>🌟 Saksham Specialised Model</h2>
+      <p>Click to explore Saksham’s own AI model</p>
+    </a>
 
-<div class="card">
-  <a href="Claude/index.html">Claude</a>
-    <h2>Claude</h2>
-    <p>Click to explore Claude AI models</p>
-  </a>
-</div>
+    <!-- Google AI -->
+    <a href="GoogleAi/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>Google AI</h2>
+      <p>Click to explore Google AI models</p>
+    </a>
 
-<div class="card">
-  <a href="DeepSeek/index.html">DeepSeek</a>
-    <h2>DeepSeek</h2>
-    <p>Click to explore DeepSeek models</p>
-  </a>
-</div>
+    <!-- Claude -->
+    <a href="Claude/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>Claude</h2>
+      <p>Click to explore Claude AI models</p>
+    </a>
+
+    <!-- DeepSeek -->
+    <a href="DeepSeek/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>DeepSeek</h2>
+      <p>Click to explore DeepSeek models</p>
+    </a>
+
+    <!-- OpenAI -->
+    <a href="OpenAI/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>OpenAI</h2>
+      <p>Click to explore OpenAI & GPT models</p>
+    </a>
+
+    <!-- Microsoft -->
+    <a href="Microsoft/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>Microsoft</h2>
+      <p>Click to explore Microsoft AI models</p>
+    </a>
+
+    <!-- Grok -->
+    <a href="Grok/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>Grok</h2>
+      <p>Click to explore Grok AI</p>
+    </a>
+
+    <!-- LLaMA (Meta) -->
+    <a href="LLaMA/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>LLaMA (Meta)</h2>
+      <p>Click to explore Meta’s LLaMA models</p>
+    </a>
+
+    <!-- Qwen -->
+    <a href="Qwen/index.html" class="card" target="_blank" rel="noopener noreferrer">
+      <h2>Qwen</h2>
+      <p>Click to explore Qwen models</p>
+    </a>
   </main>
 </body>
 </html>
