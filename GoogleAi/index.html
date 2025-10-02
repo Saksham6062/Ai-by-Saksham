@@ -131,86 +131,74 @@
       document.getElementById(btn.dataset.mode).classList.add('active');
     });
   });
+async function sendRequest(promptId="userPrompt") {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const modelValue = document.getElementById('modelSelect').value;
+  const prompt = document.getElementById(promptId).value.trim();
+  const responseBox = document.getElementById('response');
+  const exportBtns = document.getElementById('exportBtns');
 
-  async function sendRequest(promptId="userPrompt") {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const modelValue = document.getElementById('modelSelect').value;
-    const prompt = document.getElementById(promptId).value.trim();
-    const responseBox = document.getElementById('response');
-    const exportBtns = document.getElementById('exportBtns');
+  if (!apiKey || !prompt) {
+    responseBox.textContent = 'Error: Please enter your API key and a prompt.';
+    responseBox.classList.add('text-red-500');
+    return;
+  }
+  responseBox.classList.remove('text-red-500');
+  responseBox.innerHTML = '<div class="loader"></div>';
+  exportBtns.classList.add("hidden");
 
-    if (!apiKey || !prompt) {
-      responseBox.textContent = 'Error: Please enter your API key and a prompt.';
-      responseBox.classList.add('text-red-500');
-      return;
+  const textModels = [
+    "gemini-2.5-pro","gemini-2.5-flash","gemini-2.5-flash-lite",
+    "gemini-2.0-pro","gemini-2.0-flash","gemini-2.0-flash-lite",
+    "gemma-open-weight","gemma-3n","gemma-3","gemma-2","codegemma",
+    "alphafold","palm","palm2"
+  ];
+
+  const imageModels = [
+    "imagen-4","imagen-gen","imagen-fast","imagen-edit","imagen-caption","nano-banana"
+  ];
+
+  try {
+    let apiUrl = "";
+    let payload = {};
+
+    if (textModels.includes(modelValue)) {
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelValue}:generateContent?key=${apiKey}`;
+      payload = { contents: [{ parts: [{ text: prompt }] }] };
+    } else if (imageModels.includes(modelValue)) {
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelValue}:predict?key=${apiKey}`;
+      payload = { instances: [{ prompt: prompt }], parameters: { sampleCount: 1 } };
     }
-    responseBox.classList.remove('text-red-500');
-    responseBox.innerHTML = '<div class="loader"></div>';
-    exportBtns.classList.add("hidden");
 
-    const textModels = ["gemini-2.5-pro","gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-pro","gemini-2.0-flash","gemini-2.0-flash-lite","gemma-open-weight","gemma-3n","gemma-3","gemma-2","codegemma","alphafold","palm","palm2"];
-    const imageModels = ["imagen-4","imagen-gen","imagen-fast","imagen-edit","imagen-caption","nano-banana"];
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
 
-    try {
-      let apiUrl = "";
-      let payload = {};
-
-      if (textModels.includes(modelValue)) {
-        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelValue}:generateContent?key=${apiKey}`;
-        payload = { contents: [{ parts: [{ text: prompt }] }] };
-      } else if (imageModels.includes(modelValue)) {
-        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelValue}:predict?key=${apiKey}`;
-        payload = { instances: [{ prompt: prompt }], parameters: { sampleCount: 1 } };
+    if (textModels.includes(modelValue)) {
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      responseBox.textContent = text || "No response.";
+      if(promptId === "userPrompt"){ // Only show export for Canva
+        exportBtns.classList.remove("hidden");
       }
-
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (textModels.includes(modelValue)) {
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        responseBox.textContent = text || "No response.";
-        if(promptId === "userPrompt"){ // Only show export for Canva
-          exportBtns.classList.remove("hidden");
-        }
+    } else if (imageModels.includes(modelValue)) {
+      // Use URL instead of base64
+      const imageUrl = data.predictions?.[0]?.url;
+      if (imageUrl) {
+        responseBox.innerHTML = `<img src="${imageUrl}" class="rounded max-w-full h-auto mx-auto"/>`;
       } else {
-        const base64Data = data.predictions?.[0]?.bytesBase64Encoded;
-        if (base64Data) {
-          responseBox.innerHTML = `<img src="data:image/png;base64,${base64Data}" class="rounded max-w-full h-auto mx-auto"/>`;
-        } else responseBox.textContent = "No image response.";
+        responseBox.textContent = "No image response.";
       }
-
-    } catch(err) {
-      responseBox.textContent = "Error: " + err.message;
-      responseBox.classList.add('text-red-500');
-    }
-  }
-
-  // Export Functions
-  function exportFile(type){
-    const content = document.getElementById("response").innerText;
-    let blob, filename;
-
-    if(type === "docx"){
-      blob = new Blob([content], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-      filename = "document.docx";
-    } else if(type === "pptx"){
-      blob = new Blob([content], {type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"});
-      filename = "presentation.pptx";
-    } else if(type === "html"){
-      const htmlWrap = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Generated Web</title></head><body>${content.replace(/\n/g,"<br>")}</body></html>`;
-      blob = new Blob([htmlWrap], {type: "text/html"});
-      filename = "webpage.html";
     }
 
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
+  } catch(err) {
+    responseBox.textContent = "Error: " + err.message;
+    responseBox.classList.add('text-red-500');
   }
+}
+ 
 </script>
 </body>
 </html>
