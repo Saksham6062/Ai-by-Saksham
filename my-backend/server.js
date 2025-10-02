@@ -1,34 +1,52 @@
-const express = require("express");
-const fetch = require("node-fetch");
-const app = express();
+const express = require('express');
+const fetch = require('node-fetch');
+const cors = require('cors');
+require('dotenv').config();
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
 app.use(express.json());
 
-const API_KEY = process.env.API_KEY;
+// Text models
+const textModels = ["gemma-open-weight","gemma-3n","gemma-3","gemma-2","codegemma"];
+// Image models
+const imageModels = ["imagen-4","imagen-gen","imagen-fast","imagen-edit","imagen-caption","nano-banana"];
 
-app.post("/api/generate", async (req, res) => {
-  const prompt = req.body.prompt;
+// Proxy endpoint
+app.post('/api/generate', async (req, res) => {
+  const { model, prompt } = req.body;
+  const apiKey = process.env.GOOGLE_API_KEY;
+
+  if(!model || !prompt) return res.status(400).json({ error: "Missing model or prompt" });
+
+  let apiUrl = "";
+  let payload = {};
+
   try {
-    const response = await fetch("https://api.openai.com/v1/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "text-davinci-003",
-        prompt: prompt,
-        max_tokens: 100,
-      }),
+    if(textModels.includes(model)){
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      payload = { contents: [{ parts: [{ text: prompt }] }] };
+    } else if(imageModels.includes(model)){
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`;
+      payload = { instances: [{ prompt }], parameters: { sampleCount: 1 } };
+    } else {
+      return res.status(400).json({ error: "Model not supported via backend proxy" });
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
     res.json(data);
-  } catch (err) {
+
+  } catch(err){
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server is running!");
-});
+app.listen(PORT, () => console.log(`Backend running at http://localhost:${PORT}`));
