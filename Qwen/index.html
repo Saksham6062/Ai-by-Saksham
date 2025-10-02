@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen AI Models Interface</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        label { display: block; margin-top: 10px; }
+        select, textarea, input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { padding: 10px 20px; margin-top: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #response { margin-top: 20px; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }
+        #api-key { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Qwen AI Models Interface</h1>
+
+    <label for="api-key">API Key (Required):</label>
+    <input type="password" id="api-key" placeholder="Enter your Qwen API key">
+
+    <label for="model">Select Model:</label>
+    <select id="model">
+        <option value="qwen3-8b">Qwen3 (8B)</option>
+        <option value="qwen3-32b">Qwen3 (32B)</option>
+        <option value="qwen3-max">Qwen3-Max</option>
+        <option value="qwen2-5b">Qwen2.5 (5B)</option>
+        <option value="qwen2-32b">Qwen2.5 (32B)</option>
+        <option value="qwen2-omni">Qwen2.5-Omni</option>
+    </select>
+
+    <label for="mode">Select Mode:</label>
+    <select id="mode">
+        <option value="standard">Standard</option>
+        <option value="canva">Canva (Creative Design)</option>
+        <option value="deepthink">DeepThink (Reasoning)</option>
+        <option value="deepresearch">Deep Research (With Search)</option>
+    </select>
+
+    <label for="prompt">Your Prompt:</label>
+    <textarea id="prompt" rows="4" placeholder="Enter your question or prompt..."></textarea>
+
+    <button onclick="generateResponse()">Generate Response</button>
+
+    <div id="response"></div>
+
+    <script>
+        async function generateResponse() {
+            const apiKey = document.getElementById('api-key').value;
+            const model = document.getElementById('model').value;
+            const mode = document.getElementById('mode').value;
+            const prompt = document.getElementById('prompt').value;
+
+            if (!apiKey) {
+                alert('Please enter your API key.');
+                return;
+            }
+            if (!prompt) {
+                alert('Please enter a prompt.');
+                return;
+            }
+
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = 'Generating...';
+
+            let systemPrompt = '';
+            let searchParams = null;
+
+            switch (mode) {
+                case 'canva':
+                    systemPrompt = 'You are a creative design assistant like Canva. Provide ideas, descriptions, or step-by-step guides for visual designs, graphics, and layouts.';
+                    break;
+                case 'deepthink':
+                    systemPrompt = 'You are a deep thinking AI. Analyze the query thoroughly, break it down step by step, and provide insightful, reasoned responses.';
+                    break;
+                case 'deepresearch':
+                    systemPrompt = 'You are a research assistant. Use available tools to gather and synthesize information for a comprehensive answer.';
+                    searchParams = { mode: 'on', return_citations: true };
+                    break;
+                default:
+                    systemPrompt = 'You are Qwen, a helpful and maximally truthful AI built by Alibaba.';
+            }
+
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: prompt }
+            ];
+
+            const payload = {
+                model: model,
+                messages: messages,
+                temperature: 0.7,
+                max_tokens: 1000
+            };
+
+            if (searchParams) {
+                payload.search_parameters = searchParams;
+            }
+
+            try {
+                const res = await fetch('https://api.qwen.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status} ${res.statusText}`);
+                }
+
+                const data = await res.json();
+                const answer = data.choices[0].message.content;
+                responseDiv.innerHTML = answer;
+            } catch (error) {
+                responseDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
