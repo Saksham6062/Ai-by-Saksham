@@ -1,214 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Google AI Models Explorer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Model Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-radius: 50%;
-      border-top: 4px solid #3498db;
-      width: 40px; height: 40px;
-      animation: spin 1s linear infinite;
-      margin: auto;
+    :root {
+      --bg-color: #1a1a2e;
+      --card-color: #16213e;
+      --primary-text: #e0e0e0;
+      --secondary-text: #a0a0c0;
+      --border-color: #0f3460;
+      --shadow-color: rgba(93, 93, 224, 0.2);
+
+      --gemini: #1abc9c;
+      --gemma: #e67e22;
+      --imagen: #9b59b6;
+      --nano: #e74c3c;
+      --robotics: #34495e;
+      --tts: #f1c40f;
+      --lyre: #3498db;
     }
-    @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    .mode-panel {display: none;}
-    .mode-panel.active {display: block;}
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, #a2facf, #64acff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--secondary-text);
+      margin-bottom: 50px;
+    }
+
+    .launcher-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .model-card {
+      background-color: var(--card-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: left;
+      color: var(--primary-text);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .model-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px var(--shadow-color);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .card-icon { font-size: 1.8rem; }
+
+    .card-title { font-size: 1.5rem; font-weight: 600; }
+
+    .model-card[data-model="gemini"] .card-icon { color: var(--gemini); }
+    .model-card[data-model="gemma"] .card-icon { color: var(--gemma); }
+    .model-card[data-model="imagen"] .card-icon { color: var(--imagen); }
+    .model-card[data-model="nano"] .card-icon { color: var(--nano); }
+    .model-card[data-model="robotics"] .card-icon { color: var(--robotics); }
+    .model-card[data-model="tts"] .card-icon { color: var(--tts); }
+    .model-card[data-model="lyre"] .card-icon { color: var(--lyre); }
+
+    .card-description {
+      color: var(--secondary-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .launch-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      color: var(--primary-text);
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+
+    .model-card:hover .launch-btn { background-color: rgba(255, 255, 255, 0.2); }
+
+    .external-icon {
+      font-size: 0.9rem;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal-content {
+      background: var(--card-color);
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      width: 90%; max-width: 500px;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content { transform: scale(1); }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.8rem; color: var(--gemini); }
+    .modal-close {
+      background: none; border: none; color: var(--secondary-text);
+      font-size: 2rem; cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--primary-text); }
+    .modal-body p { color: var(--secondary-text); line-height: 1.7; }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col items-center p-4 md:p-6">
+<body>
 
-<div class="w-full max-w-3xl bg-white rounded-lg shadow-md p-6">
-  <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Google AI Models Explorer</h1>
+  <div class="container">
+    <h1>AI Model Hub</h1>
+    <p class="subtitle">Your central launchpad for Google's powerful AI models.</p>
 
-  <!-- Mode Switch -->
-  <div class="flex justify-center gap-4 mb-6">
-    <button class="modeBtn px-4 py-2 rounded bg-blue-600 text-white" data-mode="canva">Canva</button>
-    <button class="modeBtn px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" data-mode="deepthink">DeepThink</button>
-    <button class="modeBtn px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" data-mode="deepresearch">DeepResearch</button>
-  </div>
+    <div class="launcher-grid">
 
-  <!-- API Key -->
-  <div class="mb-4">
-    <label for="apiKey" class="block font-medium mb-1 text-gray-700">Enter Your Google AI API Key:</label>
-    <input id="apiKey" type="password" placeholder="Enter your key here" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-  </div>
+      <!-- Gemini (Modal) -->
+      <div class="model-card" data-model="gemini" id="gemini-launcher">
+        <div class="card-header">
+            <span class="card-icon">✨</span>
+            <h2 class="card-title">Gemini</h2>
+        </div>
+        <p class="card-description">The most capable and general model series. Handle complex reasoning, multimodal tasks, and advanced coding.</p>
+        <span class="launch-btn">Explore Gemini</span>
+      </div>
 
-  <!-- Shared Model Selection -->
-  <div class="mb-4">
-    <label for="modelSelect" class="block font-medium mb-1 text-gray-700">Select AI Model:</label>
-    <select id="modelSelect" class="w-full p-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-      <optgroup label="Gemini 2.5">
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-      </optgroup>
-      <optgroup label="Gemini 2.0">
-        <option value="gemini-2.0-pro">Gemini 2.0 Pro</option>
-        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
-      </optgroup>
-      <optgroup label="Gemma">
-        <option value="gemma-open-weight">Gemma (Open-weight)</option>
-        <option value="gemma-3n">Gemma 3n</option>
-        <option value="gemma-3">Gemma 3 (27B)</option>
-        <option value="gemma-2">Gemma 2 (27B)</option>
-        <option value="codegemma">CodeGemma (7B)</option>
-      </optgroup>
-      <optgroup label="Imagen">
-        <option value="imagen">Imagen (Open in AI Studio)</option>
-      </optgroup>
-      <optgroup label="Other">
-        <option value="nano-banana">Nano Banana</option>
-        <option value="alphafold">AlphaFold</option>
-        <option value="palm">PaLM</option>
-        <option value="palm2">PaLM 2</option>
-      </optgroup>
-    </select>
-  </div>
+      <!-- Gemma -->
+      <a href="https://aistudio.google.com/prompts/135S4dE_PH4bLCLXQy-WBatS2xOGII4TR" target="_blank" class="model-card" data-model="gemma">
+        <div class="card-header">
+            <span class="card-icon">🧠</span>
+            <h2 class="card-title">Gemma <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">A family of lightweight, state-of-the-art open models built from the same research as Gemini.</p>
+        <span class="launch-btn">Launch Gemma</span>
+      </a>
 
-  <!-- Canva Panel -->
-  <div id="canva" class="mode-panel active">
-    <div class="mb-4">
-      <label for="userPrompt" class="block font-medium mb-1 text-gray-700">Describe document / presentation / website you want:</label>
-      <textarea id="userPrompt" rows="4" placeholder="E.g., Generate a 3-slide presentation about climate change..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"></textarea>
-    </div>
-    <button id="submitBtn" onclick="sendRequest()" class="bg-blue-600 text-white w-full px-4 py-2 rounded hover:bg-blue-700">Generate</button>
-  </div>
+      <!-- Imagen -->
+      <a href="https://ai.studio/apps/drive/1z2l3Hlmn7FfSgKiXjX-lp1E-M28CyLln" target="_blank" class="model-card" data-model="imagen">
+        <div class="card-header">
+            <span class="card-icon">🎨</span>
+            <h2 class="card-title">Imagen <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">Google's most advanced text-to-image model for creating photorealistic and artistic visuals.</p>
+        <span class="launch-btn">Launch Imagen</span>
+      </a>
 
-  <!-- DeepThink Panel -->
-  <div id="deepthink" class="mode-panel">
-    <div class="mb-4">
-      <label for="thinkPrompt" class="block font-medium mb-1 text-gray-700">Ask DeepThink:</label>
-      <textarea id="thinkPrompt" rows="3" placeholder="Enter your question for reasoning..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"></textarea>
-    </div>
-    <button onclick="sendRequest('thinkPrompt')" class="bg-blue-600 text-white w-full px-4 py-2 rounded hover:bg-blue-700">Ask</button>
-  </div>
+      <!-- Nano Banana -->
+      <a href="https://aistudio.google.com/prompts/new_chat?model=gemini-2.5-flash-image" target="_blank" class="model-card" data-model="nano">
+        <div class="card-header">
+            <span class="card-icon">⚡</span>
+            <h2 class="card-title">Nano Banana <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">The most efficient model designed for on-device tasks, balancing performance and speed.</p>
+        <span class="launch-btn">Launch Nano</span>
+      </a>
 
-  <!-- DeepResearch Panel -->
-  <div id="deepresearch" class="mode-panel">
-    <div class="mb-4">
-      <label for="researchPrompt" class="block font-medium mb-1 text-gray-700">Enter Research Query:</label>
-      <textarea id="researchPrompt" rows="3" placeholder="Type your research query..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"></textarea>
-    </div>
-    <button onclick="sendRequest('researchPrompt')" class="bg-blue-600 text-white w-full px-4 py-2 rounded hover:bg-blue-700">Research</button>
-  </div>
+      <!-- Robotics ER -->
+      <a href="https://aistudio.google.com/prompts/135S4dE_PH4bLCLXQy-WBatS2xOGII4TR" target="_blank" class="model-card" data-model="robotics">
+        <div class="card-header">
+            <span class="card-icon">🤖</span>
+            <h2 class="card-title">Robotics ER <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">Models trained on robotics data to understand and generate code for robot actions.</p>
+        <span class="launch-btn">Launch Robotics</span>
+      </a>
 
-  <!-- Response -->
-  <div class="mt-6">
-    <label class="block font-medium mb-1 text-gray-700">AI Response:</label>
-    <div id="response" class="p-4 border border-gray-200 rounded bg-gray-50 min-h-[150px] whitespace-pre-wrap flex items-center justify-center text-gray-500">
-      Your response will appear here.
-    </div>
+      <!-- TTS -->
+      <a href="https://aistudio.google.com/generate-speech" target="_blank" class="model-card" data-model="tts">
+        <div class="card-header">
+            <span class="card-icon">🔊</span>
+            <h2 class="card-title">TTS <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">Text-to-Speech models for generating high-quality, natural-sounding audio in various voices.</p>
+        <span class="launch-btn">Launch TTS</span>
+      </a>
 
-    <!-- Export Buttons (for Canva) -->
-    <div id="exportBtns" class="hidden mt-4 flex gap-3">
-      <button onclick="exportFile('docx')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download DOCX</button>
-      <button onclick="exportFile('pptx')" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Download PPTX</button>
-      <button onclick="exportFile('html')" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">Download HTML</button>
+      <!-- Lyre -->
+      <a href="https://ai.studio/apps/bundled/promptdj-midi" target="_blank" class="model-card" data-model="lyre">
+        <div class="card-header">
+            <span class="card-icon">🎵</span>
+            <h2 class="card-title">Lyria <span class="external-icon">↗</span></h2>
+        </div>
+        <p class="card-description">A state-of-the-art AI music generation model for creating instrumental pieces and sounds.</p>
+        <span class="launch-btn">Launch Lyria</span>
+      </a>
+
     </div>
   </div>
-</div>
 
-<footer class="text-center text-gray-500 mt-6 text-sm">
-  <p>Powered by Google AI</p>
-</footer>
+  <!-- Gemini Modal -->
+  <div class="modal-overlay" id="gemini-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Welcome to Gemini</h2>
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>This is where you can integrate your custom HTML or application logic for the Gemini model.</p>
+            <p>For now, this modal demonstrates a more elegant way to handle user interaction than a standard browser alert.</p>
+        </div>
+    </div>
+  </div>
 
-<script>
-  // Mode switch logic
-  document.querySelectorAll('.modeBtn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.modeBtn').forEach(b=>b.classList.remove('bg-blue-600','text-white'));
-      btn.classList.add('bg-blue-600','text-white');
-      document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
-      document.getElementById(btn.dataset.mode).classList.add('active');
+  <script>
+    const geminiLauncher = document.getElementById('gemini-launcher');
+    const geminiModal = document.getElementById('gemini-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function openModal() { geminiModal.classList.add('active'); }
+    function closeModal() { geminiModal.classList.remove('active'); }
+
+    geminiLauncher.addEventListener('click', openModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    geminiModal.addEventListener('click', (event) => {
+      if (event.target === geminiModal) closeModal();
     });
-  });
+  </script>
 
-  async function sendRequest(promptId="userPrompt") {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const modelValue = document.getElementById('modelSelect').value;
-    const prompt = document.getElementById(promptId).value.trim();
-    const responseBox = document.getElementById('response');
-    const exportBtns = document.getElementById('exportBtns');
-
-    if (!apiKey || !prompt) {
-      responseBox.textContent = 'Error: Please enter your API key and a prompt.';
-      responseBox.classList.add('text-red-500');
-      return;
-    }
-    responseBox.classList.remove('text-red-500');
-    responseBox.innerHTML = '<div class="loader"></div>';
-    exportBtns.classList.add("hidden");
-
-    // Redirect Imagen models to separate URL
-    if(modelValue === "imagen") {
-      window.open("https://ai.studio/apps/drive/1qjfKEHcwX2mD4LBxSw50_LupFuvm5deG", "_blank");
-      responseBox.textContent = "Opening Imagen in a new tab...";
-      return;
-    }
-
-    const textModels = [
-      "gemini-2.5-pro","gemini-2.5-flash","gemini-2.5-flash-lite",
-      "gemini-2.0-pro","gemini-2.0-flash","gemini-2.0-flash-lite",
-      "gemma-open-weight","gemma-3n","gemma-3","gemma-2","codegemma",
-      "alphafold","palm","palm2"
-    ];
-
-    try {
-      let apiUrl = "";
-      let payload = {};
-
-      if (textModels.includes(modelValue)) {
-        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelValue}:generateContent?key=${apiKey}`;
-        payload = { contents: [{ parts: [{ text: prompt }] }] };
-      }
-
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (textModels.includes(modelValue)) {
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        responseBox.textContent = text || "No response.";
-        if(promptId === "userPrompt"){
-          exportBtns.classList.remove("hidden");
-        }
-      }
-    } catch(err) {
-      responseBox.textContent = "Error: " + err.message;
-      responseBox.classList.add('text-red-500');
-    }
-  }
-
-  // Export Functions
-  function exportFile(type){
-    const content = document.getElementById("response").innerText;
-    let blob, filename;
-
-    if(type === "docx"){
-      blob = new Blob([content], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-      filename = "document.docx";
-    } else if(type === "pptx"){
-      blob = new Blob([content], {type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"});
-      filename = "presentation.pptx";
-    } else if(type === "html"){
-      const htmlWrap = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Generated Web</title></head><body>${content.replace(/\n/g,"<br>")}</body></html>`;
-      blob = new Blob([htmlWrap], {type: "text/html"});
-      filename = "webpage.html";
-    }
-
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  }
-</script>
 </body>
 </html>
