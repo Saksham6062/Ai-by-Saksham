@@ -1,0 +1,15 @@
+{
+  "name": "Saksham's AI",
+  "short_name": "AI by Saksham",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2c3e50",
+  "background_color": "#f4f6f9",
+  "display": "standalone",
+  "start_url": "/Ai-by-Saksham/"
+}
