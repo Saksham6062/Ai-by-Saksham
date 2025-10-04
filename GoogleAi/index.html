@@ -190,15 +190,15 @@
         <span class="launch-btn">Explore Gemini</span>
       </div>
 
-      <!-- Gemma -->
-         <div class="model-card" data-model="gemma" id="gemma-launcher">
+      <!-- Gemma (Modal) -->
+      <div class="model-card" data-model="gemma" id="gemma-launcher">
         <div class="card-header">
-            <span class="card-icon">✨</span>
+            <span class="card-icon">🔥</span>
             <h2 class="card-title">Gemma</h2>
         </div>
-        <p class="card-description">The most capable and general model series. Handle complex reasoning, multimodal tasks, and advanced coding.</p>
+        <p class="card-description">Advanced AI model for research, deep thinking, and creative exploration.</p>
         <span class="launch-btn">Explore Gemma</span>
-      </div> 
+      </div>
 
       <!-- Imagen -->
       <a href="https://ai.studio/apps/drive/1z2l3Hlmn7FfSgKiXjX-lp1E-M28CyLln" target="_blank" class="model-card" data-model="imagen">
@@ -240,7 +240,7 @@
         <span class="launch-btn">Launch TTS</span>
       </a>
 
-      <!-- Lyre -->
+      <!-- Lyria -->
       <a href="https://ai.studio/apps/bundled/promptdj-midi" target="_blank" class="model-card" data-model="lyre">
         <div class="card-header">
             <span class="card-icon">🎵</span>
@@ -258,59 +258,45 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">Welcome to Gemini</h2>
-            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <button class="modal-close" id="gemini-close-btn">&times;</button>
         </div>
         <div class="modal-body">
-           <a href="Gemini/index.html">Gemini</a>
-    </h2>Gemini</h2>
-    <p>Click to explore Gemini models</p>
-  </a>
+           <a href="Gemini/index.html">Click to explore Gemini models</a>
         </div>
     </div>
   </div>
-  
+
   <!-- Gemma Modal -->
   <div class="modal-overlay" id="gemma-modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">Welcome to Gemma</h2>
-            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <button class="modal-close" id="gemma-close-btn">&times;</button>
         </div>
         <div class="modal-body">
-           <a href="Gemma/index.html">Gemini</a>
-    </h2>Gemma</h2>
-    <p>Click to explore Gemini models</p>
-  </a>
+           <a href="Gemma/index.html">Click to explore Gemma models</a>
         </div>
     </div>
   </div>
+
   <script>
+    // Gemini modal
     const geminiLauncher = document.getElementById('gemini-launcher');
     const geminiModal = document.getElementById('gemini-modal');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const geminiCloseBtn = document.getElementById('gemini-close-btn');
 
-    function openModal() { geminiModal.classList.add('active'); }
-    function closeModal() { geminiModal.classList.remove('active'); }
+    geminiLauncher.addEventListener('click', () => geminiModal.classList.add('active'));
+    geminiCloseBtn.addEventListener('click', () => geminiModal.classList.remove('active'));
+    geminiModal.addEventListener('click', (e) => { if(e.target === geminiModal) geminiModal.classList.remove('active'); });
 
-    geminiLauncher.addEventListener('click', openModal);
-    modalCloseBtn.addEventListener('click', closeModal);
-    geminiModal.addEventListener('click', (event) => {
-      if (event.target === geminiModal) closeModal();
-    });
-  </script>
-  <script>
+    // Gemma modal
     const gemmaLauncher = document.getElementById('gemma-launcher');
     const gemmaModal = document.getElementById('gemma-modal');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const gemmaCloseBtn = document.getElementById('gemma-close-btn');
 
-    function openModal() { gemmaModal.classList.add('active'); }
-    function closeModal() { gemmaModal.classList.remove('active'); }
-
-    gemmaLauncher.addEventListener('click', openModal);
-    modalCloseBtn.addEventListener('click', closeModal);
-    gemmaModal.addEventListener('click', (event) => {
-      if (event.target === gemmaModal) closeModal();
-    });
+    gemmaLauncher.addEventListener('click', () => gemmaModal.classList.add('active'));
+    gemmaCloseBtn.addEventListener('click', () => gemmaModal.classList.remove('active'));
+    gemmaModal.addEventListener('click', (e) => { if(e.target === gemmaModal) gemmaModal.classList.remove('active'); });
   </script>
 
 </body>
