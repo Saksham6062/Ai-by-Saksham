@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemma AI Hub - Text & Code Generation</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --bg-gradient: linear-gradient(135deg,#e0c3fc,#8ec5fc);
+  --card-bg: rgba(255,255,255,0.9);
+  --btn-bg: linear-gradient(45deg,#6a11cb,#2575fc);
+  --btn-hover: linear-gradient(45deg,#5b0eaa,#1b5be0);
+  --text:#222;
+  --text-secondary:#555;
+  --tab-bg: rgba(255,255,255,0.7);
+  --tab-active: #2575fc;
+  --input-bg: rgba(255,255,255,0.8);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+body{background:var(--bg-gradient);color:var(--text);padding:20px;min-height:100vh;}
+.container{max-width:1000px;margin:auto;}
+h1{text-align:center;font-size:2.5rem;background:linear-gradient(45deg,#6a11cb,#2575fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px;}
+.input-card{background:var(--card-bg);padding:25px;border-radius:20px;margin-bottom:25px;backdrop-filter: blur(12px);box-shadow:0 15px 25px rgba(0,0,0,0.2);}
+input,textarea,select{width:100%;padding:14px;margin:10px 0;border-radius:12px;border:none;background:var(--input-bg);color:var(--text);font-size:1rem;}
+button{padding:12px 20px;border-radius:50px;border:none;background:var(--btn-bg);color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 8px 15px rgba(0,0,0,0.2);}
+button:hover{background:var(--btn-hover);box-shadow:0 12px 25px rgba(0,0,0,0.3);transform:scale(1.05);}
+.mode-tab{display:inline-block;padding:12px 28px;margin:0 8px 10px 0;border-radius:50px;cursor:pointer;background:var(--tab-bg);transition:all 0.3s ease;font-weight:600;box-shadow:0 6px 15px rgba(0,0,0,0.1);}
+.mode-tab.active{background:var(--tab-active);color:#fff;}
+#response{background:var(--card-bg);padding:20px;border-radius:20px;min-height:150px;white-space:pre-wrap;overflow:auto;margin-top:15px;box-shadow:0 8px 25px rgba(0,0,0,0.2);}
+#canva-container{display:none;margin-top:20px;}
+#editor{width:100%;height:250px;background:rgba(0,0,0,0.05);padding:15px;border-radius:15px;overflow:auto;white-space:pre;font-family:monospace;}
+#preview{width:100%;height:300px;border:1px solid rgba(0,0,0,0.1);border-radius:15px;margin-top:10px;}
+.sources-list{margin-top:15px;list-style:none;padding-left:0;}
+.sources-list li{margin-bottom:6px;color:var(--text-secondary);}
+.lang-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+.lang-btn{padding:10px 15px;border-radius:50px;border:none;background:#ffeaa7;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:5px;}
+.lang-btn:hover{background:#fab1a0;transform:scale(1.05);}
+label{display:flex;align-items:center;gap:8px;font-weight:600;}
+.loader{border:4px solid #f3f3f3;border-radius:50%;border-top:4px solid #3498db;width:30px;height:30px;animation:spin 1s linear infinite;margin:auto;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1><i class="fas fa-robot"></i> Gemma AI Hub</h1>
+
+<div class="input-card">
+<label><i class="fas fa-key"></i> Google AI API Key:</label>
+<input type="password" id="apiKey" placeholder="Enter API Key">
+
+<label><i class="fas fa-layer-group"></i> Gemma Model:</label>
+<select id="gemmaVersion">
+  <!-- Gemma 3-series -->
+  <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
+  <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
+  <option value="gemma-3-12b-it">Gemma 3 12B IT</option>
+  <option value="gemma-3-27b-it">Gemma 3 27B IT</option>
+  <!-- Gemma 3n-series -->
+  <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
+  <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
+</select>
+
+<div>
+  <div class="mode-tab active" data-mode="standard"><i class="fas fa-circle"></i> Standard</div>
+  <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink</div>
+  <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva</div>
+  <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> Deep Research</div>
+</div>
+
+<label><i class="fas fa-edit"></i> Prompt:</label>
+<textarea id="userPrompt" rows="4" placeholder="Type your prompt here..."></textarea>
+<button onclick="generate()"><i class="fas fa-play"></i> Generate</button>
+</div>
+
+<div id="response">Your output will appear here.</div>
+
+<div id="canva-container">
+<div class="lang-buttons">
+<button class="lang-btn" data-lang="html"><i class="fas fa-code"></i> HTML</button>
+<button class="lang-btn" data-lang="css"><i class="fas fa-paint-brush"></i> CSS</button>
+<button class="lang-btn" data-lang="js"><i class="fas fa-terminal"></i> JS</button>
+<button class="lang-btn" data-lang="java"><i class="fas fa-java"></i> Java</button>
+<button class="lang-btn" data-lang="typescript"><i class="fas fa-code"></i> TypeScript</button>
+<button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
+<button class="lang-btn" data-lang="kotlin"><i class="fas fa-android"></i> Kotlin</button>
+<button class="lang-btn" data-lang="swift"><i class="fas fa-apple"></i> Swift</button>
+<button class="lang-btn" data-lang="python"><i class="fas fa-python"></i> Python</button>
+</div>
+<div id="editor"></div>
+<iframe id="preview"></iframe>
+</div>
+
+<ul class="sources-list" id="sources-list"></ul>
+
+<script>
+let selectedMode='standard';
+let activeLang='html';
+let canvaFiles={html:'',css:'',js:'',java:'',typescript:'',dart:'',kotlin:'',swift:'',python:''};
+const sourcesList=document.getElementById('sources-list');
+const editor=document.getElementById('editor');
+const preview=document.getElementById('preview');
+const canvaContainer=document.getElementById('canva-container');
+
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    selectedMode=tab.dataset.mode;
+    canvaContainer.style.display=(selectedMode==='canva')?'block':'none';
+    sourcesList.innerHTML='';
+  });
+});
+
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeLang=btn.dataset.lang;
+    editor.textContent=canvaFiles[activeLang]||'';
+  });
+});
+
+editor.addEventListener('input',()=>{
+  canvaFiles[activeLang]=editor.textContent;
+  updatePreview();
+});
+
+function updatePreview(){
+  preview.srcdoc=`<html><head><style>${canvaFiles.css}</style></head><body>${canvaFiles.html}<script>${canvaFiles.js}<\/script></body></html>`;
+}
+
+async function generate(){
+  const apiKey=document.getElementById('apiKey').value.trim();
+  const model=document.getElementById('gemmaVersion').value;
+  const prompt=document.getElementById('userPrompt').value.trim();
+  const response=document.getElementById('response');
+  response.textContent='Generating...';
+  sourcesList.innerHTML='';
+
+  if(!apiKey || !prompt){response.textContent='API Key and Prompt required'; return;}
+
+  try{
+    const payload={contents:[{parts:[{text:prompt}]}]};
+    const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+
+    if(selectedMode==='deepthink'){
+      response.textContent='DeepThink reasoning:\n\n'+text;
+    } else if(selectedMode==='deepresearch'){
+      response.textContent='Deep Research output:\n\n'+text;
+    } else if(selectedMode==='canva'){
+      canvaFiles.html=text;
+      canvaFiles.css='/* CSS code */';
+      canvaFiles.js='// JS code';
+      editor.textContent=canvaFiles[activeLang];
+      updatePreview();
+      response.textContent='Code generated in Canva mode.';
+    } else {
+      response.textContent=text;
+    }
+  }catch(err){response.textContent='Error: '+err.message;}
+}
+</script>
+</body>
+</html>
