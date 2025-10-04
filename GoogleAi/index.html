@@ -268,7 +268,8 @@
         </div>
     </div>
   </div>
-<!-- Gemma Modal -->
+  
+  <!-- Gemma Modal -->
   <div class="modal-overlay" id="gemma-modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -295,6 +296,19 @@
     modalCloseBtn.addEventListener('click', closeModal);
     geminiModal.addEventListener('click', (event) => {
       if (event.target === geminiModal) closeModal();
+    });
+
+    const gemmaLauncher = document.getElementById('gemma-launcher');
+    const gemmaModal = document.getElementById('gemma-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function openModal() { gemmaModal.classList.add('active'); }
+    function closeModal() { gemmaModal.classList.remove('active'); }
+
+    gemmaLauncher.addEventListener('click', openModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    gemmaModal.addEventListener('click', (event) => {
+      if (event.target === gemmaModal) closeModal();
     });
   </script>
 
