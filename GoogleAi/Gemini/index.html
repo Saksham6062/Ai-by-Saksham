@@ -3,25 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gemini AI Hub - Smart Text, Code & Research</title>
+<title>Gemini AI Hub -- Smart Multimodal Content & Code</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
+/* Custom styles using Tailwind overrides for gradient/color variables */
 :root {
   --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3f0ff);
   --card-bg: #ffffffcc;
-  --btn-bg: linear-gradient(45deg, #ff6b6b, #feca57);
-  --btn-hover: linear-gradient(45deg, #ff4757, #ff9f43);
+  --btn-bg: linear-gradient(45deg, #25a4d9, #47b8ff); /* Blue/Cyan for main action */
+  --btn-hover: linear-gradient(45deg, #1d8abf, #2394d0);
   --text: #222;
   --text-secondary: #666;
   --tab-bg: #f3f3f3cc;
-  --tab-active-standard: #ff6b6b;
-  --tab-active-canva: #1dd1a1;
+  --tab-active-standard: #25a4d9;
+  --tab-active-canva: #1dd1a1; /* Teal for Canva */
   --tab-active-deepthink: #54a0ff;
   --tab-active-deepresearch: #f368e0;
   --input-bg: #ffffffb0;
-  --lang-btn-bg: #fceae7;
-  --lang-btn-hover: #f8c291;
+  --canva-type-bg: #e0f2f1; /* Light teal for canva selector */
+  --canva-type-active: #0d9488; /* Darker teal */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
@@ -29,7 +31,7 @@
 body {
   background: var(--bg-gradient);
   color: var(--text);
-  padding: 25px;
+  padding: 15px;
   min-height: 100vh;
 }
 
@@ -40,40 +42,34 @@ body {
 
 h1 {
   text-align: center;
-  font-size: 2.8rem;
-  margin-bottom: 25px;
-  background: linear-gradient(45deg, #ff6b6b, #1dd1a1);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  margin-bottom: 20px;
+  background: linear-gradient(45deg, var(--tab-active-standard), var(--tab-active-canva));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .input-card {
   background: var(--card-bg);
-  padding: 25px;
+  padding: 20px;
   border-radius: 20px;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transition: all 0.3s;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
 
-.input-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.15);
-}
-
-input, textarea, select {
+input[type="text"], input[type="password"], textarea, select {
   width: 100%;
-  padding: 14px;
-  margin: 10px 0;
-  border-radius: 15px;
-  border: none;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
   background: var(--input-bg);
   font-size: 1rem;
 }
 
 button {
-  padding: 12px 22px;
+  padding: 10px 20px;
   border-radius: 50px;
   border: none;
   background: var(--btn-bg);
@@ -81,25 +77,29 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 button:hover:not(:disabled) {
   background: var(--btn-hover);
-  transform: scale(1.05);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+  transform: translateY(-1px);
 }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .mode-tab {
   display: inline-block;
-  padding: 10px 22px;
-  margin: 6px 6px 10px 0;
-  border-radius: 50px;
+  padding: 8px 18px;
+  margin: 5px 5px 8px 0;
+  border-radius: 30px;
   cursor: pointer;
   background: var(--tab-bg);
   transition: all 0.3s ease;
   font-weight: 600;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.05);
+  font-size: 0.9rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
 }
 .mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; }
 .mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; }
@@ -110,56 +110,95 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   background: var(--card-bg);
   padding: 20px;
   border-radius: 20px;
-  min-height: 150px;
+  min-height: 100px;
   white-space: pre-wrap;
   overflow: auto;
   margin-top: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+#response pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* Cursor simulation */
+    border-right: 2px solid var(--text);
+    padding-right: 2px;
+    animation: blink-cursor 0.75s step-end infinite;
+}
+@keyframes blink-cursor {
+    from, to { border-color: transparent }
+    50% { border-color: var(--text); }
 }
 
 #editor {
   width: 100%;
-  height: 300px;
-  background: rgba(255,255,255,0.5);
-  color: #222;
+  height: 250px;
+  background: #282c34; /* Dark background for code editor */
+  color: #fff;
   padding: 15px;
-  border-radius: 20px;
+  border-radius: 15px;
   margin-top: 10px;
   overflow: auto;
   white-space: pre;
   font-family: monospace;
+  font-size: 0.9rem;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
 }
 
 iframe {
   width: 100%;
-  height: 400px;
+  height: 300px;
   border: none;
-  border-radius: 20px;
+  border-radius: 15px;
   margin-top: 15px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
-.lang-buttons {
+.lang-buttons, .canva-type-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   margin-top: 10px;
+  padding: 10px;
+  background: var(--canva-type-bg);
+  border-radius: 12px;
+}
+
+.canva-type-btn {
+  padding: 8px 14px;
+  border-radius: 40px;
+  background: var(--canva-type-bg);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.canva-type-btn.active-type {
+  background: var(--canva-type-active);
+  color: #fff;
+  border-color: var(--canva-type-active);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.canva-type-btn:hover:not(.active-type) {
+    background: #b2dfdb;
 }
 
 .lang-btn {
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 40px;
-  border: none;
-  background: var(--lang-btn-bg);
+  border: 1px solid #ccc;
+  background: #fff;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
+  font-size: 0.85rem;
 }
-.lang-btn.active-lang { background: var(--tab-active-canva); color: #fff; }
-.lang-btn:hover:not(.active-lang) { background: var(--lang-btn-hover); }
+.lang-btn.active-lang { background: var(--tab-active-canva); color: #fff; border-color: var(--tab-active-canva); }
+.lang-btn:hover:not(.active-lang) { background: #f0f0f0; }
 
 .sources-list {
   margin-top: 15px;
@@ -173,6 +212,7 @@ iframe {
 .sources-list li a {
   color: var(--tab-active-deepresearch);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .loader {
@@ -185,176 +225,651 @@ iframe {
   margin: auto;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* File Input Custom Styling (Minimized) */
+.file-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 10px; /* Reduced padding */
+    margin-top: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.file-upload-container:hover {
+    border-color: #54a0ff;
+}
+.file-upload-container input[type="file"] {
+    display: none;
+}
+.file-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e9f5ff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+.file-clear-btn {
+    background: none;
+    color: #ff6b6b;
+    padding: 5px;
+    box-shadow: none;
+    margin: 0;
+}
+.file-clear-btn:hover {
+    color: #ff4757;
+    background: none;
+}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1><i class="fas fa-robot"></i> Gemini AI Hub</h1>
+<h1><i class="fas fa-magic"></i> Gemini AI Hub: Multimodal & Code Canvas</h1>
 
-  <div class="input-card">
-    <label><i class="fas fa-key"></i> Google AI API Key:</label>
-    <input type="password" id="apiKey" placeholder="Enter API Key">
+<div class="input-card">
+  <label class="block mb-2 font-semibold"><i class="fas fa-key"></i> Google AI API Key:</label>
+  <input type="password" id="apiKey" placeholder="Enter API Key (required)">
 
-    <label><i class="fas fa-layer-group"></i> Gemini Model:</label>
-    <select id="geminiVersion">
-      <option value="gemini-2.5-flash-preview-05-20">2.5 Flash (Default)</option>
-      <option value="gemini-2.5-pro">2.5 Pro</option>
-      <option value="gemini-2.5-flash">2.5 Flash</option>
-      <option value="gemini-2.5-flash-lite">2.5 Flash-Lite</option>
-      <option value="gemini-2.0-flash">2.0 Flash</option>
-      <option value="gemini-2.0-flash-lite">2.0 Flash-Lite</option>
-    </select>
-
-    <div style="margin-top:10px;">
-      <div class="mode-tab active standard" data-mode="standard"><i class="fas fa-circle"></i> Standard</div>
-      <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva</div>
-      <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink</div>
-      <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> DeepResearch</div>
-    </div>
-
-    <label><i class="fas fa-edit"></i> Prompt:</label>
-    <textarea id="userPrompt" rows="4" placeholder="Type your prompt here..."></textarea>
-    <button id="generateButton" onclick="generate()"><i class="fas fa-play"></i> Generate</button>
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-layer-group"></i> Gemini Model:</label>
+  <select id="geminiVersion" class="block">
+    <!-- NEW DEFAULT MODEL ADDED -->
+    <option value="gemini-2.5-flash-preview-05-20" selected>2.5 Flash Preview (Recommended)</option>
+    <option value="gemini-2.5-flash">2.5 Flash (Multimodal)</option>
+    <option value="gemini-2.5-pro">2.5 Pro (Powerful)</option>
+    <option value="gemini-2.5-flash-lite">2.5 Flash Lite</option>
+    <option value="gemini-2.0-flash">2.0 Flash (Legacy)</option>
+    <option value="gemini-2.0-flash-lite">2.0 Flash Lite (Legacy)</option>
+  </select>
+  
+  <!-- File Uploader (Minimized) -->
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-camera"></i> File Upload (Optional):</label>
+  <div class="file-upload-container text-center" onclick="document.getElementById('fileUpload').click()">
+    <i class="fas fa-cloud-upload-alt text-lg text-gray-500"></i>
+    <p class="text-sm text-gray-600">Click to select an image or file.</p>
+    <input type="file" id="fileUpload" accept="image/*,video/*,application/pdf,text/*">
+  </div>
+  
+  <div id="fileInfoDisplay" class="file-info" style="display:none;">
+      <span id="fileName"></span>
+      <button class="file-clear-btn" onclick="clearFile(event)"><i class="fas fa-times"></i> Clear</button>
   </div>
 
-  <div id="response">Your output will appear here.</div>
 
-  <div id="canva-container" style="display:none;">
-    <div class="lang-buttons">
-      <button class="lang-btn active-lang" data-lang="html"><i class="fas fa-code"></i> HTML</button>
-      <button class="lang-btn" data-lang="css"><i class="fas fa-paint-brush"></i> CSS</button>
-      <button class="lang-btn" data-lang="js"><i class="fas fa-terminal"></i> JS</button>
-      <button class="lang-btn" data-lang="python"><i class="fab fa-python"></i> Python</button>
-      <button class="lang-btn" data-lang="java"><i class="fab fa-java"></i> Java</button>
-      <button class="lang-btn" data-lang="typescript"><i class="fab fa-js"></i> TypeScript</button>
-      <button class="lang-btn" data-lang="swift"><i class="fab fa-swift"></i> Swift</button>
-      <button class="lang-btn" data-lang="kotlin"><i class="fas fa-mobile-alt"></i> Kotlin</button>
-      <button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
-    </div>
-    <pre id="editor" contenteditable="true"></pre>
-    <iframe id="preview"></iframe>
+  <div class="mt-4">
+    <div class="mode-tab active standard" data-mode="standard"><i class="fas fa-circle"></i> Standard Text</div>
+    <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva Studio (File/Code)</div>
+    <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink Analysis</div>
+    <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> DeepResearch (Grounded)</div>
   </div>
 
-  <ul class="sources-list" id="sources-list"></ul>
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-edit"></i> Prompt:</label>
+  <textarea id="userPrompt" rows="4" placeholder="Describe the document, code, or game you want to generate, or ask a question about the uploaded file..."></textarea>
+
+  <button id="generateButton" class="mt-4 w-full"><i class="fas fa-rocket"></i> Generate Content</button>
+</div>
+
+<div id="canva-container" class="input-card" style="display:none;">
+    <h2 class="text-xl font-bold mb-3 text-center text-gray-700">Canva Studio Configuration</h2>
+    
+    <!-- Canva Type Selector (Simplified) -->
+    <div class="canva-type-selector" id="canva-type-selector">
+        <div class="canva-type-btn active-type" data-type="document"><i class="fas fa-file-word"></i> Document (Markdown)</div>
+        <div class="canva-type-btn" data-type="code"><i class="fas fa-code"></i> Code / Game Development</div>
+    </div>
+    
+    <!-- Code Language Selector (Only visible for 'code' type) -->
+    <div class="lang-buttons" id="lang-buttons" style="display:none;">
+        <button class="lang-btn active-lang" data-lang="html"><i class="fas fa-code"></i> HTML</button>
+        <button class="lang-btn" data-lang="python"><i class="fab fa-python"></i> Python</button>
+        <button class="lang-btn" data-lang="javascript"><i class="fab fa-js"></i> JavaScript</button>
+        <button class="lang-btn" data-lang="typescript"><i class="fab fa-js"></i> TypeScript</button>
+        <button class="lang-btn" data-lang="java"><i class="fab fa-java"></i> Java</button>
+        <button class="lang-btn" data-lang="php"><i class="fab fa-php"></i> PHP</button>
+        <button class="lang-btn" data-lang="csharp" title="C#"><i class="fas fa-sharp"></i> C#</button>
+        <button class="lang-btn" data-lang="cpp" title="C/C++"><i class="fas fa-file-code"></i> C/C++</button>
+        <button class="lang-btn" data-lang="go"><i class="fas fa-code-branch"></i> Go</button>
+        <button class="lang-btn" data-lang="rust"><i class="fab fa-rust"></i> Rust</button>
+        <button class="lang-btn" data-lang="ruby"><i class="fas fa-gem"></i> Ruby</button>
+        <button class="lang-btn" data-lang="sql"><i class="fas fa-database"></i> SQL</button>
+        <button class="lang-btn" data-lang="r"><i class="fas fa-chart-line"></i> R</button>
+        <button class="lang-btn" data-lang="lua"><i class="fas fa-moon"></i> Lua</button>
+        <button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
+        <button class="lang-btn" data-lang="kotlin"><i class="fas fa-mobile-alt"></i> Kotlin</button>
+        <button class="lang-btn" data-lang="swift"><i class="fab fa-swift"></i> Swift</button>
+        
+        <!-- Hidden button for internal document use -->
+        <button class="lang-btn" data-lang="markdown" style="display:none;"></button>
+    </div>
+
+    <!-- Actions for Editor Content -->
+    <div class="flex gap-3 mt-4">
+        <button id="copyEditorButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Editor Content</button>
+        <button id="downloadEditorButton" class="flex-1 bg-purple-500 hover:bg-purple-600"><i class="fas fa-download"></i> Download File</button>
+    </div>
+
+    <pre id="editor" contenteditable="true" class="mt-4">Generated content will appear here. For code, you can edit it live.</pre>
+    <!-- Updated editor note -->
+    <div class="text-xs text-gray-500 mt-2">
+        <i class="fas fa-info-circle"></i> Note: Content is generated as **text-based structures** (Markdown or Code) for editing and download.
+    </div>
+
+    <!-- Preview for HTML/Game code -->
+    <iframe id="preview" title="Code Preview"></iframe>
+</div>
+
+<!-- Response Area for Standard/DeepThink/DeepResearch -->
+<div class="input-card">
+    <h2 class="text-xl font-bold mb-3 text-gray-700">Output Result</h2>
+    
+    <!-- Actions for Response Content -->
+    <div class="flex gap-3">
+        <button id="copyResponseButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Response Text</button>
+        <button id="downloadResponseButton" class="flex-1 bg-purple-500 hover:bg-purple-600" style="display:none;"><i class="fas fa-download"></i> Download Response</button>
+    </div>
+
+    <div id="response" class="font-mono text-sm">Your output will appear here.</div>
+    <ul class="sources-list" id="sources-list"></ul>
+</div>
+
 </div>
 
 <script>
-let selectedMode='standard';
-let activeLang='html';
-let canvaFiles={html:'',css:'',js:'',python:'',java:'',typescript:'',swift:'',kotlin:'',dart:''};
+let selectedMode = 'standard';
+let selectedCanvaType = 'document'; // Default Canva type
+let activeLang = 'markdown'; // Default language for non-code canva types
+// Store content for each language/type (simplified)
+let canvaFiles = { 
+    html: '', python: '', javascript: '', typescript: '', java: '', 
+    dart: '', kotlin: '', swift: '', php: '', csharp: '', cpp: '', 
+    go: '', rust: '', ruby: '', sql: '', r: '', lua: '',
+    markdown: '' // For document type
+};
 
-const editor=document.getElementById('editor');
-const preview=document.getElementById('preview');
-const canvaContainer=document.getElementById('canva-container');
-const sourcesList=document.getElementById('sources-list');
-const generateButton=document.getElementById('generateButton');
-const apiKeyInput=document.getElementById('apiKey');
+// State for Multimodal
+let selectedFile = { 
+    file: null, 
+    base64Data: null, 
+    mimeType: null 
+};
 
-document.querySelectorAll('.mode-tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active','standard','canva','deepthink','deepresearch'));
-    tab.classList.add('active',tab.dataset.mode);
-    selectedMode=tab.dataset.mode;
-    canvaContainer.style.display=(selectedMode==='canva')?'block':'none';
-    sourcesList.innerHTML='';
-    document.getElementById('response').textContent='Your output will appear here.';
-  });
-});
+let currentTypingInterval = null; 
 
-document.querySelectorAll('.lang-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active-lang'));
-    btn.classList.add('active-lang');
-    canvaFiles[activeLang]=editor.textContent;
-    activeLang=btn.dataset.lang;
-    editor.textContent=canvaFiles[activeLang]||'';
-    if(['html','css','js'].includes(activeLang)) updatePreview();
-  });
-});
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const canvaContainer = document.getElementById('canva-container');
+const langButtonsContainer = document.getElementById('lang-buttons');
+const canvaTypeButtons = document.getElementById('canva-type-selector');
+const sourcesList = document.getElementById('sources-list');
+const generateButton = document.getElementById('generateButton');
+const apiKeyInput = document.getElementById('apiKey');
+const userPromptInput = document.getElementById('userPrompt');
+const responseDiv = document.getElementById('response');
+const fileUploadInput = document.getElementById('fileUpload');
+const fileInfoDisplay = document.getElementById('fileInfoDisplay');
+const fileNameDisplay = document.getElementById('fileName');
+const geminiVersion = document.getElementById('geminiVersion');
 
-editor.addEventListener('input',()=>{
-  canvaFiles[activeLang]=editor.textContent;
-  if(['html','css','js'].includes(activeLang)) updatePreview();
-});
+const copyEditorButton = document.getElementById('copyEditorButton');
+const downloadEditorButton = document.getElementById('downloadEditorButton');
+const copyResponseButton = document.getElementById('copyResponseButton');
+const downloadResponseButton = document.getElementById('downloadResponseButton');
 
-function updatePreview(){
-  preview.srcdoc=`<html><head><style>${canvaFiles.css}</style></head><body>${canvaFiles.html}<script>${canvaFiles.js}<\/script></body></html>`;
+// Utility Functions
+function updatePreview() {
+  if (selectedCanvaType === 'code' && activeLang === 'html') {
+    preview.srcdoc = canvaFiles.html; // Assuming HTML contains embedded CSS/JS
+  } else {
+    preview.srcdoc = '';
+  }
 }
 
-async function generate(){
-  const apiKey=apiKeyInput.value.trim();
-  const model=document.getElementById('geminiVersion').value;
-  const prompt=document.getElementById('userPrompt').value.trim();
-  const responseDiv=document.getElementById('response');
-  responseDiv.textContent='';
-  sourcesList.innerHTML='';
+// --- Streaming Simulation ---
+function typewriterEffect(element, text, delay = 15) {
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+    }
+    element.innerHTML = ''; 
+    let i = 0;
+    
+    currentTypingInterval = setInterval(() => {
+        if (i < text.length) {
+            element.textContent += text.charAt(i); 
+            element.scrollTop = element.scrollHeight;
+            i++;
+        } else {
+            clearInterval(currentTypingInterval);
+            currentTypingInterval = null;
+            if (element.style) {
+                element.style.borderRight = 'none';
+                element.style.animation = 'none';
+            }
+        }
+    }, delay);
+}
 
-  if(!apiKey || !prompt){responseDiv.textContent='API Key and Prompt required.'; return;}
+function displayResponse(text, candidates = []) {
+  downloadResponseButton.style.display = 'none';
 
-  generateButton.disabled=true;
-  responseDiv.innerHTML='<div class="loader"></div> Awaiting response...';
+  if (selectedMode === 'canva') {
+      // Canva output is in the editor
+      responseDiv.innerHTML = '<div class="text-lg font-bold text-teal-600"><i class="fas fa-check-circle"></i> Content generated and ready in the editor above.</div>';
+  } else {
+      // Standard, DeepThink, DeepResearch
+      responseDiv.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
+      
+      const preElement = document.getElementById('typing-output');
+      
+      // Apply the cursor style temporarily for the animation
+      preElement.style.borderRight = '2px solid var(--text)';
+      preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
 
-  const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  let systemPrompt='';
-  let tools=[];
+      // Start the typing animation
+      typewriterEffect(preElement, text, 15);
+      
+      // Allow download for text responses
+      downloadResponseButton.style.display = 'flex';
+  }
+}
 
-  if(selectedMode==='deepthink'){
-    systemPrompt="You are a master analytical thinker. Provide a structured, multi-perspective analysis.";
-  } else if(selectedMode==='deepresearch'){
-    systemPrompt="You are a live researcher. Use verified online info and cite sources.";
-    tools=[{google_search:{}}];
-  } else if(selectedMode==='canva'){
-    systemPrompt=`You are a coding assistant. Generate a complete ${activeLang.toUpperCase()} program only — no explanations.`;
+// --- File Handling ---
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Clear previous file state
+    clearFileState();
+    selectedFile.file = file;
+    selectedFile.mimeType = file.type;
+
+    // Display file name
+    fileNameDisplay.textContent = file.name;
+    fileInfoDisplay.style.display = 'flex';
+    
+    // Check if it's an image or video for Base64 conversion
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedFile.base64Data = e.target.result.split(',')[1];
+            userPromptInput.placeholder = `Ask a question about the image (${file.name})...`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // For non-image files
+        userPromptInput.placeholder = `A ${file.type} file (${file.name}) is selected. Ask for an analysis of its content/purpose.`;
+    }
+}
+
+function clearFileState() {
+    selectedFile = { file: null, base64Data: null, mimeType: null };
+    fileUploadInput.value = '';
+    fileInfoDisplay.style.display = 'none';
+    fileNameDisplay.textContent = '';
+    userPromptInput.placeholder = "Describe the document, code, game, or analysis you want to generate...";
+}
+
+function clearFile(event) {
+    event.stopPropagation(); // Stop click from propagating to file input
+    clearFileState();
+}
+
+// --- Canva Type & Language Switching ---
+
+// 1. Mode Tab Listener (Standard, Canva, DeepThink, DeepResearch)
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active', 'standard', 'canva', 'deepthink', 'deepresearch'));
+    tab.classList.add('active', tab.dataset.mode);
+    selectedMode = tab.dataset.mode;
+    canvaContainer.style.display = (selectedMode === 'canva') ? 'block' : 'none';
+    sourcesList.innerHTML = '';
+    
+    // Clear any active typewriter effect
+    if (currentTypingInterval) clearInterval(currentTypingInterval);
+    
+    // Reset Canva state when switching back to Canva mode
+    if (selectedMode === 'canva') {
+        setCanvaType(selectedCanvaType);
+        downloadResponseButton.style.display = 'none';
+        responseDiv.innerHTML = '<div class="text-xs text-gray-500">Output for Canva Studio appears in the editable editor above.</div>';
+    } else {
+        // Clear editor/preview when switching away from canva
+        editor.textContent = 'Generated content will appear here.';
+        preview.srcdoc = '';
+    }
+  });
+});
+
+// 2. Canva Type Selector Listener
+canvaTypeButtons.querySelectorAll('.canva-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        setCanvaType(btn.dataset.type);
+    });
+});
+
+function setCanvaType(type) {
+    document.querySelectorAll('.canva-type-btn').forEach(b => b.classList.remove('active-type'));
+    canvaTypeButtons.querySelector(`[data-type="${type}"]`).classList.add('active-type');
+    
+    selectedCanvaType = type;
+    langButtonsContainer.style.display = (type === 'code') ? 'flex' : 'none';
+    
+    if (type === 'code') {
+        // If switching to code, preserve existing code language selection
+        const currentActiveLangBtn = langButtonsContainer.querySelector('.active-lang');
+        activeLang = currentActiveLangBtn ? currentActiveLangBtn.dataset.lang : 'html';
+    } else {
+        // Document is the only non-code type left
+        activeLang = 'markdown';
+    }
+
+    editor.textContent = canvaFiles[activeLang] || '';
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+}
+
+// 3. Code Language Listener (Only active for 'code' type)
+langButtonsContainer.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (selectedCanvaType !== 'code') return;
+    
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
+    btn.classList.add('active-lang');
+    
+    // Save current content before switching
+    canvaFiles[activeLang] = editor.textContent;
+    
+    activeLang = btn.dataset.lang;
+    editor.textContent = canvaFiles[activeLang] || '';
+    
+    // Only update preview for HTML
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+  });
+});
+
+// 4. Editor Input Listener (Live Preview for HTML/Code)
+editor.addEventListener('input', () => {
+  canvaFiles[activeLang] = editor.textContent;
+  if (activeLang === 'html') updatePreview();
+});
+
+// --- API Generation ---
+
+async function generate() {
+  const apiKey = apiKeyInput.value.trim();
+  const model = geminiVersion.value;
+  const prompt = userPromptInput.value.trim();
+
+  // Clear previous typing interval if still running
+  if (currentTypingInterval) {
+      clearInterval(currentTypingInterval);
+      currentTypingInterval = null;
+  }
+  
+  responseDiv.innerHTML = '';
+  sourcesList.innerHTML = '';
+
+  if (!apiKey || !prompt) { 
+    responseDiv.innerHTML = '<div class="text-red-500 font-semibold">API Key and Prompt required.</div>'; 
+    return; 
+  }
+  
+  if (selectedFile.file && !selectedFile.base64Data && selectedFile.file.type.startsWith('image/')) {
+    responseDiv.innerHTML = '<div class="text-yellow-500 font-semibold">Please wait for the image to finish loading before generating.</div>';
+    return;
   }
 
-  const payload={
-    contents:[{parts:[{text:prompt}]}],
-    ...(systemPrompt && {systemInstruction:{parts:[{text:systemPrompt}]}}),
-    ...(tools.length>0 && {tools:tools})
+  generateButton.disabled = true; 
+  responseDiv.innerHTML = '<div class="loader"></div> Awaiting response...';
+
+  // Use the selected model from the dropdown
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  let systemPrompt = '';
+  let tools = [];
+  let contentsParts = [];
+
+  // 1. Build Content Parts (Text + Multimodal)
+  contentsParts.push({ text: prompt });
+  if (selectedFile.base64Data) {
+      // Add image data if available
+      contentsParts.push({
+          inlineData: {
+              mimeType: selectedFile.mimeType,
+              data: selectedFile.base64Data
+          }
+      });
+  } else if (selectedFile.file) {
+      // Inform the model about the non-image file attached (Name/Type)
+      contentsParts.push({ text: `[User has attached a file named: ${selectedFile.file.name} of type: ${selectedFile.file.type}. Please analyze based on the prompt, acknowledging the file attachment.]` });
+  }
+
+  // 2. Dynamic System Prompt Setup
+  if (selectedMode === 'deepthink') { 
+      systemPrompt = "You are a master analytical thinker. Provide a structured, concise, multi-perspective analysis on the user's prompt. Do not use any external tools or search.";
+  } else if (selectedMode === 'deepresearch') { 
+      // The system prompt guides the model to use search and cite sources
+      systemPrompt = "You are a live researcher. Use verified online information to answer the user's query and cite all sources at the end. Provide a detailed, grounded response. Ensure the response is informative and based on the retrieved web content."; 
+      tools = [{ google_search: {} }]; 
+  } else if (selectedMode === 'canva') { 
+      let formatInstruction = '';
+      if (selectedCanvaType === 'document') {
+          formatInstruction = `Generate the complete content for a ${prompt} in **clean, structured Markdown format**. Only output the Markdown text, ready for conversion to a document format. Do not include any explanation or surrounding text.`;
+          activeLang = 'markdown';
+      } else if (selectedCanvaType === 'code') {
+          formatInstruction = `You are a coding assistant. Generate a complete, single-file, and runnable ${activeLang.toUpperCase()} program or game based on the prompt: "${prompt}". For HTML, include all CSS and JavaScript in the single file. Only output the code itself, with no explanations or surrounding text.`;
+      }
+      
+      systemPrompt = `You are the AI engine for the 'Canva Studio'. Your task is to strictly follow the format instruction: ${formatInstruction}`;
+  }
+  
+  // 3. Construct Final Payload
+  const payload = { 
+    contents: [{ parts: contentsParts }], 
+    ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } }), 
+    ...(tools.length > 0 && { tools: tools }) 
   };
 
-  try{
+  try {
     let data;
-    for(let attempt=0;attempt<3;attempt++){
-      try{
-        const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-        if(res.status===429&&attempt<2){await new Promise(r=>setTimeout(r,Math.pow(2,attempt)*1500));continue;}
-        if(!res.ok)throw new Error(`HTTP ${res.status}`);
-        data=await res.json();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.status === 429 && attempt < 2) { await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1500)); continue; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json(); 
         break;
-      }catch(e){if(attempt===2)throw e;}
-    }
-
-    const candidate=data?.candidates?.[0];
-    const text=candidate?.content?.parts?.[0]?.text||'No response.';
-    responseDiv.textContent=text;
-
-    if(selectedMode==='canva'){
-      canvaFiles[activeLang]=text;
-      editor.textContent=text;
-      if(activeLang==='html')updatePreview();
-    }
-
-    if(selectedMode==='deepresearch'){
-      const grounding=candidate?.groundingMetadata?.groundingAttributions||[];
-      if(grounding.length>0){
-        sourcesList.innerHTML='<li><strong>Sources:</strong></li>';
-        grounding.forEach((src,i)=>{
-          if(src.web?.uri&&src.web?.title){
-            const li=document.createElement('li');
-            li.innerHTML=`(${i+1}) <a href="${src.web.uri}" target="_blank">${src.web.title}</a>`;
-            sourcesList.appendChild(li);
-          }
-        });
+      } catch (e) {
+        if (attempt === 2) throw e;
       }
     }
 
-  }catch(err){
-    responseDiv.textContent='Error: '+err.message;
-  }finally{
-    generateButton.disabled=false;
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || 'No response.';
+    
+    // Handle Canva mode output
+    if (selectedMode === 'canva') { 
+        canvaFiles[activeLang] = text; 
+        editor.textContent = text; 
+        if (activeLang === 'html') updatePreview();
+        displayResponse(text, data?.candidates || []); // Show confirmation in response area
+    } else {
+        editor.textContent = '';
+        preview.srcdoc = '';
+        displayResponse(text, data?.candidates || []); // Typewriter effect in response area
+    }
+
+    // Handle Grounding/Sources for DeepResearch (Updated to confirm functionality)
+    if (selectedMode === 'deepresearch') {
+      const grounding = candidate?.groundingMetadata?.groundingAttributions || [];
+      sourcesList.innerHTML = '<li class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle"></i> Research is powered by Google Search grounding for real-time information.</li>';
+
+      if (grounding.length > 0) {
+        sourcesList.innerHTML += '<li class="font-bold mt-2 text-pink-500"><i class="fas fa-atlas"></i> Grounding Sources Used:</li>';
+        grounding.forEach((src, i) => {
+          let uri = src.web?.uri || null, title = src.web?.title || `Source ${i+1}`;
+          if (uri) { 
+              const li = document.createElement('li'); 
+              li.innerHTML = `<i class="fas fa-link text-xs mr-1"></i> <a href="${uri}" target="_blank">${title}</a>`; 
+              sourcesList.appendChild(li); 
+          }
+        });
+      } else {
+        sourcesList.innerHTML += '<li class="text-xs text-gray-500 mt-2">No external sources were used for this response.</li>';
+      }
+    }
+
+  } catch (err) { 
+      responseDiv.innerHTML = `<div class="text-red-500 font-semibold">Error: Could not complete request. ${err.message}. Check your API key.</div>`; 
+  }
+  finally { 
+      generateButton.disabled = false; 
   }
 }
+
+// --- Action Button Functions (Copy & Download) ---
+
+function copyText(elementId, buttonElement) {
+    const element = document.getElementById(elementId);
+    let textToCopy;
+    
+    if (elementId === 'editor') {
+        textToCopy = element.textContent;
+    } else { // responseDiv
+        const pre = element.querySelector('pre');
+        textToCopy = pre ? pre.textContent : '';
+        if (!textToCopy && element.innerText.includes('Content generated')) {
+            textToCopy = element.innerText;
+        }
+    }
+
+    if (!textToCopy || textToCopy.trim() === 'Your output will appear here.' || textToCopy.trim() === '') {
+        showTemporaryMessage(buttonElement, 'Nothing to copy.', 'bg-yellow-500');
+        return;
+    }
+    
+    // Clear typing interval before copying to ensure full text is available
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.innerHTML = pre.textContent; 
+    }
+
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showTemporaryMessage(buttonElement, 'Content Copied!', 'bg-teal-500');
+    } catch (err) {
+        console.error('Copy failed:', err);
+        showTemporaryMessage(buttonElement, 'Copy Failed!', 'bg-red-500');
+    }
+}
+
+function downloadContent(content, fileName, mimeType, buttonElement) {
+    if (!content.trim()) {
+        showTemporaryMessage(buttonElement, 'Nothing to download.', 'bg-yellow-500');
+        return;
+    }
+    
+    // Clear typing interval before downloading
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+    }
+
+    try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showTemporaryMessage(buttonElement, 'Download Complete!', 'bg-teal-500');
+    } catch (err) {
+        showTemporaryMessage(buttonElement, 'Download Failed!', 'bg-red-500');
+        console.error('Download error:', err);
+    }
+}
+
+function showTemporaryMessage(originalButton, message, colorClass) {
+    const originalText = originalButton.innerHTML;
+    originalButton.innerHTML = message;
+    originalButton.classList.add(colorClass);
+    originalButton.classList.remove('bg-green-500', 'hover:bg-green-600', 'bg-purple-500', 'hover:bg-purple-600');
+
+    setTimeout(() => {
+        originalButton.innerHTML = originalText;
+        originalButton.classList.remove(colorClass);
+        // Re-apply original classes
+        if (originalButton.id.startsWith('copy')) {
+            originalButton.classList.add('bg-green-500', 'hover:bg-green-600');
+        } else {
+            originalButton.classList.add('bg-purple-500', 'hover:bg-purple-600');
+        }
+    }, 2000);
+}
+
+// --- Event Handlers ---
+
+// Editor Action Buttons
+copyEditorButton.addEventListener('click', (e) => copyText('editor', e.currentTarget));
+downloadEditorButton.addEventListener('click', (e) => {
+    let content = editor.textContent;
+    let extension;
+    let mimeType;
+    let fileNameBase = 'gemini_canva_output';
+    
+    // Determine file extension and MIME type based on activeLang/selectedCanvaType
+    if (selectedCanvaType === 'code') {
+        extension = activeLang; // e.g., 'html', 'py', 'js'
+        mimeType = `text/${activeLang === 'html' ? 'html' : 'plain'}`;
+        if (activeLang === 'typescript') extension = 'ts';
+        if (activeLang === 'csharp') extension = 'cs';
+        if (activeLang === 'cpp') extension = 'cpp';
+        if (activeLang === 'python') extension = 'py';
+        if (activeLang === 'javascript') extension = 'js';
+    } else { // Document (markdown based)
+        extension = 'md';
+        mimeType = 'text/markdown';
+    }
+
+    downloadContent(content, `${fileNameBase}.${extension}`, mimeType, e.currentTarget);
+});
+
+// Response Action Buttons
+copyResponseButton.addEventListener('click', (e) => copyText('response', e.currentTarget));
+downloadResponseButton.addEventListener('click', (e) => {
+    const pre = responseDiv.querySelector('pre');
+    const content = pre ? pre.textContent : '';
+    downloadContent(content, 'gemini_response.txt', 'text/plain', e.currentTarget);
+});
+
+// File Upload Listener
+fileUploadInput.addEventListener('change', handleFileUpload);
+generateButton.addEventListener('click', generate);
+document.getElementById('userPrompt').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate(); });
+
+// Initial setup
+document.addEventListener('DOMContentLoaded', () => {
+    setCanvaType('document'); 
+    downloadResponseButton.style.display = 'none'; 
+});
+
 </script>
 </body>
 </html>
+
