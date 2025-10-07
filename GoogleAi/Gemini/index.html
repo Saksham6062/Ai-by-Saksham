@@ -8,31 +8,100 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-/* Custom styles using Tailwind overrides for gradient/color variables */
+/* --- THEME VARIABLES (Default: Light Mode) --- */
 :root {
+  /* Colors */
   --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3f0ff);
   --card-bg: #ffffffcc;
-  --btn-bg: linear-gradient(45deg, #25a4d9, #47b8ff); /* Blue/Cyan for main action */
-  --btn-hover: linear-gradient(45deg, #1d8abf, #2394d0);
   --text: #222;
   --text-secondary: #666;
+  --input-bg: #ffffffb0;
   --tab-bg: #f3f3f3cc;
+  --header-bg: rgba(255, 255, 255, 0.85);
+
+  /* Accents */
+  --btn-bg: linear-gradient(45deg, #25a4d9, #47b8ff); /* Blue/Cyan */
+  --btn-hover: linear-gradient(45deg, #1d8abf, #2394d0);
   --tab-active-standard: #25a4d9;
   --tab-active-canva: #1dd1a1; /* Teal for Canva */
   --tab-active-deepthink: #54a0ff;
   --tab-active-deepresearch: #f368e0;
-  --input-bg: #ffffffb0;
   --canva-type-bg: #e0f2f1; /* Light teal for canva selector */
   --canva-type-active: #0d9488; /* Darker teal */
+  --shadow-base: rgba(0,0,0,0.15);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+/* --- DARK MODE Overrides --- */
+[data-theme="dark"] {
+  /* Colors */
+  --bg-gradient: linear-gradient(135deg, #1f283d, #0d121c);
+  --card-bg: #2b3a55cc;
+  --text: #f0f4f8;
+  --text-secondary: #aeb8c4;
+  --input-bg: #1f283d;
+  --tab-bg: #3f516acc;
+  --header-bg: rgba(31, 40, 61, 0.9);
+
+  /* Accents - Adjusted for visibility */
+  --btn-bg: linear-gradient(45deg, #47b8ff, #25a4d9);
+  --btn-hover: linear-gradient(45deg, #62caff, #39b3e6);
+  --tab-active-standard: #47b8ff;
+  --tab-active-canva: #38c172;
+  --tab-active-deepthink: #7aa1ff;
+  --tab-active-deepresearch: #ff6bcc;
+  --canva-type-bg: #354a63;
+  --canva-type-active: #1dd1a1;
+  --shadow-base: rgba(0,0,0,0.5);
+}
+
+
+/* Global Styles & Transitions */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Poppins', sans-serif; 
+    /* Smooth transition for all elements */
+    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s, border-color 0.3s, transform 0.15s;
+}
 
 body {
   background: var(--bg-gradient);
   color: var(--text);
   padding: 15px;
   min-height: 100vh;
+}
+
+/* --- Header & Theme Toggle --- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-end;
+}
+
+#theme-toggle {
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: var(--text-secondary);
+    color: var(--bg-gradient-color-start, #f0f4f8); /* Use a fall-back light color */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#theme-toggle:hover {
+    background: var(--tab-active-deepthink);
 }
 
 .container {
@@ -44,20 +113,31 @@ h1 {
   text-align: center;
   font-size: clamp(1.8rem, 5vw, 2.5rem);
   margin-bottom: 20px;
+  /* Existing Gradient */
   background: linear-gradient(45deg, var(--tab-active-standard), var(--tab-active-canva));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  
+  /* Added Effect */
+  text-shadow: 0 0 5px var(--shadow-base);
+  transition: text-shadow 0.3s ease;
 }
 
+/* Card Styling */
 .input-card {
   background: var(--card-bg);
   padding: 20px;
   border-radius: 20px;
   margin-bottom: 20px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 16px var(--shadow-base);
+  border: 1px solid rgba(255,255,255,0.1); /* Subtle white border for light mode contrast */
+}
+[data-theme="dark"] .input-card {
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
+/* Input Styling */
 input[type="text"], input[type="password"], textarea, select {
   width: 100%;
   padding: 12px;
@@ -65,9 +145,14 @@ input[type="text"], input[type="password"], textarea, select {
   border-radius: 12px;
   border: 1px solid rgba(0,0,0,0.1);
   background: var(--input-bg);
+  color: var(--text);
   font-size: 1rem;
 }
+[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] textarea, [data-theme="dark"] select {
+    border: 1px solid rgba(255,255,255,0.1);
+}
 
+/* Main Button Styling (Base) */
 button {
   padding: 10px 20px;
   border-radius: 50px;
@@ -76,7 +161,6 @@ button {
   color: white;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   display: inline-flex;
   align-items: center;
@@ -85,10 +169,44 @@ button {
 }
 button:hover:not(:disabled) {
   background: var(--btn-hover);
-  transform: translateY(-1px);
 }
-button:disabled { opacity: 0.6; cursor: not-allowed; }
+button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+
+/* 3D Generate Button Styling (Applied to #generateButton) */
+button#generateButton {
+    padding: 16px 32px; /* Increased size */
+    font-size: 1.2rem;
+    font-weight: 700;
+    /* 3D Effect: Outer shadow for lift, dark shadow for depth */
+    box-shadow: 
+        0 4px 0 0 rgba(0, 0, 0, 0.2), /* Dark base for depth */
+        0 10px 20px rgba(0, 0, 0, 0.25), /* Floating shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Highlight top */
+    transform: translateY(0);
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button#generateButton:hover:not(:disabled) {
+    transform: translateY(-2px); /* Slight hover lift */
+    box-shadow: 
+        0 6px 0 0 rgba(0, 0, 0, 0.2),
+        0 15px 30px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: var(--btn-hover); /* Keep background hover effect */
+}
+
+button#generateButton:active:not(:disabled) {
+    /* Press down effect */
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 0 rgba(0, 0, 0, 0.3), /* Reduced base shadow */
+        0 5px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(0, 0, 0, 0.2); /* Inner depression shadow */
+}
+
+
+/* Mode Tab Styling */
 .mode-tab {
   display: inline-block;
   padding: 8px 18px;
@@ -96,16 +214,23 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   border-radius: 30px;
   cursor: pointer;
   background: var(--tab-bg);
+  color: var(--text);
   transition: all 0.3s ease;
   font-weight: 600;
   font-size: 0.9rem;
   box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+.mode-tab:hover:not(.active) {
+    background: var(--text-secondary);
+    color: var(--card-bg);
 }
 .mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; }
 .mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; }
 .mode-tab.active.deepthink { background: var(--tab-active-deepthink); color: #fff; }
 .mode-tab.active.deepresearch { background: var(--tab-active-deepresearch); color: #fff; }
 
+
+/* Response Area Styling */
 #response {
   background: var(--card-bg);
   padding: 20px;
@@ -114,26 +239,15 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   white-space: pre-wrap;
   overflow: auto;
   margin-top: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px var(--shadow-base);
   border: 1px solid rgba(0,0,0,0.05);
 }
-#response pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    /* Cursor simulation */
-    border-right: 2px solid var(--text);
-    padding-right: 2px;
-    animation: blink-cursor 0.75s step-end infinite;
-}
-@keyframes blink-cursor {
-    from, to { border-color: transparent }
-    50% { border-color: var(--text); }
-}
 
+/* Editor Styling */
 #editor {
   width: 100%;
   height: 250px;
-  background: #282c34; /* Dark background for code editor */
+  background: #282c34; /* Dark background for code editor (fixed for readability) */
   color: #fff;
   padding: 15px;
   border-radius: 15px;
@@ -145,23 +259,26 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
 }
 
-iframe {
-  width: 100%;
-  height: 300px;
-  border: none;
-  border-radius: 15px;
-  margin-top: 15px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+/* Code Language Buttons (Two-Column Grid) */
+.lang-buttons {
+    display: grid; /* Changed from flex */
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 12px; /* Increased gap */
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
 }
 
-.lang-buttons, .canva-type-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 10px;
-  background: var(--canva-type-bg);
-  border-radius: 12px;
+/* Canva Type Selector Styling (Unchanged) */
+.canva-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
 }
 
 .canva-type-btn {
@@ -193,6 +310,7 @@ iframe {
   transition: all 0.3s;
   display: flex;
   align-items: center;
+  justify-content: center; /* Center text within the grid item */
   gap: 6px;
   font-weight: 500;
   font-size: 0.85rem;
@@ -268,7 +386,14 @@ iframe {
 }
 </style>
 </head>
-<body>
+<!-- Set default theme to light, as the CSS default is light -->
+<body data-theme="light">
+
+<header>
+    <!-- Dark Mode Toggle Button -->
+    <button id="theme-toggle"><i class="fas fa-moon"></i> Dark Mode</button>
+</header>
+
 <div class="container">
 <h1><i class="fas fa-magic"></i> Gemini AI Hub: Multimodal & Code Canvas</h1>
 
@@ -311,6 +436,7 @@ iframe {
   <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-edit"></i> Prompt:</label>
   <textarea id="userPrompt" rows="4" placeholder="Describe the document, code, or game you want to generate, or ask a question about the uploaded file..."></textarea>
 
+  <!-- GENERATE BUTTON: Size Increased and 3D Styled -->
   <button id="generateButton" class="mt-4 w-full"><i class="fas fa-rocket"></i> Generate Content</button>
 </div>
 
@@ -323,7 +449,7 @@ iframe {
         <div class="canva-type-btn" data-type="code"><i class="fas fa-code"></i> Code / Game Development</div>
     </div>
     
-    <!-- Code Language Selector (Only visible for 'code' type) -->
+    <!-- Code Language Selector (Now 2-Column Grid) -->
     <div class="lang-buttons" id="lang-buttons" style="display:none;">
         <button class="lang-btn active-lang" data-lang="html"><i class="fas fa-code"></i> HTML</button>
         <button class="lang-btn" data-lang="python"><i class="fab fa-python"></i> Python</button>
@@ -437,18 +563,26 @@ function typewriterEffect(element, text, delay = 15) {
     element.innerHTML = ''; 
     let i = 0;
     
+    // Create the pre tag inside the response div
+    element.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
+    const preElement = document.getElementById('typing-output');
+
+    // Apply the cursor style temporarily for the animation
+    preElement.style.borderRight = '2px solid var(--text)';
+    preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
+
+    
     currentTypingInterval = setInterval(() => {
         if (i < text.length) {
-            element.textContent += text.charAt(i); 
-            element.scrollTop = element.scrollHeight;
+            preElement.textContent += text.charAt(i); 
+            preElement.scrollTop = preElement.scrollHeight;
             i++;
         } else {
             clearInterval(currentTypingInterval);
             currentTypingInterval = null;
-            if (element.style) {
-                element.style.borderRight = 'none';
-                element.style.animation = 'none';
-            }
+            // Remove the cursor style after completion
+            preElement.style.borderRight = 'none';
+            preElement.style.animation = 'none';
         }
     }, delay);
 }
@@ -461,16 +595,8 @@ function displayResponse(text, candidates = []) {
       responseDiv.innerHTML = '<div class="text-lg font-bold text-teal-600"><i class="fas fa-check-circle"></i> Content generated and ready in the editor above.</div>';
   } else {
       // Standard, DeepThink, DeepResearch
-      responseDiv.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
-      
-      const preElement = document.getElementById('typing-output');
-      
-      // Apply the cursor style temporarily for the animation
-      preElement.style.borderRight = '2px solid var(--text)';
-      preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
-
-      // Start the typing animation
-      typewriterEffect(preElement, text, 15);
+      // Use the typewriterEffect which handles the inner <pre> tag
+      typewriterEffect(responseDiv, text, 15);
       
       // Allow download for text responses
       downloadResponseButton.style.display = 'flex';
@@ -558,7 +684,7 @@ function setCanvaType(type) {
     canvaTypeButtons.querySelector(`[data-type="${type}"]`).classList.add('active-type');
     
     selectedCanvaType = type;
-    langButtonsContainer.style.display = (type === 'code') ? 'flex' : 'none';
+    langButtonsContainer.style.display = (type === 'code') ? 'grid' : 'none';
     
     if (type === 'code') {
         // If switching to code, preserve existing code language selection
@@ -698,7 +824,7 @@ async function generate() {
         canvaFiles[activeLang] = text; 
         editor.textContent = text; 
         if (activeLang === 'html') updatePreview();
-        displayResponse(text, data?.candidates || []); // Show confirmation in response area
+        displayResponse('Content generated and ready in the editor above.', data?.candidates || []); // Show confirmation in response area
     } else {
         editor.textContent = '';
         preview.srcdoc = '';
@@ -742,7 +868,8 @@ function copyText(elementId, buttonElement) {
     if (elementId === 'editor') {
         textToCopy = element.textContent;
     } else { // responseDiv
-        const pre = element.querySelector('pre');
+        // Get text from the pre tag created by typewriterEffect
+        const pre = element.querySelector('#typing-output');
         textToCopy = pre ? pre.textContent : '';
         if (!textToCopy && element.innerText.includes('Content generated')) {
             textToCopy = element.innerText;
@@ -759,7 +886,7 @@ function copyText(elementId, buttonElement) {
         clearInterval(currentTypingInterval);
         currentTypingInterval = null;
         const pre = document.getElementById('typing-output');
-        if(pre) pre.innerHTML = pre.textContent; 
+        if(pre) pre.style.borderRight = 'none'; // Stop cursor
     }
 
     try {
@@ -786,6 +913,8 @@ function downloadContent(content, fileName, mimeType, buttonElement) {
     if (currentTypingInterval) {
         clearInterval(currentTypingInterval);
         currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.style.borderRight = 'none'; // Stop cursor
     }
 
     try {
@@ -807,20 +936,42 @@ function downloadContent(content, fileName, mimeType, buttonElement) {
 
 function showTemporaryMessage(originalButton, message, colorClass) {
     const originalText = originalButton.innerHTML;
+    const originalClasses = originalButton.className;
+    
+    // Temporarily change button appearance
     originalButton.innerHTML = message;
-    originalButton.classList.add(colorClass);
-    originalButton.classList.remove('bg-green-500', 'hover:bg-green-600', 'bg-purple-500', 'hover:bg-purple-600');
+    originalButton.classList.remove(...originalButton.classList.filter(c => c.startsWith('bg-') || c.startsWith('hover:bg-')));
+    originalButton.classList.add(colorClass, 'hover:bg-opacity-90');
 
     setTimeout(() => {
+        // Restore button appearance
         originalButton.innerHTML = originalText;
-        originalButton.classList.remove(colorClass);
-        // Re-apply original classes
-        if (originalButton.id.startsWith('copy')) {
-            originalButton.classList.add('bg-green-500', 'hover:bg-green-600');
-        } else {
-            originalButton.classList.add('bg-purple-500', 'hover:bg-purple-600');
+        originalButton.className = originalClasses;
+        
+        // Re-apply specific 3D styles if it's the generate button
+        if(originalButton.id === 'generateButton') {
+            originalButton.style.transform = 'translateY(0)';
+            originalButton.style.boxShadow = '0 4px 0 0 rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
         }
     }, 2000);
+}
+
+
+// --- Theme Toggle Logic ---
+const body = document.body;
+const themeToggle = document.getElementById('theme-toggle');
+const THEME_KEY = 'geminiHubTheme';
+
+function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i> Light Mode' : '<i class="fas fa-moon"></i> Dark Mode';
+}
+
+function initTheme() {
+    // Default to light since the base CSS is light mode.
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light'; 
+    applyTheme(savedTheme);
 }
 
 // --- Event Handlers ---
@@ -851,22 +1002,30 @@ downloadEditorButton.addEventListener('click', (e) => {
 });
 
 // Response Action Buttons
-copyResponseButton.addEventListener('click', (e) => copyText('response', e.currentTarget));
 downloadResponseButton.addEventListener('click', (e) => {
-    const pre = responseDiv.querySelector('pre');
+    const pre = responseDiv.querySelector('#typing-output');
     const content = pre ? pre.textContent : '';
     downloadContent(content, 'gemini_response.txt', 'text/plain', e.currentTarget);
 });
+
+copyResponseButton.addEventListener('click', (e) => copyText('response', e.currentTarget));
+
 
 // File Upload Listener
 fileUploadInput.addEventListener('change', handleFileUpload);
 generateButton.addEventListener('click', generate);
 document.getElementById('userPrompt').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate(); });
+themeToggle.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+});
 
 // Initial setup
 document.addEventListener('DOMContentLoaded', () => {
     setCanvaType('document'); 
-    downloadResponseButton.style.display = 'none'; 
+    downloadResponseButton.style.display = 'none';
+    initTheme(); // Initialize theme preference
 });
 
 </script>
