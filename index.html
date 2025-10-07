@@ -1,90 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Standard Favicon -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saksham's AI Models</title>
 <link rel="icon" type="image/png" sizes="512x512" href="/Ai-by-Saksham/favicon.png">
-
-<!-- Apple Touch Icon (for iPhones/iPads Home Screen) -->
 <link rel="apple-touch-icon" href="/Ai-by-Saksham/favicon.png">
-
-<!-- Android/Chrome Manifest -->
-<link rel="manifest" href="/Ai-by-Saksham/manifest.json">
 <meta name="theme-color" content="#2c3e50">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Saksham's AI Models</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f6f9; color:#333; }
-    header { background:#2c3e50; color:white; text-align:center; padding:20px; }
-    .container { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; padding:20px; }
-    .card { 
-      background:white; border-radius:8px; 
-      box-shadow:0 2px 5px rgba(0,0,0,0.1); 
-      padding:20px; text-align:center; 
-      transition:transform 0.2s; 
-      text-decoration:none; color:inherit; 
-      display:block; 
-    }
-    .card:hover { transform:translateY(-5px); }
-    .card h2 { margin:10px 0; color:#2c3e50; }
-    .card p { font-size:14px; color:#666; }
-  </style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+:root {
+  --bg: #ffffff;
+  --text: #1a202c;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0,0,0,0.08);
+  --accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --accent-hover: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  --glow: rgba(102, 126, 234, 0.3);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0e1a;
+  --text: #e2e8f0;
+  --card-bg: #151b2e;
+  --card-shadow: rgba(102, 126, 234, 0.15);
+  --glow: rgba(102, 126, 234, 0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated background particles */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--glow);
+  border-radius: 50%;
+  animation: float linear infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Header */
+header {
+  position: relative;
+  background: var(--accent);
+  color: white;
+  text-align: center;
+  padding: 80px 20px 70px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: pulse 8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+header h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, #ffffff, #f0f9ff, #dbeafe, #ffffff);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s linear infinite;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+  position: relative;
+  z-index: 2;
+  letter-spacing: -0.02em;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0%; }
+  100% { background-position: 200%; }
+}
+
+header p {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-weight: 300;
+  opacity: 0.95;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: white;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.theme-toggle:hover {
+  transform: rotate(180deg) scale(1.1);
+  background: rgba(255,255,255,0.25);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+}
+
+.theme-toggle:active {
+  transform: rotate(180deg) scale(0.95);
+}
+
+/* Container */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 32px 28px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px var(--card-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, var(--card-glow, transparent) 100%);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.card:hover::before {
+  opacity: 0.08;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 24px 64px var(--card-glow, var(--card-shadow));
+  border-color: var(--card-glow, transparent);
+}
+
+.card h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  font-size: 0.95rem;
+  opacity: 0.75;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.card-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover .card-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* Brand Colors */
+.card.google { --card-glow: #4285F4; }
+.card.claude { --card-glow: #D97706; }
+.card.deepseek { --card-glow: #FF6B35; }
+.card.openai { --card-glow: #10A37F; }
+.card.microsoft { --card-glow: #00BCF2; }
+.card.grok { --card-glow: #1DA1F2; }
+.card.llama { --card-glow: #8B5CF6; }
+.card.qwen { --card-glow: #EC4899; }
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 48px 20px;
+  font-size: 0.95rem;
+  opacity: 0.7;
+  position: relative;
+  z-index: 1;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  header {
+    padding: 60px 20px 50px;
+  }
+  
+  .container {
+    padding: 40px 16px;
+  }
+  
+  .grid {
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+  
+  .theme-toggle {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+/* Loading animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+.card:nth-child(6) { animation-delay: 0.3s; }
+.card:nth-child(7) { animation-delay: 0.35s; }
+.card:nth-child(8) { animation-delay: 0.4s; }
+</style>
 </head>
 <body>
+  <div class="particles" id="particles"></div>
+
   <header>
     <h1>🚀 Saksham's AI Models</h1>
     <p>Showcasing my own and global AI models</p>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
   </header>
 
-  <main class="container">
-    
-    <!-- Google AI by Saksham -->
-    <a href="GoogleAi/index.html" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>Google AI</h2>
-      <p>Click to explore Saksham's Google AI models</p>
-    </a>
+  <div class="container">
+    <div class="grid">
+      <a href="GoogleAi/index.html" class="card google">
+        <div class="card-icon">🔷</div>
+        <h2>Google AI</h2>
+        <p>Explore Saksham's Google AI models</p>
+      </a>
 
-    <!-- Claude (Anthropic) by Saksham-->
-    <a href="https://claude.ai/new" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>Claude</h2>
-      <p>Anthropic’s Claude AI powered by Saksham</p>
-    </a>
+      <a href="https://claude.ai/new" class="card claude">
+        <div class="card-icon">✨</div>
+        <h2>Claude</h2>
+        <p>Anthropic's Claude AI powered by Saksham</p>
+      </a>
 
-    <!-- DeepSeek by Saksham-->
-    <a href="DeepSeek/index.html" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>DeepSeek</h2>
-      <p>Click to explore Saksham's DeepSeek models</p>
-    </a>
+      <a href="DeepSeek/index.html" class="card deepseek">
+        <div class="card-icon">🔍</div>
+        <h2>DeepSeek</h2>
+        <p>Explore Saksham's DeepSeek models</p>
+      </a>
 
-    <!-- OpenAI by Saksham-->
-    <a href="OpenAI/index.html" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>OpenAI</h2>
-      <p>Click to explore Saksham's GPT models</p>
-    </a>
+      <a href="OpenAI/index.html" class="card openai">
+        <div class="card-icon">🤖</div>
+        <h2>OpenAI</h2>
+        <p>Explore Saksham's GPT models</p>
+      </a>
 
-    <!-- Microsoft Copilot by Saksham-->
-    <a href="https://copilot.microsoft.com" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>Microsoft Copilot</h2>
-      <p>Microsoft's Copilot by Saksham</p>
-    </a>
+      <a href="https://copilot.microsoft.com" class="card microsoft">
+        <div class="card-icon">💡</div>
+        <h2>Microsoft Copilot</h2>
+        <p>Microsoft's Copilot by Saksham</p>
+      </a>
 
-    <!-- Grok (xAI) by Saksham -->
-    <a href="https://grok.com/" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>Grok</h2>
-      <p>xAI’s Grok by Saksham</p>
-    </a>
+      <a href="https://grok.com/" class="card grok">
+        <div class="card-icon">⚡</div>
+        <h2>Grok</h2>
+        <p>xAI's Grok by Saksham</p>
+      </a>
 
-    <!-- LLaMA (Meta AI) by Saksham-->
-    <a href="https://ai.meta.com/llama/" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>LLaMA (Meta)</h2>
-      <p>Meta’s Llama by Saksham</p>
-    </a>
+      <a href="https://ai.meta.com/llama/" class="card llama">
+        <div class="card-icon">🦙</div>
+        <h2>LLaMA (Meta)</h2>
+        <p>Meta's LLaMA by Saksham</p>
+      </a>
 
-    <!-- Qwen (Alibaba) by Saksham-->
-    <a href="https://qwenlm.ai" class="card" target="_blank" rel="noopener noreferrer">
-      <h2>Qwen</h2>
-      <p>Qwen AI by Saksham </p>
-    </a>
-  </main>
+      <a href="https://qwenlm.ai" class="card qwen">
+        <div class="card-icon">🌸</div>
+        <h2>Qwen</h2>
+        <p>Qwen AI by Saksham</p>
+      </a>
+    </div>
+  </div>
+
+  <footer>✨ Made with ❤️ by Saksham | 2025</footer>
+
+<script>
+const root = document.documentElement;
+const STORAGE_KEY = "theme-preference";
+const toggle = document.getElementById("themeToggle");
+const particlesContainer = document.getElementById("particles");
+
+function getPreferredTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "light" || saved === "dark") return saved;
+  return "dark";
+}
+
+function applyTheme(theme) {
+  root.setAttribute("data-theme", theme);
+  toggle.textContent = theme === "dark" ? "☀️" : "🌙";
+}
+
+toggle.addEventListener("click", () => {
+  const current = root.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem(STORAGE_KEY, next);
+});
+
+// Create floating particles
+function createParticles() {
+  for (let i = 0; i < 30; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+    particle.style.animationDelay = Math.random() * 5 + 's';
+    particlesContainer.appendChild(particle);
+  }
+}
+
+applyTheme(getPreferredTheme());
+createParticles();
+</script>
 </body>
 </html>
