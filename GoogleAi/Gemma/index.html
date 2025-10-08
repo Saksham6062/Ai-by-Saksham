@@ -13,7 +13,8 @@
 /* --- THEME VARIABLES (Default: Light Mode) --- */
 :root {
   /* Colors */
-  --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3f0ff);
+  /* CHANGED TO PURPLE GRADIENT (Soft Lavender to Medium Violet) */
+  --bg-gradient: linear-gradient(135deg, #f3e8ff, #d8a7ff); 
   --card-bg: #ffffffcc;
   --text: #222;
   --text-secondary: #666;
@@ -21,39 +22,49 @@
   --tab-bg: #f3f3f3cc;
   --header-bg: rgba(255, 255, 255, 0.85);
 
-  /* Accents */
-  --btn-bg: linear-gradient(45deg, #25a4d9, #47b8ff); /* Blue/Cyan */
-  --btn-hover: linear-gradient(45deg, #1d8abf, #2394d0);
-  --tab-active-standard: #25a4d9;
-  --tab-active-canva: #1dd1a1; /* Teal for Canva */
-  --tab-active-deepthink: #54a0ff;
-  --tab-active-deepresearch: #f368e0;
+  /* Accents (All changed to Purple) */
+  --btn-bg: linear-gradient(45deg, #8338ec, #9d4edd); /* Purple */
+  --btn-hover: linear-gradient(45deg, #702ecc, #8e42d7);
+  --tab-active-standard: #9d4edd; /* Main Purple Accent */
+  --tab-active-canva: #1dd1a1; /* Teal for Canva (Kept teal for distinction) */
+  --tab-active-deepthink: #7aa1ff; /* Light Blue/Purple for DeepThink (Kept for distinction) */
+  --tab-active-deepresearch: #f368e0; /* Bright Pink/Magenta for DeepResearch (Kept for distinction) */
   --canva-type-bg: #e0f2f1; /* Light teal for canva selector */
   --canva-type-active: #0d9488; /* Darker teal */
-  --shadow-base: rgba(0,0,0,0.15);
+  /* Shadows */
+  --shadow-base: rgba(0,0,0,0.1);
+  --shadow-card: 0 10px 20px rgba(0,0,0,0.1);
+  --focus-ring-color: #9d4edd; /* Purple focus ring */
+  --input-focus-glow: 0 0 0 3px rgba(157, 77, 221, 0.5); /* Purple focus glow */
 }
 
 /* --- DARK MODE Overrides --- */
 [data-theme="dark"] {
   /* Colors */
-  --bg-gradient: linear-gradient(135deg, #1f283d, #0d121c);
-  --card-bg: #2b3a55cc;
+  /* CHANGED TO DEEP PURPLE GRADIENT (Dark Eggplant) */
+  --bg-gradient: linear-gradient(135deg, #1a082b, #3f1163);
+  /* Adjusted card and header to match the deep purple background better */
+  --card-bg: #352a46cc;
   --text: #f0f4f8;
   --text-secondary: #aeb8c4;
   --input-bg: #1f283d;
   --tab-bg: #3f516acc;
-  --header-bg: rgba(31, 40, 61, 0.9);
+  --header-bg: rgba(26, 8, 43, 0.9);
 
   /* Accents - Adjusted for visibility */
-  --btn-bg: linear-gradient(45deg, #47b8ff, #25a4d9);
-  --btn-hover: linear-gradient(45deg, #62caff, #39b3e6);
-  --tab-active-standard: #47b8ff;
+  --btn-bg: linear-gradient(45deg, #b366ff, #9d4edd); /* Brighter Purple */
+  --btn-hover: linear-gradient(45deg, #c790ff, #a453e0);
+  --tab-active-standard: #b366ff; /* Main Purple Accent */
   --tab-active-canva: #38c172;
-  --tab-active-deepthink: #7aa1ff;
+  --tab-active-deepthink: #9cbbff;
   --tab-active-deepresearch: #ff6bcc;
   --canva-type-bg: #354a63;
   --canva-type-active: #1dd1a1;
-  --shadow-base: rgba(0,0,0,0.5);
+  /* Shadows - Lighter for dark mode */
+  --shadow-base: rgba(255,255,255,0.05);
+  --shadow-card: 0 10px 20px rgba(0,0,0,0.5);
+  --focus-ring-color: #b366ff; /* Bright Purple focus ring */
+  --input-focus-glow: 0 0 0 3px rgba(179, 102, 255, 0.5); /* Bright Purple focus glow */
 }
 
 
@@ -74,6 +85,36 @@ body {
   min-height: 100vh;
 }
 
+/* --- Accessibility: Universal Focus Ring --- */
+*:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring-color);
+    border-radius: 15px; /* Apply to elements that aren't already rounded */
+}
+
+/* Override focus ring for elements with specific rounded styles */
+button:focus-visible, .mode-tab:focus-visible, .canva-type-btn:focus-visible, .lang-btn:focus-visible {
+    border-radius: 50px;
+    box-shadow: 0 0 0 3px var(--focus-ring-color);
+}
+
+
+/* --- Custom Scrollbar Styling (Aesthetic Polish) --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tab-active-standard);
+}
+
+
 /* --- Header & Theme Toggle --- */
 header {
     position: sticky;
@@ -87,7 +128,7 @@ header {
     background: var(--header-bg);
     backdrop-filter: blur(10px);
     border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px var(--shadow-base); /* Softened shadow */
     display: flex;
     justify-content: flex-end;
 }
@@ -96,7 +137,7 @@ header {
     padding: 10px 20px;
     border-radius: 50px;
     background: var(--text-secondary);
-    color: var(--bg-gradient-color-start, #f0f4f8); /* Use a fall-back light color */
+    color: var(--card-bg); /* Use card-bg for contrast */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -104,6 +145,7 @@ header {
 }
 #theme-toggle:hover {
     background: var(--tab-active-deepthink);
+    transform: translateY(-1px); /* Micro-interaction lift */
 }
 
 .container {
@@ -115,12 +157,12 @@ h1 {
   text-align: center;
   font-size: clamp(1.8rem, 5vw, 2.5rem);
   margin-bottom: 20px;
-  /* Existing Gradient */
+  /* Updated Gradient to use new purple standard color */
   background: linear-gradient(45deg, var(--tab-active-standard), var(--tab-active-canva));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   
-  /* Added Effect */
+  /* Added Effect: Subtle lift */
   text-shadow: 0 0 5px var(--shadow-base);
   transition: text-shadow 0.3s ease;
 }
@@ -132,14 +174,14 @@ h1 {
   border-radius: 20px;
   margin-bottom: 20px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 16px var(--shadow-base);
-  border: 1px solid rgba(255,255,255,0.1); /* Subtle white border for light mode contrast */
+  box-shadow: var(--shadow-card); /* Using new variable for soft shadow */
+  border: 1px solid rgba(255,255,255,0.1); 
 }
 [data-theme="dark"] .input-card {
     border: 1px solid rgba(0,0,0,0.1);
 }
 
-/* Input Styling */
+/* --- Input Focus Glow and Standard Styling --- */
 input[type="text"], input[type="password"], textarea, select {
   width: 100%;
   padding: 12px;
@@ -149,9 +191,18 @@ input[type="text"], input[type="password"], textarea, select {
   background: var(--input-bg);
   color: var(--text);
   font-size: 1rem;
+  /* Reset focus-visible for custom glow */
+  outline: none;
+  box-shadow: none; 
 }
 [data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] textarea, [data-theme="dark"] select {
     border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Input Glow on Focus */
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus {
+    border-color: var(--focus-ring-color);
+    box-shadow: var(--input-focus-glow); 
 }
 
 /* Main Button Styling (Base) */
@@ -168,6 +219,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  outline: none; /* Controlled by focus-visible */
 }
 button:hover:not(:disabled) {
   background: var(--btn-hover);
@@ -186,7 +238,7 @@ button#generateButton {
         0 10px 20px rgba(0, 0, 0, 0.25), /* Floating shadow */
         inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Highlight top */
     transform: translateY(0);
-    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s;
 }
 
 button#generateButton:hover:not(:disabled) {
@@ -208,7 +260,7 @@ button#generateButton:active:not(:disabled) {
 }
 
 
-/* Mode Tab Styling */
+/* --- Mode Tab Styling (Refined Hover/Active States) --- */
 .mode-tab {
   display: inline-block;
   padding: 8px 18px;
@@ -221,15 +273,24 @@ button#generateButton:active:not(:disabled) {
   font-weight: 600;
   font-size: 0.9rem;
   box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  outline: none; /* Controlled by focus-visible */
 }
 .mode-tab:hover:not(.active) {
     background: var(--text-secondary);
     color: var(--card-bg);
+    transform: scale(1.03); /* Hover scale micro-interaction */
 }
-.mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; }
-.mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; }
-.mode-tab.active.deepthink { background: var(--tab-active-deepthink); color: #fff; }
-.mode-tab.active.deepresearch { background: var(--tab-active-deepresearch); color: #fff; }
+
+/* Active Tab Styles: Added distinct shadow based on color */
+.mode-tab.active { 
+    transform: scale(1.03); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+}
+/* Updated shadow color for standard tab to match purple */
+.mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; box-shadow: 0 4px 10px rgba(157, 77, 221, 0.5); }
+.mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; box-shadow: 0 4px 10px rgba(29, 209, 161, 0.5); }
+.mode-tab.active.deepthink { background: var(--tab-active-deepthink); color: #fff; box-shadow: 0 4px 10px rgba(84, 160, 255, 0.5); }
+.mode-tab.active.deepresearch { background: var(--tab-active-deepresearch); color: #fff; box-shadow: 0 4px 10px rgba(243, 104, 224, 0.5); }
 
 
 /* Response Area Styling */
@@ -272,7 +333,7 @@ button#generateButton:active:not(:disabled) {
     border-radius: 12px;
 }
 
-/* Canva Type Selector Styling (Unchanged) */
+/* Canva Type Selector Styling */
 .canva-type-selector {
     display: flex;
     flex-wrap: wrap;
@@ -292,15 +353,18 @@ button#generateButton:active:not(:disabled) {
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid transparent;
+  outline: none; /* Controlled by focus-visible */
 }
 .canva-type-btn.active-type {
   background: var(--canva-type-active);
   color: #fff;
   border-color: var(--canva-type-active);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: scale(1.03); /* Active scale micro-interaction */
 }
 .canva-type-btn:hover:not(.active-type) {
     background: #b2dfdb;
+    transform: scale(1.03); /* Hover scale micro-interaction */
 }
 
 .lang-btn {
@@ -316,9 +380,18 @@ button#generateButton:active:not(:disabled) {
   gap: 6px;
   font-weight: 500;
   font-size: 0.85rem;
+  outline: none; /* Controlled by focus-visible */
 }
-.lang-btn.active-lang { background: var(--tab-active-canva); color: #fff; border-color: var(--tab-active-canva); }
-.lang-btn:hover:not(.active-lang) { background: #f0f0f0; }
+.lang-btn.active-lang { 
+    background: var(--tab-active-canva); 
+    color: #fff; 
+    border-color: var(--tab-active-canva); 
+    transform: scale(1.03);
+}
+.lang-btn:hover:not(.active-lang) { 
+    background: #f0f0f0; 
+    transform: scale(1.03); /* Hover scale micro-interaction */
+}
 
 .sources-list {
   margin-top: 15px;
@@ -338,7 +411,8 @@ button#generateButton:active:not(:disabled) {
 .loader {
   border: 4px solid #f3f3f3;
   border-radius: 50%;
-  border-top: 4px solid var(--tab-active-deepthink);
+  /* Updated loader color to purple */
+  border-top: 4px solid var(--tab-active-standard); 
   width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
@@ -360,7 +434,9 @@ button#generateButton:active:not(:disabled) {
     gap: 8px;
 }
 .file-upload-container:hover {
-    border-color: #54a0ff;
+    /* Updated hover color to purple */
+    border-color: var(--focus-ring-color); 
+    box-shadow: 0 0 0 1px var(--focus-ring-color);
 }
 .file-upload-container input[type="file"] {
     display: none;
@@ -369,7 +445,8 @@ button#generateButton:active:not(:disabled) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #e9f5ff;
+    /* Updated background to light purple */
+    background: #f1e4ff;
     padding: 10px;
     border-radius: 8px;
     margin-top: 10px;
@@ -381,10 +458,12 @@ button#generateButton:active:not(:disabled) {
     padding: 5px;
     box-shadow: none;
     margin: 0;
+    transform: scale(1);
 }
 .file-clear-btn:hover {
     color: #ff4757;
     background: none;
+    transform: scale(1.1);
 }
 
 /* iframe for code preview */
@@ -439,10 +518,10 @@ button#generateButton:active:not(:disabled) {
 
 
   <div class="mt-4">
-    <div class="mode-tab active standard" data-mode="standard"><i class="fas fa-circle"></i> Standard Text</div>
-    <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva Studio (File/Code)</div>
-    <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink Analysis</div>
-    <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> DeepResearch (Grounded)</div>
+    <div class="mode-tab active standard" data-mode="standard" tabindex="0"><i class="fas fa-circle"></i> Standard Text</div>
+    <div class="mode-tab" data-mode="canva" tabindex="0"><i class="fas fa-paint-brush"></i> Canva Studio (File/Code)</div>
+    <div class="mode-tab" data-mode="deepthink" tabindex="0"><i class="fas fa-brain"></i> DeepThink Analysis</div>
+    <div class="mode-tab" data-mode="deepresearch" tabindex="0"><i class="fas fa-search"></i> DeepResearch (Grounded)</div>
   </div>
 
   <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-edit"></i> Prompt:</label>
@@ -457,29 +536,29 @@ button#generateButton:active:not(:disabled) {
     
     <!-- Canva Type Selector (Simplified) -->
     <div class="canva-type-selector" id="canva-type-selector">
-        <div class="canva-type-btn active-type" data-type="document"><i class="fas fa-file-word"></i> Document (Markdown)</div>
-        <div class="canva-type-btn" data-type="code"><i class="fas fa-code"></i> Code / Game Development</div>
+        <div class="canva-type-btn active-type" data-type="document" tabindex="0"><i class="fas fa-file-word"></i> Document (Markdown)</div>
+        <div class="canva-type-btn" data-type="code" tabindex="0"><i class="fas fa-code"></i> Code / Game Development</div>
     </div>
     
     <!-- Code Language Selector (Now 2-Column Grid) -->
     <div class="lang-buttons" id="lang-buttons" style="display:none;">
-        <button class="lang-btn active-lang" data-lang="html"><i class="fas fa-code"></i> HTML</button>
-        <button class="lang-btn" data-lang="python"><i class="fab fa-python"></i> Python</button>
-        <button class="lang-btn" data-lang="javascript"><i class="fab fa-js"></i> JavaScript</button>
-        <button class="lang-btn" data-lang="typescript"><i class="fab fa-js"></i> TypeScript</button>
-        <button class="lang-btn" data-lang="java"><i class="fab fa-java"></i> Java</button>
-        <button class="lang-btn" data-lang="php"><i class="fab fa-php"></i> PHP</button>
-        <button class="lang-btn" data-lang="csharp" title="C#"><i class="fas fa-sharp"></i> C#</button>
-        <button class="lang-btn" data-lang="cpp" title="C/C++"><i class="fas fa-file-code"></i> C/C++</button>
-        <button class="lang-btn" data-lang="go"><i class="fas fa-code-branch"></i> Go</button>
-        <button class="lang-btn" data-lang="rust"><i class="fab fa-rust"></i> Rust</button>
-        <button class="lang-btn" data-lang="ruby"><i class="fas fa-gem"></i> Ruby</button>
-        <button class="lang-btn" data-lang="sql"><i class="fas fa-database"></i> SQL</button>
-        <button class="lang-btn" data-lang="r"><i class="fas fa-chart-line"></i> R</button>
-        <button class="lang-btn" data-lang="lua"><i class="fas fa-moon"></i> Lua</button>
-        <button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
-        <button class="lang-btn" data-lang="kotlin"><i class="fas fa-mobile-alt"></i> Kotlin</button>
-        <button class="lang-btn" data-lang="swift"><i class="fab fa-swift"></i> Swift</button>
+        <button class="lang-btn active-lang" data-lang="html" tabindex="0"><i class="fas fa-code"></i> HTML</button>
+        <button class="lang-btn" data-lang="python" tabindex="0"><i class="fab fa-python"></i> Python</button>
+        <button class="lang-btn" data-lang="javascript" tabindex="0"><i class="fab fa-js"></i> JavaScript</button>
+        <button class="lang-btn" data-lang="typescript" tabindex="0"><i class="fab fa-js"></i> TypeScript</button>
+        <button class="lang-btn" data-lang="java" tabindex="0"><i class="fab fa-java"></i> Java</button>
+        <button class="lang-btn" data-lang="php" tabindex="0"><i class="fab fa-php"></i> PHP</button>
+        <button class="lang-btn" data-lang="csharp" title="C#" tabindex="0"><i class="fas fa-sharp"></i> C#</button>
+        <button class="lang-btn" data-lang="cpp" title="C/C++" tabindex="0"><i class="fas fa-file-code"></i> C/C++</button>
+        <button class="lang-btn" data-lang="go" tabindex="0"><i class="fas fa-code-branch"></i> Go</button>
+        <button class="lang-btn" data-lang="rust" tabindex="0"><i class="fab fa-rust"></i> Rust</button>
+        <button class="lang-btn" data-lang="ruby" tabindex="0"><i class="fas fa-gem"></i> Ruby</button>
+        <button class="lang-btn" data-lang="sql" tabindex="0"><i class="fas fa-database"></i> SQL</button>
+        <button class="lang-btn" data-lang="r" tabindex="0"><i class="fas fa-chart-line"></i> R</button>
+        <button class="lang-btn" data-lang="lua" tabindex="0"><i class="fas fa-moon"></i> Lua</button>
+        <button class="lang-btn" data-lang="dart" tabindex="0"><i class="fas fa-mobile-alt"></i> Dart</button>
+        <button class="lang-btn" data-lang="kotlin" tabindex="0"><i class="fas fa-mobile-alt"></i> Kotlin</button>
+        <button class="lang-btn" data-lang="swift" tabindex="0"><i class="fab fa-swift"></i> Swift</button>
         
         <!-- Hidden button for internal document use -->
         <button class="lang-btn" data-lang="markdown" style="display:none;"></button>
@@ -562,12 +641,14 @@ const responseDiv = document.getElementById('response');
 const fileUploadInput = document.getElementById('fileUpload');
 const fileInfoDisplay = document.getElementById('fileInfoDisplay');
 const fileNameDisplay = document.getElementById('fileName');
-const gemmaVersion = document.getElementById('gemmaVersion'); // Changed ID for Gemma
+const gemmaVersion = document.getElementById('gemmaVersion'); 
 
 const copyEditorButton = document.getElementById('copyEditorButton');
 const downloadEditorButton = document.getElementById('downloadEditorButton');
 const copyResponseButton = document.getElementById('copyResponseButton');
 const downloadResponseButton = document.getElementById('downloadResponseButton');
+const themeToggle = document.getElementById('theme-toggle');
+
 
 // Utility Functions
 function updatePreview() {
@@ -589,8 +670,18 @@ function typewriterEffect(element, text, delay = 15) {
     element.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
     const preElement = document.getElementById('typing-output');
 
+    // Blink cursor styling
     preElement.style.borderRight = '2px solid var(--text)';
     preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
+    const styleSheet = document.styleSheets[0];
+    if (!styleSheet.cssRules || Array.from(styleSheet.cssRules).every(rule => !rule.cssText.includes('blink-cursor'))) {
+        styleSheet.insertRule(`
+            @keyframes blink-cursor {
+                0%, 100% { border-color: var(--text); }
+                50% { border-color: transparent; }
+            }
+        `, styleSheet.cssRules.length);
+    }
 
     
     currentTypingInterval = setInterval(() => {
@@ -704,7 +795,7 @@ function setCanvaType(type) {
     else preview.srcdoc = '';
 }
 
-// *** FIX: Event Listener for Canva Type Buttons (Document/Code) ***
+// Event Listener for Canva Type Buttons (Document/Code)
 canvaTypeButtons.querySelectorAll('.canva-type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const newType = btn.dataset.type;
@@ -954,6 +1045,7 @@ function showTemporaryMessage(originalButton, message, colorClass) {
         
         if(originalButton.id === 'generateButton') {
             originalButton.style.transform = 'translateY(0)';
+            // Reapply 3D shadow style manually after temporary message clears
             originalButton.style.boxShadow = '0 4px 0 0 rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
         }
     }, 2000);
@@ -962,18 +1054,33 @@ function showTemporaryMessage(originalButton, message, colorClass) {
 
 // --- Theme Toggle Logic ---
 const body = document.body;
-const themeToggle = document.getElementById('theme-toggle');
 const THEME_KEY = 'geminiHubTheme';
 
 function applyTheme(theme) {
     body.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
     themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i> Light Mode' : '<i class="fas fa-moon"></i> Dark Mode';
+    
+    // Rerun tab updates to apply correct color shadows immediately after theme switch
+    updateActiveTabShadow();
 }
 
 function initTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light'; 
     applyTheme(savedTheme);
+}
+
+// Function to force update the active tab's shadow immediately after theme switch
+function updateActiveTabShadow() {
+    const activeTab = document.querySelector('.mode-tab.active');
+    if (activeTab) {
+        // Remove and re-add the active class to force the browser to recalculate the box-shadow based on the new CSS variables
+        const activeClass = activeTab.dataset.mode;
+        activeTab.classList.remove(activeClass);
+        // Force reflow/re-render before re-adding
+        void activeTab.offsetWidth; 
+        activeTab.classList.add(activeClass);
+    }
 }
 
 // --- Event Handlers ---
