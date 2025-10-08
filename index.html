@@ -6,6 +6,7 @@
 <title>Saksham's Intellgence</title>
 <link rel="icon" type="image/png" sizes="512x512" href="/Ai-by-Saksham/favicon.png">
 <link rel="apple-touch-icon" href="/Ai-by-Saksham/favicon.png">
+<link rel="manifest" href="/Ai-by-Saksham/manifest.json">
 <meta name="theme-color" content="#2c3e50">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
@@ -428,6 +429,11 @@ function createParticles() {
   }
 }
 
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/Ai-by-Saksham/sw.js')
+    .then(() => console.log('Service Worker Registered'))
+    .catch(err => console.log('Service Worker registration failed:', err));
+}
 applyTheme(getPreferredTheme());
 createParticles();
 </script>
