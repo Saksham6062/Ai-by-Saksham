@@ -1,15 +1,22 @@
 {
-  "name": "Saksham's AI",
-  "short_name": "AI by Saksham",
+  "name": "Saksham's AI Intelligence",
+  "short_name": "SakshamAI",
+  "start_url": "/Ai-by-Saksham/",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait-primary",
+  "description": "Showcasing my own and global AI models with interactive UI.",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "/Ai-by-Saksham/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Ai-by-Saksham/favicon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#2c3e50",
-  "background_color": "#f4f6f9",
-  "display": "standalone",
-  "start_url": "/Ai-by-Saksham/"
+  ]
 }
