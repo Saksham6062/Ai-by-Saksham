@@ -1,7 +1,7 @@
 {
   "name": "Saksham's AI Intelligence",
   "short_name": "SakshamAI",
-  "start_url": "/Ai-by-Saksham/",
+  "start_url": "/Ai-by-Saksham/index.html",
   "display": "standalone",
   "background_color": "#0a0e1a",
   "theme_color": "#2c3e50",
@@ -13,10 +13,5 @@
       "sizes": "192x192",
       "type": "image/png"
     },
-    {
-      "src": "/Ai-by-Saksham/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
   ]
 }
