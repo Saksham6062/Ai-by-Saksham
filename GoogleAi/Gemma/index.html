@@ -3,166 +3,1029 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gemma AI Hub - Text & Code Generation</title>
+<title>Gemma AI Hub -- Smart Multimodal Content & Code</title>
+<!-- PWA Manifest Link -->
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-:root{
-  --bg-gradient: linear-gradient(135deg,#e0c3fc,#8ec5fc);
-  --card-bg: rgba(255,255,255,0.9);
-  --btn-bg: linear-gradient(45deg,#6a11cb,#2575fc);
-  --btn-hover: linear-gradient(45deg,#5b0eaa,#1b5be0);
-  --text:#222;
-  --text-secondary:#555;
-  --tab-bg: rgba(255,255,255,0.7);
-  --tab-active: #2575fc;
-  --input-bg: rgba(255,255,255,0.8);
+/* --- THEME VARIABLES (Default: Light Mode) --- */
+:root {
+  /* Colors */
+  --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3f0ff);
+  --card-bg: #ffffffcc;
+  --text: #222;
+  --text-secondary: #666;
+  --input-bg: #ffffffb0;
+  --tab-bg: #f3f3f3cc;
+  --header-bg: rgba(255, 255, 255, 0.85);
+
+  /* Accents */
+  --btn-bg: linear-gradient(45deg, #25a4d9, #47b8ff); /* Blue/Cyan */
+  --btn-hover: linear-gradient(45deg, #1d8abf, #2394d0);
+  --tab-active-standard: #25a4d9;
+  --tab-active-canva: #1dd1a1; /* Teal for Canva */
+  --tab-active-deepthink: #54a0ff;
+  --tab-active-deepresearch: #f368e0;
+  --canva-type-bg: #e0f2f1; /* Light teal for canva selector */
+  --canva-type-active: #0d9488; /* Darker teal */
+  --shadow-base: rgba(0,0,0,0.15);
 }
 
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
-body{background:var(--bg-gradient);color:var(--text);padding:20px;min-height:100vh;}
-.container{max-width:1000px;margin:auto;}
-h1{text-align:center;font-size:2.5rem;background:linear-gradient(45deg,#6a11cb,#2575fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px;}
-.input-card{background:var(--card-bg);padding:25px;border-radius:20px;margin-bottom:25px;backdrop-filter: blur(12px);box-shadow:0 15px 25px rgba(0,0,0,0.2);}
-input,textarea,select{width:100%;padding:14px;margin:10px 0;border-radius:12px;border:none;background:var(--input-bg);color:var(--text);font-size:1rem;}
-button{padding:12px 20px;border-radius:50px;border:none;background:var(--btn-bg);color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 8px 15px rgba(0,0,0,0.2);}
-button:hover{background:var(--btn-hover);box-shadow:0 12px 25px rgba(0,0,0,0.3);transform:scale(1.05);}
-.mode-tab{display:inline-block;padding:12px 28px;margin:0 8px 10px 0;border-radius:50px;cursor:pointer;background:var(--tab-bg);transition:all 0.3s ease;font-weight:600;box-shadow:0 6px 15px rgba(0,0,0,0.1);}
-.mode-tab.active{background:var(--tab-active);color:#fff;}
-#response{background:var(--card-bg);padding:20px;border-radius:20px;min-height:150px;white-space:pre-wrap;overflow:auto;margin-top:15px;box-shadow:0 8px 25px rgba(0,0,0,0.2);}
-#canva-container{display:none;margin-top:20px;}
-#editor{width:100%;height:250px;background:rgba(0,0,0,0.05);padding:15px;border-radius:15px;overflow:auto;white-space:pre;font-family:monospace;}
-#preview{width:100%;height:300px;border:1px solid rgba(0,0,0,0.1);border-radius:15px;margin-top:10px;}
-.sources-list{margin-top:15px;list-style:none;padding-left:0;}
-.sources-list li{margin-bottom:6px;color:var(--text-secondary);}
-.lang-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-.lang-btn{padding:10px 15px;border-radius:50px;border:none;background:#ffeaa7;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:5px;}
-.lang-btn:hover{background:#fab1a0;transform:scale(1.05);}
-label{display:flex;align-items:center;gap:8px;font-weight:600;}
-.loader{border:4px solid #f3f3f3;border-radius:50%;border-top:4px solid #3498db;width:30px;height:30px;animation:spin 1s linear infinite;margin:auto;}
-@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+/* --- DARK MODE Overrides --- */
+[data-theme="dark"] {
+  /* Colors */
+  --bg-gradient: linear-gradient(135deg, #1f283d, #0d121c);
+  --card-bg: #2b3a55cc;
+  --text: #f0f4f8;
+  --text-secondary: #aeb8c4;
+  --input-bg: #1f283d;
+  --tab-bg: #3f516acc;
+  --header-bg: rgba(31, 40, 61, 0.9);
+
+  /* Accents - Adjusted for visibility */
+  --btn-bg: linear-gradient(45deg, #47b8ff, #25a4d9);
+  --btn-hover: linear-gradient(45deg, #62caff, #39b3e6);
+  --tab-active-standard: #47b8ff;
+  --tab-active-canva: #38c172;
+  --tab-active-deepthink: #7aa1ff;
+  --tab-active-deepresearch: #ff6bcc;
+  --canva-type-bg: #354a63;
+  --canva-type-active: #1dd1a1;
+  --shadow-base: rgba(0,0,0,0.5);
+}
+
+
+/* Global Styles & Transitions */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Poppins', sans-serif; 
+    /* Smooth transition for all elements */
+    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s, border-color 0.3s, transform 0.15s;
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text);
+  padding: 15px;
+  min-height: 100vh;
+}
+
+/* --- Header & Theme Toggle --- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-end;
+}
+
+#theme-toggle {
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: var(--text-secondary);
+    color: var(--bg-gradient-color-start, #f0f4f8); /* Use a fall-back light color */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#theme-toggle:hover {
+    background: var(--tab-active-deepthink);
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  margin-bottom: 20px;
+  /* Existing Gradient */
+  background: linear-gradient(45deg, var(--tab-active-standard), var(--tab-active-canva));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Added Effect */
+  text-shadow: 0 0 5px var(--shadow-base);
+  transition: text-shadow 0.3s ease;
+}
+
+/* Card Styling */
+.input-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 16px var(--shadow-base);
+  border: 1px solid rgba(255,255,255,0.1); /* Subtle white border for light mode contrast */
+}
+[data-theme="dark"] .input-card {
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Input Styling */
+input[type="text"], input[type="password"], textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+}
+[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] textarea, [data-theme="dark"] select {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Main Button Styling (Base) */
+button {
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  background: var(--btn-bg);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+button:hover:not(:disabled) {
+  background: var(--btn-hover);
+}
+button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+
+/* 3D Generate Button Styling (Applied to #generateButton) */
+button#generateButton {
+    padding: 16px 32px; /* Increased size */
+    font-size: 1.2rem;
+    font-weight: 700;
+    /* 3D Effect: Outer shadow for lift, dark shadow for depth */
+    box-shadow: 
+        0 4px 0 0 rgba(0, 0, 0, 0.2), /* Dark base for depth */
+        0 10px 20px rgba(0, 0, 0, 0.25), /* Floating shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Highlight top */
+    transform: translateY(0);
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button#generateButton:hover:not(:disabled) {
+    transform: translateY(-2px); /* Slight hover lift */
+    box-shadow: 
+        0 6px 0 0 rgba(0, 0, 0, 0.2),
+        0 15px 30px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: var(--btn-hover); /* Keep background hover effect */
+}
+
+button#generateButton:active:not(:disabled) {
+    /* Press down effect */
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 0 rgba(0, 0, 0, 0.3), /* Reduced base shadow */
+        0 5px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(0, 0, 0, 0.2); /* Inner depression shadow */
+}
+
+
+/* Mode Tab Styling */
+.mode-tab {
+  display: inline-block;
+  padding: 8px 18px;
+  margin: 5px 5px 8px 0;
+  border-radius: 30px;
+  cursor: pointer;
+  background: var(--tab-bg);
+  color: var(--text);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+.mode-tab:hover:not(.active) {
+    background: var(--text-secondary);
+    color: var(--card-bg);
+}
+.mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; }
+.mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; }
+.mode-tab.active.deepthink { background: var(--tab-active-deepthink); color: #fff; }
+.mode-tab.active.deepresearch { background: var(--tab-active-deepresearch); color: #fff; }
+
+
+/* Response Area Styling */
+#response {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 20px;
+  min-height: 100px;
+  white-space: pre-wrap;
+  overflow: auto;
+  margin-top: 15px;
+  box-shadow: 0 8px 20px var(--shadow-base);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Editor Styling */
+#editor {
+  width: 100%;
+  height: 250px;
+  background: #282c34; /* Dark background for code editor (fixed for readability) */
+  color: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  margin-top: 10px;
+  overflow: auto;
+  white-space: pre;
+  font-family: monospace;
+  font-size: 0.9rem;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Code Language Buttons (Two-Column Grid) */
+.lang-buttons {
+    display: grid; /* Changed from flex */
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 12px; /* Increased gap */
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
+}
+
+/* Canva Type Selector Styling (Unchanged) */
+.canva-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
+}
+
+.canva-type-btn {
+  padding: 8px 14px;
+  border-radius: 40px;
+  background: var(--canva-type-bg);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.canva-type-btn.active-type {
+  background: var(--canva-type-active);
+  color: #fff;
+  border-color: var(--canva-type-active);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.canva-type-btn:hover:not(.active-type) {
+    background: #b2dfdb;
+}
+
+.lang-btn {
+  padding: 8px 14px;
+  border-radius: 40px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center text within the grid item */
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.lang-btn.active-lang { background: var(--tab-active-canva); color: #fff; border-color: var(--tab-active-canva); }
+.lang-btn:hover:not(.active-lang) { background: #f0f0f0; }
+
+.sources-list {
+  margin-top: 15px;
+  list-style: none;
+  padding-left: 0;
+}
+.sources-list li {
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+.sources-list li a {
+  color: var(--tab-active-deepresearch);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid var(--tab-active-deepthink);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* File Input Custom Styling (Minimized) */
+.file-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 10px; /* Reduced padding */
+    margin-top: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.file-upload-container:hover {
+    border-color: #54a0ff;
+}
+.file-upload-container input[type="file"] {
+    display: none;
+}
+.file-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e9f5ff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+.file-clear-btn {
+    background: none;
+    color: #ff6b6b;
+    padding: 5px;
+    box-shadow: none;
+    margin: 0;
+}
+.file-clear-btn:hover {
+    color: #ff4757;
+    background: none;
+}
+
+/* iframe for code preview */
+#preview {
+    width: 100%;
+    height: 300px; /* Set a reasonable height */
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    margin-top: 15px;
+    background-color: white; /* Ensure visibility */
+}
 </style>
 </head>
-<body>
+<!-- Set default theme to light, as the CSS default is light -->
+<body data-theme="light">
+
+<header>
+    <!-- Dark Mode Toggle Button -->
+    <button id="theme-toggle"><i class="fas fa-moon"></i> Dark Mode</button>
+</header>
+
 <div class="container">
-<h1><i class="fas fa-robot"></i> Gemma AI Hub</h1>
+<h1><i class="fas fa-magic"></i> Gemma AI Hub: Multimodal & Code Canvas</h1>
 
 <div class="input-card">
-<label><i class="fas fa-key"></i> Google AI API Key:</label>
-<input type="password" id="apiKey" placeholder="Enter API Key">
+  <label class="block mb-2 font-semibold"><i class="fas fa-key"></i> Google AI API Key:</label>
+  <input type="password" id="apiKey" placeholder="Enter API Key (required)">
 
-<label><i class="fas fa-layer-group"></i> Gemma Model:</label>
-<select id="gemmaVersion">
-  <!-- Gemma 3-series -->
-  <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
-  <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
-  <option value="gemma-3-12b-it">Gemma 3 12B IT</option>
-  <option value="gemma-3-27b-it">Gemma 3 27B IT</option>
-  <!-- Gemma 3n-series -->
-  <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
-  <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
-</select>
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-layer-group"></i> Gemma Model:</label>
+  <!-- Model list updated to Gemma 3-series -->
+  <select id="gemmaVersion" class="block">
+    <option value="gemma-3-12b-it" selected>Gemma 3 12B IT (Recommended)</option>
+    <option value="gemma-3-27b-it">Gemma 3 27B IT (Powerful)</option>
+    <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
+    <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
+    <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
+    <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
+  </select>
+  
+  <!-- File Uploader (Minimized) -->
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-camera"></i> File Upload (Optional):</label>
+  <div class="file-upload-container text-center" onclick="document.getElementById('fileUpload').click()">
+    <i class="fas fa-cloud-upload-alt text-lg text-gray-500"></i>
+    <p class="text-sm text-gray-600">Click to select an image or file.</p>
+    <input type="file" id="fileUpload" accept="image/*,video/*,application/pdf,text/*">
+  </div>
+  
+  <div id="fileInfoDisplay" class="file-info" style="display:none;">
+      <span id="fileName"></span>
+      <button class="file-clear-btn" onclick="clearFile(event)"><i class="fas fa-times"></i> Clear</button>
+  </div>
 
-<div>
-  <div class="mode-tab active" data-mode="standard"><i class="fas fa-circle"></i> Standard</div>
-  <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink</div>
-  <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva</div>
-  <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> Deep Research</div>
+
+  <div class="mt-4">
+    <div class="mode-tab active standard" data-mode="standard"><i class="fas fa-circle"></i> Standard Text</div>
+    <div class="mode-tab" data-mode="canva"><i class="fas fa-paint-brush"></i> Canva Studio (File/Code)</div>
+    <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink Analysis</div>
+    <div class="mode-tab" data-mode="deepresearch"><i class="fas fa-search"></i> DeepResearch (Grounded)</div>
+  </div>
+
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-edit"></i> Prompt:</label>
+  <textarea id="userPrompt" rows="4" placeholder="Describe the document, code, or game you want to generate, or ask a question about the uploaded file..."></textarea>
+
+  <!-- GENERATE BUTTON: Size Increased and 3D Styled -->
+  <button id="generateButton" class="mt-4 w-full"><i class="fas fa-rocket"></i> Generate Content</button>
 </div>
 
-<label><i class="fas fa-edit"></i> Prompt:</label>
-<textarea id="userPrompt" rows="4" placeholder="Type your prompt here..."></textarea>
-<button onclick="generate()"><i class="fas fa-play"></i> Generate</button>
+<div id="canva-container" class="input-card" style="display:none;">
+    <h2 class="text-xl font-bold mb-3 text-center text-gray-700">Canva Studio Configuration</h2>
+    
+    <!-- Canva Type Selector (Simplified) -->
+    <div class="canva-type-selector" id="canva-type-selector">
+        <div class="canva-type-btn active-type" data-type="document"><i class="fas fa-file-word"></i> Document (Markdown)</div>
+        <div class="canva-type-btn" data-type="code"><i class="fas fa-code"></i> Code / Game Development</div>
+    </div>
+    
+    <!-- Code Language Selector (Now 2-Column Grid) -->
+    <div class="lang-buttons" id="lang-buttons" style="display:none;">
+        <button class="lang-btn active-lang" data-lang="html"><i class="fas fa-code"></i> HTML</button>
+        <button class="lang-btn" data-lang="python"><i class="fab fa-python"></i> Python</button>
+        <button class="lang-btn" data-lang="javascript"><i class="fab fa-js"></i> JavaScript</button>
+        <button class="lang-btn" data-lang="typescript"><i class="fab fa-js"></i> TypeScript</button>
+        <button class="lang-btn" data-lang="java"><i class="fab fa-java"></i> Java</button>
+        <button class="lang-btn" data-lang="php"><i class="fab fa-php"></i> PHP</button>
+        <button class="lang-btn" data-lang="csharp" title="C#"><i class="fas fa-sharp"></i> C#</button>
+        <button class="lang-btn" data-lang="cpp" title="C/C++"><i class="fas fa-file-code"></i> C/C++</button>
+        <button class="lang-btn" data-lang="go"><i class="fas fa-code-branch"></i> Go</button>
+        <button class="lang-btn" data-lang="rust"><i class="fab fa-rust"></i> Rust</button>
+        <button class="lang-btn" data-lang="ruby"><i class="fas fa-gem"></i> Ruby</button>
+        <button class="lang-btn" data-lang="sql"><i class="fas fa-database"></i> SQL</button>
+        <button class="lang-btn" data-lang="r"><i class="fas fa-chart-line"></i> R</button>
+        <button class="lang-btn" data-lang="lua"><i class="fas fa-moon"></i> Lua</button>
+        <button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
+        <button class="lang-btn" data-lang="kotlin"><i class="fas fa-mobile-alt"></i> Kotlin</button>
+        <button class="lang-btn" data-lang="swift"><i class="fab fa-swift"></i> Swift</button>
+        
+        <!-- Hidden button for internal document use -->
+        <button class="lang-btn" data-lang="markdown" style="display:none;"></button>
+    </div>
+
+    <!-- Actions for Editor Content -->
+    <div class="flex gap-3 mt-4">
+        <button id="copyEditorButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Editor Content</button>
+        <button id="downloadEditorButton" class="flex-1 bg-purple-500 hover:bg-purple-600"><i class="fas fa-download"></i> Download File</button>
+    </div>
+
+    <pre id="editor" contenteditable="true" class="mt-4">Generated content will appear here. For code, you can edit it live.</pre>
+    <!-- Updated editor note -->
+    <div class="text-xs text-gray-500 mt-2">
+        <i class="fas fa-info-circle"></i> Note: Content is generated as **text-based structures** (Markdown or Code) for editing and download.
+    </div>
+
+    <!-- Preview for HTML/Game code -->
+    <iframe id="preview" title="Code Preview"></iframe>
 </div>
 
-<div id="response">Your output will appear here.</div>
+<!-- Response Area for Standard/DeepThink/DeepResearch -->
+<div class="input-card">
+    <h2 class="text-xl font-bold mb-3 text-gray-700">Output Result</h2>
+    
+    <!-- Actions for Response Content -->
+    <div class="flex gap-3">
+        <button id="copyResponseButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Response Text</button>
+        <button id="downloadResponseButton" class="flex-1 bg-purple-500 hover:bg-purple-600" style="display:none;"><i class="fas fa-download"></i> Download Response</button>
+    </div>
 
-<div id="canva-container">
-<div class="lang-buttons">
-<button class="lang-btn" data-lang="html"><i class="fas fa-code"></i> HTML</button>
-<button class="lang-btn" data-lang="css"><i class="fas fa-paint-brush"></i> CSS</button>
-<button class="lang-btn" data-lang="js"><i class="fas fa-terminal"></i> JS</button>
-<button class="lang-btn" data-lang="java"><i class="fas fa-java"></i> Java</button>
-<button class="lang-btn" data-lang="typescript"><i class="fas fa-code"></i> TypeScript</button>
-<button class="lang-btn" data-lang="dart"><i class="fas fa-mobile-alt"></i> Dart</button>
-<button class="lang-btn" data-lang="kotlin"><i class="fas fa-android"></i> Kotlin</button>
-<button class="lang-btn" data-lang="swift"><i class="fas fa-apple"></i> Swift</button>
-<button class="lang-btn" data-lang="python"><i class="fas fa-python"></i> Python</button>
-</div>
-<div id="editor"></div>
-<iframe id="preview"></iframe>
+    <div id="response" class="font-mono text-sm">Your output will appear here.</div>
+    <ul class="sources-list" id="sources-list"></ul>
 </div>
 
-<ul class="sources-list" id="sources-list"></ul>
+</div>
 
 <script>
-let selectedMode='standard';
-let activeLang='html';
-let canvaFiles={html:'',css:'',js:'',java:'',typescript:'',dart:'',kotlin:'',swift:'',python:''};
-const sourcesList=document.getElementById('sources-list');
-const editor=document.getElementById('editor');
-const preview=document.getElementById('preview');
-const canvaContainer=document.getElementById('canva-container');
-
-document.querySelectorAll('.mode-tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    selectedMode=tab.dataset.mode;
-    canvaContainer.style.display=(selectedMode==='canva')?'block':'none';
-    sourcesList.innerHTML='';
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      })
+      .catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
   });
-});
-
-document.querySelectorAll('.lang-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    activeLang=btn.dataset.lang;
-    editor.textContent=canvaFiles[activeLang]||'';
-  });
-});
-
-editor.addEventListener('input',()=>{
-  canvaFiles[activeLang]=editor.textContent;
-  updatePreview();
-});
-
-function updatePreview(){
-  preview.srcdoc=`<html><head><style>${canvaFiles.css}</style></head><body>${canvaFiles.html}<script>${canvaFiles.js}<\/script></body></html>`;
 }
 
-async function generate(){
-  const apiKey=document.getElementById('apiKey').value.trim();
-  const model=document.getElementById('gemmaVersion').value;
-  const prompt=document.getElementById('userPrompt').value.trim();
-  const response=document.getElementById('response');
-  response.textContent='Generating...';
-  sourcesList.innerHTML='';
 
-  if(!apiKey || !prompt){response.textContent='API Key and Prompt required'; return;}
+let selectedMode = 'standard';
+let selectedCanvaType = 'document'; 
+let activeLang = 'markdown'; 
+let canvaFiles = { 
+    html: '', python: '', javascript: '', typescript: '', java: '', 
+    dart: '', kotlin: '', swift: '', php: '', csharp: '', cpp: '', 
+    go: '', rust: '', ruby: '', sql: '', r: '', lua: '',
+    markdown: '' 
+};
+let selectedFile = { 
+    file: null, 
+    base64Data: null, 
+    mimeType: null 
+};
 
-  try{
-    const payload={contents:[{parts:[{text:prompt}]}]};
-    const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const data=await res.json();
-    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+let currentTypingInterval = null; 
 
-    if(selectedMode==='deepthink'){
-      response.textContent='DeepThink reasoning:\n\n'+text;
-    } else if(selectedMode==='deepresearch'){
-      response.textContent='Deep Research output:\n\n'+text;
-    } else if(selectedMode==='canva'){
-      canvaFiles.html=text;
-      canvaFiles.css='/* CSS code */';
-      canvaFiles.js='// JS code';
-      editor.textContent=canvaFiles[activeLang];
-      updatePreview();
-      response.textContent='Code generated in Canva mode.';
-    } else {
-      response.textContent=text;
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const canvaContainer = document.getElementById('canva-container');
+const langButtonsContainer = document.getElementById('lang-buttons');
+const canvaTypeButtons = document.getElementById('canva-type-selector');
+const sourcesList = document.getElementById('sources-list');
+const generateButton = document.getElementById('generateButton');
+const apiKeyInput = document.getElementById('apiKey');
+const userPromptInput = document.getElementById('userPrompt');
+const responseDiv = document.getElementById('response');
+const fileUploadInput = document.getElementById('fileUpload');
+const fileInfoDisplay = document.getElementById('fileInfoDisplay');
+const fileNameDisplay = document.getElementById('fileName');
+const gemmaVersion = document.getElementById('gemmaVersion'); // Changed ID for Gemma
+
+const copyEditorButton = document.getElementById('copyEditorButton');
+const downloadEditorButton = document.getElementById('downloadEditorButton');
+const copyResponseButton = document.getElementById('copyResponseButton');
+const downloadResponseButton = document.getElementById('downloadResponseButton');
+
+// Utility Functions
+function updatePreview() {
+  if (selectedCanvaType === 'code' && activeLang === 'html') {
+    preview.srcdoc = canvaFiles.html; 
+  } else {
+    preview.srcdoc = '';
+  }
+}
+
+// --- Streaming Simulation ---
+function typewriterEffect(element, text, delay = 15) {
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
     }
-  }catch(err){response.textContent='Error: '+err.message;}
+    element.innerHTML = ''; 
+    let i = 0;
+    
+    element.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
+    const preElement = document.getElementById('typing-output');
+
+    preElement.style.borderRight = '2px solid var(--text)';
+    preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
+
+    
+    currentTypingInterval = setInterval(() => {
+        if (i < text.length) {
+            preElement.textContent += text.charAt(i); 
+            preElement.scrollTop = preElement.scrollHeight;
+            i++;
+        } else {
+            clearInterval(currentTypingInterval);
+            currentTypingInterval = null;
+            preElement.style.borderRight = 'none';
+            preElement.style.animation = 'none';
+        }
+    }, delay);
 }
+
+function displayResponse(text, candidates = []) {
+  downloadResponseButton.style.display = 'none';
+
+  if (selectedMode === 'canva') {
+      responseDiv.innerHTML = '<div class="text-lg font-bold text-teal-600"><i class="fas fa-check-circle"></i> Content generated and ready in the editor above.</div>';
+  } else {
+      typewriterEffect(responseDiv, text, 15);
+      downloadResponseButton.style.display = 'flex';
+  }
+}
+
+// --- File Handling ---
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    clearFileState();
+    selectedFile.file = file;
+    selectedFile.mimeType = file.type;
+
+    fileNameDisplay.textContent = file.name;
+    fileInfoDisplay.style.display = 'flex';
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedFile.base64Data = e.target.result.split(',')[1];
+            userPromptInput.placeholder = `Ask a question about the image (${file.name})...`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        userPromptInput.placeholder = `A ${file.type} file (${file.name}) is selected. Ask for an analysis of its content/purpose.`;
+    }
+}
+
+function clearFileState() {
+    selectedFile = { file: null, base64Data: null, mimeType: null };
+    fileUploadInput.value = '';
+    fileInfoDisplay.style.display = 'none';
+    fileNameDisplay.textContent = '';
+    userPromptInput.placeholder = "Describe the document, code, game, or analysis you want to generate...";
+}
+
+function clearFile(event) {
+    event.stopPropagation(); 
+    clearFileState();
+}
+
+// --- Canva Type & Language Switching ---
+
+// Event Listener for Main Mode Tabs
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active', 'standard', 'canva', 'deepthink', 'deepresearch'));
+    tab.classList.add('active', tab.dataset.mode);
+    selectedMode = tab.dataset.mode;
+    canvaContainer.style.display = (selectedMode === 'canva') ? 'block' : 'none';
+    sourcesList.innerHTML = '';
+    
+    if (currentTypingInterval) clearInterval(currentTypingInterval);
+    
+    if (selectedMode === 'canva') {
+        setCanvaType(selectedCanvaType);
+        downloadResponseButton.style.display = 'none';
+        responseDiv.innerHTML = '<div class="text-xs text-gray-500">Output for Canva Studio appears in the editable editor above.</div>';
+    } else {
+        editor.textContent = ''; // Clear editor for non-canva modes
+        preview.srcdoc = '';
+        responseDiv.innerHTML = 'Your output will appear here.';
+    }
+  });
+});
+
+function setCanvaType(type) {
+    document.querySelectorAll('.canva-type-btn').forEach(b => b.classList.remove('active-type'));
+    const targetButton = canvaTypeButtons.querySelector(`[data-type="${type}"]`);
+    if (targetButton) {
+        targetButton.classList.add('active-type');
+    }
+    
+    selectedCanvaType = type;
+    langButtonsContainer.style.display = (type === 'code') ? 'grid' : 'none';
+    
+    if (type === 'code') {
+        // Ensure an active language is set if switching to code mode
+        const currentActiveLangBtn = langButtonsContainer.querySelector('.active-lang');
+        activeLang = currentActiveLangBtn ? currentActiveLangBtn.dataset.lang : 'html';
+    } else {
+        activeLang = 'markdown';
+    }
+
+    editor.textContent = canvaFiles[activeLang] || '';
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+}
+
+// *** FIX: Event Listener for Canva Type Buttons (Document/Code) ***
+canvaTypeButtons.querySelectorAll('.canva-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newType = btn.dataset.type;
+    setCanvaType(newType);
+  });
+});
+
+// Event Listener for Code Language Buttons
+langButtonsContainer.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (selectedCanvaType !== 'code') return;
+    
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
+    btn.classList.add('active-lang');
+    
+    // Save current editor content before switching language
+    canvaFiles[activeLang] = editor.textContent;
+    
+    activeLang = btn.dataset.lang;
+    editor.textContent = canvaFiles[activeLang] || '';
+    
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+  });
+});
+
+editor.addEventListener('input', () => {
+  canvaFiles[activeLang] = editor.textContent;
+  if (activeLang === 'html') updatePreview();
+});
+
+// --- API Generation ---
+
+async function generate() {
+  const apiKey = apiKeyInput.value.trim();
+  const model = gemmaVersion.value; // Use gemmaVersion
+  const prompt = userPromptInput.value.trim();
+
+  if (currentTypingInterval) {
+      clearInterval(currentTypingInterval);
+      currentTypingInterval = null;
+  }
+  
+  responseDiv.innerHTML = '';
+  sourcesList.innerHTML = '';
+
+  if (!apiKey || !prompt) { 
+    responseDiv.innerHTML = '<div class="text-red-500 font-semibold">API Key and Prompt required.</div>'; 
+    return; 
+  }
+  
+  if (selectedFile.file && !selectedFile.base64Data && selectedFile.file.type.startsWith('image/')) {
+    responseDiv.innerHTML = '<div class="text-yellow-500 font-semibold">Please wait for the image to finish loading before generating.</div>';
+    return;
+  }
+
+  generateButton.disabled = true; 
+  responseDiv.innerHTML = '<div class="loader"></div> Awaiting response...';
+
+  // API URL remains the same structure for all Google models
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  let systemPrompt = '';
+  let tools = [];
+  let contentsParts = [];
+
+  // 1. Build Content Parts (Text + Multimodal)
+  contentsParts.push({ text: prompt });
+  if (selectedFile.base64Data) {
+      contentsParts.push({
+          inlineData: {
+              mimeType: selectedFile.mimeType,
+              data: selectedFile.base64Data
+          }
+      });
+  } else if (selectedFile.file) {
+      // For non-image files where we don't read content, provide a textual hint
+      contentsParts.push({ text: `[User has attached a file named: ${selectedFile.file.name} of type: ${selectedFile.file.type}. Please analyze based on the prompt, acknowledging the file attachment.]` });
+  }
+
+  // 2. Dynamic System Prompt Setup
+  if (selectedMode === 'deepthink') { 
+      systemPrompt = "You are a master analytical thinker. Provide a structured, concise, multi-perspective analysis on the user's prompt. Do not use any external tools or search.";
+  } else if (selectedMode === 'deepresearch') { 
+      systemPrompt = "You are a live researcher. Use verified online information to answer the user's query and cite all sources at the end. Provide a detailed, grounded response. Ensure the response is informative and based on the retrieved web content."; 
+      tools = [{ google_search: {} }]; 
+  } else if (selectedMode === 'canva') { 
+      let formatInstruction = '';
+      if (selectedCanvaType === 'document') {
+          formatInstruction = `Generate the complete content for a ${prompt} in **clean, structured Markdown format**. Only output the Markdown text, ready for conversion to a document format. Do not include any explanation or surrounding text.`;
+          activeLang = 'markdown';
+      } else if (selectedCanvaType === 'code') {
+          // If the user hasn't explicitly set the language yet, use the active one (default 'html')
+          const currentLang = langButtonsContainer.querySelector('.active-lang')?.dataset?.lang || 'html'; 
+          formatInstruction = `You are a coding assistant. Generate a complete, single-file, and runnable ${currentLang.toUpperCase()} program or game based on the prompt: "${prompt}". For HTML, include all CSS and JavaScript in the single file. Only output the code itself, with no explanations or surrounding text.`;
+      }
+      
+      systemPrompt = `You are the AI engine for the 'Canva Studio'. Your task is to strictly follow the format instruction: ${formatInstruction}`;
+  }
+  
+  // 3. Construct Final Payload
+  const payload = { 
+    contents: [{ parts: contentsParts }], 
+    ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } }), 
+    ...(tools.length > 0 && { tools: tools }) 
+  };
+
+  try {
+    let data;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.status === 429 && attempt < 2) { await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1500)); continue; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json(); 
+        break;
+      } catch (e) {
+        if (attempt === 2) throw e;
+      }
+    }
+
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || 'No response.';
+    
+    // Handle Canva mode output
+    if (selectedMode === 'canva') { 
+        canvaFiles[activeLang] = text; 
+        editor.textContent = text; 
+        if (activeLang === 'html') updatePreview();
+        displayResponse('Content generated and ready in the editor above.', data?.candidates || []); 
+    } else {
+        editor.textContent = '';
+        preview.srcdoc = '';
+        displayResponse(text, data?.candidates || []); 
+    }
+
+    // Handle Grounding/Sources for DeepResearch
+    if (selectedMode === 'deepresearch') {
+      const grounding = candidate?.groundingMetadata?.groundingAttributions || [];
+      sourcesList.innerHTML = '<li class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle"></i> Research is powered by Google Search grounding for real-time information.</li>';
+
+      if (grounding.length > 0) {
+        sourcesList.innerHTML += '<li class="font-bold mt-2 text-pink-500"><i class="fas fa-atlas"></i> Grounding Sources Used:</li>';
+        grounding.forEach((src, i) => {
+          let uri = src.web?.uri || null, title = src.web?.title || `Source ${i+1}`;
+          if (uri) { 
+              const li = document.createElement('li'); 
+              li.innerHTML = `<i class="fas fa-link text-xs mr-1"></i> <a href="${uri}" target="_blank">${title}</a>`; 
+              sourcesList.appendChild(li); 
+          }
+        });
+      } else {
+        sourcesList.innerHTML += '<li class="text-xs text-gray-500 mt-2">No external sources were used for this response.</li>';
+      }
+    }
+
+  } catch (err) { 
+      responseDiv.innerHTML = `<div class="text-red-500 font-semibold">Error: Could not complete request. ${err.message}. Check your API key.</div>`; 
+  }
+  finally { 
+      generateButton.disabled = false; 
+  }
+}
+
+// --- Action Button Functions (Copy & Download) ---
+
+function copyText(elementId, buttonElement) {
+    const element = document.getElementById(elementId);
+    let textToCopy;
+    
+    if (elementId === 'editor') {
+        textToCopy = element.textContent;
+    } else { 
+        const pre = element.querySelector('#typing-output');
+        textToCopy = pre ? pre.textContent : '';
+        if (!textToCopy && element.innerText.includes('Content generated')) {
+            textToCopy = 'Content generated and ready in the editor above.';
+        }
+    }
+
+    if (!textToCopy || textToCopy.trim() === 'Your output will appear here.' || textToCopy.trim() === 'Generated content will appear here. For code, you can edit it live.' || textToCopy.trim() === '') {
+        showTemporaryMessage(buttonElement, 'Nothing to copy.', 'bg-yellow-500');
+        return;
+    }
+    
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.style.borderRight = 'none'; 
+    }
+
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showTemporaryMessage(buttonElement, 'Content Copied!', 'bg-teal-500');
+    } catch (err) {
+        console.error('Copy failed:', err);
+        showTemporaryMessage(buttonElement, 'Copy Failed!', 'bg-red-500');
+    }
+}
+
+function downloadContent(content, fileName, mimeType, buttonElement) {
+    if (!content.trim()) {
+        showTemporaryMessage(buttonElement, 'Nothing to download.', 'bg-yellow-500');
+        return;
+    }
+    
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.style.borderRight = 'none'; 
+    }
+
+    try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showTemporaryMessage(buttonElement, 'Download Complete!', 'bg-teal-500');
+    } catch (err) {
+        showTemporaryMessage(buttonElement, 'Download Failed!', 'bg-red-500');
+        console.error('Download error:', err);
+    }
+}
+
+function showTemporaryMessage(originalButton, message, colorClass) {
+    const originalText = originalButton.innerHTML;
+    const originalClasses = originalButton.className;
+    
+    originalButton.innerHTML = message;
+    originalButton.classList.remove(...originalButton.classList.filter(c => c.startsWith('bg-') || c.startsWith('hover:bg-')));
+    originalButton.classList.add(colorClass, 'hover:bg-opacity-90');
+
+    setTimeout(() => {
+        originalButton.innerHTML = originalText;
+        originalButton.className = originalClasses;
+        
+        if(originalButton.id === 'generateButton') {
+            originalButton.style.transform = 'translateY(0)';
+            originalButton.style.boxShadow = '0 4px 0 0 rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+        }
+    }, 2000);
+}
+
+
+// --- Theme Toggle Logic ---
+const body = document.body;
+const themeToggle = document.getElementById('theme-toggle');
+const THEME_KEY = 'geminiHubTheme';
+
+function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i> Light Mode' : '<i class="fas fa-moon"></i> Dark Mode';
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light'; 
+    applyTheme(savedTheme);
+}
+
+// --- Event Handlers ---
+
+copyEditorButton.addEventListener('click', (e) => copyText('editor', e.currentTarget));
+downloadEditorButton.addEventListener('click', (e) => {
+    let content = editor.textContent;
+    let extension;
+    let mimeType;
+    let fileNameBase = 'gemma_canva_output';
+    
+    if (selectedCanvaType === 'code') {
+        extension = activeLang;
+        mimeType = `text/${activeLang === 'html' ? 'html' : 'plain'}`;
+        if (activeLang === 'typescript') extension = 'ts';
+        if (activeLang === 'csharp') extension = 'cs';
+        if (activeLang === 'cpp') extension = 'cpp';
+        if (activeLang === 'python') extension = 'py';
+        if (activeLang === 'javascript') extension = 'js';
+    } else { 
+        extension = 'md';
+        mimeType = 'text/markdown';
+    }
+
+    downloadContent(content, `${fileNameBase}.${extension}`, mimeType, e.currentTarget);
+});
+
+downloadResponseButton.addEventListener('click', (e) => {
+    const pre = responseDiv.querySelector('#typing-output');
+    const content = pre ? pre.textContent : '';
+    downloadContent(content, 'gemma_response.txt', 'text/plain', e.currentTarget);
+});
+
+copyResponseButton.addEventListener('click', (e) => copyText('response', e.currentTarget));
+
+
+fileUploadInput.addEventListener('change', handleFileUpload);
+generateButton.addEventListener('click', generate);
+document.getElementById('userPrompt').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate(); });
+themeToggle.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    setCanvaType('document'); 
+    downloadResponseButton.style.display = 'none';
+    initTheme(); 
+});
+
 </script>
 </body>
 </html>
+
