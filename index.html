@@ -328,6 +328,26 @@ footer {
 .card:nth-child(6) { animation-delay: 0.3s; }
 .card:nth-child(7) { animation-delay: 0.35s; }
 .card:nth-child(8) { animation-delay: 0.4s; }
+  .download-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 28px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 3;
+}
+
+.download-btn:hover {
+  background: var(--accent-hover);
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
 </style>
 </head>
 <body>
@@ -428,27 +448,6 @@ function createParticles() {
     particle.style.animationDelay = Math.random() * 5 + 's';
     particlesContainer.appendChild(particle);
   }
-}
-
-  .download-btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 14px 28px;
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-  border-radius: 50px;
-  text-decoration: none;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 3;
-}
-
-.download-btn:hover {
-  background: var(--accent-hover);
-  transform: scale(1.05);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
   if ('serviceWorker' in navigator) {
