@@ -33,7 +33,7 @@
 }
 *{ box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
 body{background:var(--bg-gradient);color:var(--text);padding:20px;min-height:100vh;}
-.container{max-width:800px;margin:auto;}
+.container{max-width:900px;margin:auto;}
 .title-area{text-align:center;margin-bottom:25px;}
 .title-area h1{font-size:2.5rem;font-weight:900;background:linear-gradient(90deg,#ff6ec4,#6a11cb,#2575fc,#ffb347);background-clip:text;-webkit-background-clip:text;color:transparent;animation:gradientMove 5s infinite linear;}
 @keyframes gradientMove{0%{background-position:0%}100%{background-position:100%}}
@@ -53,6 +53,7 @@ button:hover{background:var(--btn-hover);transform:scale(1.05);}
 .history-section h3{text-align:center;margin-bottom:10px;}
 .history-item{padding:10px;margin-bottom:8px;border-radius:10px;background:var(--tab-bg);cursor:pointer;transition:0.2s;}
 .history-item:hover{background:var(--tab-active);color:#fff;}
+#canvaLanguage{display:none;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -89,6 +90,29 @@ button:hover{background:var(--btn-hover);transform:scale(1.05);}
     <button onclick="generate()"><i class="fas fa-play"></i> Generate</button>
     <button id="playPauseBtn" onclick="togglePause()" style="background:orange;"><i class="fas fa-pause"></i> Pause</button>
     <button onclick="stopGeneration()" style="background:red;"><i class="fas fa-stop"></i> Stop</button>
+    <button onclick="newChat()" style="background:#ff4757;color:white;margin-left:10px;"><i class="fas fa-plus"></i> New Chat</button>
+
+    <select id="canvaLanguage">
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="javascript">JavaScript</option>
+      <option value="typescript">TypeScript</option>
+      <option value="dart">Dart</option>
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="csharp">C#</option>
+      <option value="java">Java</option>
+      <option value="kotlin">Kotlin</option>
+      <option value="swift">Swift</option>
+      <option value="go">Go</option>
+      <option value="rust">Rust</option>
+      <option value="python">Python</option>
+      <option value="ruby">Ruby</option>
+      <option value="php">PHP</option>
+      <option value="sql">SQL</option>
+      <option value="lua">Lua</option>
+      <option value="r">R</option>
+    </select>
   </div>
 
   <div id="response">Your output will appear here.</div>
@@ -99,7 +123,6 @@ button:hover{background:var(--btn-hover);transform:scale(1.05);}
   </div>
   <div class="preview-box" id="codePreview" contenteditable="true"></div>
 
-  <!-- Vertical History Section -->
   <div class="history-section">
     <h3>History</h3>
     <div id="historyList"></div>
@@ -107,25 +130,21 @@ button:hover{background:var(--btn-hover);transform:scale(1.05);}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-markup.min.js"></script>
-
 <script>
-let selectedMode='standard';
-let stopFlag=false, isPaused=false;
-let history=[];
+let selectedMode='standard',isPaused=false,stopFlag=false,history=[];
+const modeTabs=document.querySelectorAll('.mode-tab');
+const themeToggle=document.getElementById('themeToggle');
+const canvaLang=document.getElementById('canvaLanguage');
 
-document.querySelectorAll('.mode-tab').forEach(tab=>{
+modeTabs.forEach(tab=>{
   tab.addEventListener('click',()=>{
-    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    modeTabs.forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     selectedMode=tab.dataset.mode;
+    canvaLang.style.display = selectedMode==='canva'?'block':'none';
   });
 });
 
-const themeToggle=document.getElementById('themeToggle');
 themeToggle.addEventListener('click',()=>{
   document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
   localStorage.setItem('theme',document.body.dataset.theme);
@@ -140,6 +159,15 @@ function togglePause(){
 
 function stopGeneration(){ stopFlag=true; isPaused=false; document.getElementById('playPauseBtn').innerHTML='<i class="fas fa-pause"></i> Pause'; }
 
+function newChat(){
+  document.getElementById('response').textContent='';
+  document.getElementById('codePreview').innerHTML='';
+  document.getElementById('userPrompt').value='';
+  history=[];
+  renderHistory();
+  stopGeneration();
+}
+
 async function generate(){
   stopFlag=false; isPaused=false;
   const apiKey=document.getElementById('apiKey').value.trim();
@@ -147,14 +175,15 @@ async function generate(){
   const prompt=document.getElementById('userPrompt').value.trim();
   const responseBox=document.getElementById('response');
   const preview=document.getElementById('codePreview');
+  const language=canvaLang.value||'html';
   responseBox.textContent='Generating...';
   preview.innerHTML='';
   if(!apiKey || !prompt){responseBox.textContent='⚠️ API Key and Prompt required'; return;}
   try{
     let modifiedPrompt=prompt;
     if(selectedMode==='reasoning'){modifiedPrompt=`You are a reasoning AI. Explain step by step, then give final answer. User: ${prompt}`;}
-    if(selectedMode==='canva'){modifiedPrompt=`Generate ${prompt} in programming code (HTML/CSS/JS/Python etc). Output code only.`;}
-    
+    if(selectedMode==='canva'){modifiedPrompt=`Generate a complete multi-file project in ${language}. Separate files with "--- File: filename.ext". Output code only.`;}
+
     const payload={contents:[{parts:[{text:modifiedPrompt}]}]};
     const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -175,28 +204,55 @@ async function generate(){
       await new Promise(r=>setTimeout(r,30));
     }
 
-    // Canva live preview
+    // Canva multi-file preview
     if(selectedMode==='canva'){
       preview.innerHTML='';
-      const pre=document.createElement('pre');
-      const code=document.createElement('code');
-      code.className='language-js';
-      code.textContent=text;
-      pre.appendChild(code);
-      preview.appendChild(pre);
-      Prism.highlightElement(code);
+      const files=text.split(/---\s*File:/);
+      let htmlContent='', cssContent='', jsContent='', dartContent='';
 
-      const iframe=document.createElement('iframe');
-      iframe.style.width='100%'; iframe.style.height='300px'; iframe.style.border='none';
-      preview.appendChild(iframe);
-      const doc=iframe.contentDocument||iframe.contentWindow.document;
-      doc.open(); doc.write(text); doc.close();
+      files.forEach(f=>{
+        if(!f.trim()) return;
+        const lines=f.trim().split("\n");
+        const filename=lines.shift().trim();
+        const content=lines.join("\n");
 
-      preview.addEventListener('input',()=>{
-        const doc=iframe.contentDocument||iframe.contentWindow.document;
-        doc.open(); doc.write(preview.innerText); doc.close();
+        if(filename.endsWith('.html')) htmlContent = content;
+        else if(filename.endsWith('.css')) cssContent = content;
+        else if(filename.endsWith('.js')) jsContent = content;
+        else if(filename.endsWith('.ts')) jsContent = content;
+        else if(filename.endsWith('.dart')) dartContent = content;
+
+        const tabTitle=document.createElement('h4');
+        tabTitle.textContent=filename;
+        tabTitle.style.cursor="pointer";
+        preview.appendChild(tabTitle);
+
+        const codeBlock=document.createElement('pre');
+        const code=document.createElement('code');
+        code.className='language-js';
+        code.textContent=content;
+        codeBlock.appendChild(code);
+        preview.appendChild(codeBlock);
+        Prism.highlightElement(code);
+
+        codeBlock.style.display='none';
+        tabTitle.onclick=()=>{ codeBlock.style.display=codeBlock.style.display==='none'?'block':'none'; };
       });
+
+      if(htmlContent){
+        const iframe=document.createElement('iframe');
+        iframe.style.width='100%'; iframe.style.height='400px'; iframe.style.border='none';
+        preview.appendChild(iframe);
+        const doc=iframe.contentDocument||iframe.contentWindow.document;
+        doc.open();
+        doc.write(htmlContent);
+        if(cssContent) doc.write(`<style>${cssContent}</style>`);
+        if(jsContent) doc.write(`<script>${jsContent}<\/script>`);
+        if(dartContent) doc.write(`<script type="application/dart">${dartContent}<\/script>`);
+        doc.close();
+      }
     }
+
   }catch(e){responseBox.textContent='⚠️ Error: '+e.message;}
 }
 
