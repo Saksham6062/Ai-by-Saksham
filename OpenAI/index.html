@@ -28,6 +28,34 @@ body {
 }
 .header h1 { font-size:36px; margin-bottom:12px; font-weight:700; }
 .header p { opacity:0.95; font-size:15px; }
+
+/* --- Tab Navigation --- */
+.tabs {
+    display: flex;
+    background: #f7f7f8;
+    border-bottom: 2px solid #e5e5e5;
+}
+.tab {
+    flex: 1;
+    padding: 16px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f7f7f8;
+    border-right: 1px solid #e5e5e5;
+    transition: background 0.3s;
+}
+.tab:last-child { border-right: none; }
+.tab.active {
+    background: white;
+    color: #10a37f;
+    border-bottom: 3px solid #10a37f;
+}
+
+/* --- Controls / Chat Section --- */
+.section { display: none; }
+.section.active { display: block; }
+
 .controls {
     display: grid;
     grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
@@ -74,61 +102,118 @@ select:focus, input:focus { outline:none; border-color:#10a37f; box-shadow:0 0 0
 .input-container button { padding:14px 32px; background:linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; transition: all 0.3s; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; }
 .input-container button:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 20px rgba(16,163,127,0.3); }
 .input-container button:disabled { opacity:0.5; cursor:not-allowed; }
-.media-output { margin-top:16px; border-radius:12px; overflow:hidden; max-width:100%; }
-.media-output img { max-width:100%; display:block; border-radius:8px; }
-.media-output audio { width:100%; margin-top:10px; }
-@media(max-width:768px){ .controls{grid-template-columns:1fr;} .message-content{max-width:90%;} .header h1{font-size:28px;} }
+
+.api-settings {
+    padding:40px;
+    background:#fff;
+}
+.api-settings label { display:block; margin-bottom:10px; font-weight:600; color:#333; }
+.api-settings input {
+    width:100%; padding:14px; font-size:15px;
+    border:2px solid #e5e5e5; border-radius:10px;
+}
+.api-settings button {
+    margin-top:20px; padding:14px 32px;
+    background:linear-gradient(135deg,#10a37f 0%,#1a7f64 100%);
+    color:white; border:none; border-radius:12px;
+    font-weight:700; cursor:pointer;
+    font-size:15px; text-transform:uppercase;
+    letter-spacing:0.5px;
+}
+.api-settings button:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(16,163,127,0.3); }
+
+@media(max-width:768px){
+    .controls{grid-template-columns:1fr;}
+    .message-content{max-width:90%;}
+    .header h1{font-size:28px;}
+}
 </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🤖 OpenAI Multi-Model Interface</h1>
-        <p>Access GPT, O-Series, Image, Audio, and Video models with advanced modes</p>
+        <p>Access GPT Mini models with deep modes & API key control</p>
     </div>
 
-    <div class="controls">
-        <div class="control-group">
-            <label for="model-select">🎯 Select Model</label>
-            <select id="model-select">
-                <option value="gpt-4.1-mini" selected>GPT-4.1 Mini</option>
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="dall-e-3">DALL·E 3</option>
-                <option value="tts-1">TTS-1</option>
-            </select>
-        </div>
-
-        <div class="control-group">
-            <label for="mode-select">⚙️ Interaction Mode</label>
-            <select id="mode-select">
-                <option value="normal" selected>Normal Chat</option>
-                <option value="deepthink">Deep Think</option>
-                <option value="deep-research">Deep Research</option>
-            </select>
-            <div class="mode-description" id="mode-description">Standard conversational mode with real-time responses</div>
-        </div>
+    <div class="tabs">
+        <div class="tab active" id="chat-tab" onclick="switchTab('chat')">💬 Chat</div>
+        <div class="tab" id="api-tab" onclick="switchTab('api')">🔑 API Key</div>
     </div>
 
-    <div class="chat-container" id="chat-container">
-        <div class="message assistant">
-            <div class="message-avatar">AI</div>
-            <div class="message-content">
-                <div class="model-badge">GPT-4.1 Mini - Normal Mode</div>
-                Welcome! Select a model and mode above, then type your message below.
+    <!-- Chat Section -->
+    <div class="section active" id="chat-section">
+        <div class="controls">
+            <div class="control-group">
+                <label for="model-select">🎯 Select Model</label>
+                <select id="model-select">
+                    <option value="gpt-4.1-mini" selected>GPT-4.1 Mini</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="mode-select">⚙️ Interaction Mode</label>
+                <select id="mode-select">
+                    <option value="normal" selected>Normal Chat</option>
+                    <option value="deepthink">Deep Think</option>
+                    <option value="deep-research">Deep Research</option>
+                </select>
+                <div class="mode-description" id="mode-description">Standard conversational mode with real-time responses</div>
             </div>
         </div>
+
+        <div class="chat-container" id="chat-container">
+            <div class="message assistant">
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="model-badge">GPT-4.1 Mini - Normal Mode</div>
+                    Welcome! Enter your API key under the API tab before chatting.
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Type your message here..."></textarea>
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
-    <div class="input-container">
-        <textarea id="user-input" placeholder="Type your message here..."></textarea>
-        <button id="send-btn" onclick="sendMessage()">Send</button>
+    <!-- API Key Section -->
+    <div class="section" id="api-section">
+        <div class="api-settings">
+            <label for="api-key-input">Enter your OpenAI API key:</label>
+            <input type="password" id="api-key-input" placeholder="sk-..." />
+            <button onclick="saveApiKey()">Save API Key</button>
+            <p id="api-status" style="margin-top:15px; color:#10a37f; font-weight:600;"></p>
+        </div>
     </div>
 </div>
 
 <script>
-const BACKEND_URL = '/api/ask'; // Node.js backend endpoint
+const BACKEND_URL = '/api/ask'; // placeholder for backend endpoint
 let conversationHistory = [];
+
+function switchTab(tab){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    document.getElementById(`${tab}-section`).classList.add('active');
+}
+
+// Save API key
+function saveApiKey(){
+    const key = document.getElementById('api-key-input').value.trim();
+    if(!key){ alert('Please enter a valid API key'); return; }
+    localStorage.setItem('openai_api_key', key);
+    document.getElementById('api-status').textContent = '✅ API Key saved securely (stored locally).';
+    document.getElementById('api-key-input').value = '';
+}
+
+// Load saved API key (optional)
+function getApiKey(){
+    return localStorage.getItem('openai_api_key');
+}
 
 const modeDescriptions = {
     normal: 'Standard conversational mode with real-time responses',
@@ -144,13 +229,7 @@ document.getElementById('user-input').addEventListener('keydown', function(e){
     if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
 });
 
-function getModelType(model){
-    if(model.includes('dall-e')) return 'image';
-    if(model.includes('tts')) return 'tts';
-    return 'chat';
-}
-
-function addMessage(role, content, model, mode, mediaUrl=null){
+function addMessage(role, content, model, mode){
     const chatContainer = document.getElementById('chat-container');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
@@ -168,23 +247,6 @@ function addMessage(role, content, model, mode, mediaUrl=null){
     const text = document.createElement('div');
     text.textContent = content;
     messageContent.appendChild(text);
-
-    if(mediaUrl){
-        const mediaDiv = document.createElement('div');
-        mediaDiv.className='media-output';
-        if(mediaUrl.endsWith('.mp3') || mediaUrl.endsWith('.wav')){
-            const audio=document.createElement('audio');
-            audio.controls=true;
-            audio.src=mediaUrl;
-            mediaDiv.appendChild(audio);
-        } else {
-            const img=document.createElement('img');
-            img.src=mediaUrl;
-            mediaDiv.appendChild(img);
-        }
-        messageContent.appendChild(mediaDiv);
-    }
-
     messageDiv.appendChild(avatar);
     messageDiv.appendChild(messageContent);
     chatContainer.appendChild(messageDiv);
@@ -198,44 +260,34 @@ async function sendMessage(){
     input.value = '';
     const model = document.getElementById('model-select').value;
     const mode = document.getElementById('mode-select').value;
+    const apiKey = getApiKey();
+    if(!apiKey){
+        alert('Please set your API key in the API tab first!');
+        return;
+    }
     addMessage('user', userText, model, mode);
 
-    const type = getModelType(model);
-
-    let body = { type, model };
-    if(type==='chat'){
-        let messages = [...conversationHistory, { role: 'user', content: userText }];
-        if(mode==='deepthink'){
-            messages.unshift({ role:'system', content:'Provide step-by-step reasoning.' });
-        } else if(mode==='deep-research'){
-            messages.unshift({ role:'system', content:'Provide multi-perspective in-depth analysis.' });
-        }
-        body.messages = messages;
-    } else {
-        body.prompt = userText;
+    let messages = [...conversationHistory, { role: 'user', content: userText }];
+    if(mode==='deepthink'){
+        messages.unshift({ role:'system', content:'Provide step-by-step reasoning.' });
+    } else if(mode==='deep-research'){
+        messages.unshift({ role:'system', content:'Provide multi-perspective in-depth analysis.' });
     }
 
     try{
         const response = await fetch(BACKEND_URL, {
             method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(body)
+            headers:{
+                'Content-Type':'application/json',
+                'Authorization':`Bearer ${apiKey}`
+            },
+            body: JSON.stringify({ model, messages })
         });
         const data = await response.json();
-        if(type==='chat'){
-            const reply = data.choices?.[0]?.message?.content || 'No response';
-            conversationHistory.push({ role:'user', content:userText });
-            conversationHistory.push({ role:'assistant', content:reply });
-            addMessage('assistant', reply, model, mode);
-        } else if(type==='image'){
-            const url = data.data?.[0]?.url || null;
-            if(url) addMessage('assistant','Here is your generated image:', model, mode, url);
-            else addMessage('assistant','Image generation failed.', model, mode);
-        } else if(type==='tts'){
-            const url = data.url || null;
-            if(url) addMessage('assistant','Here is your audio:', model, mode, url);
-            else addMessage('assistant','Audio generation failed.', model, mode);
-        }
+        const reply = data.choices?.[0]?.message?.content || 'No response';
+        conversationHistory.push({ role:'user', content:userText });
+        conversationHistory.push({ role:'assistant', content:reply });
+        addMessage('assistant', reply, model, mode);
     } catch(err){
         console.error(err);
         addMessage('assistant','Error: '+err.message, model, mode);
