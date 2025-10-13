@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Saksham Intelligence -- Gemma AI Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saksham Intelligence - Gemma AI Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css">
 
 <style>
 :root {
-  --bg-gradient: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+  --bg-gradient: linear-gradient(135deg,#e0c3fc,#8ec5fc);
   --card-bg: rgba(255,255,255,0.9);
-  --btn-bg: linear-gradient(45deg, #6a11cb, #2575fc);
-  --btn-hover: linear-gradient(45deg, #5b0eaa, #1b5be0);
+  --btn-bg: linear-gradient(45deg,#6a11cb,#2575fc);
+  --btn-hover: linear-gradient(45deg,#5b0eaa,#1b5be0);
   --text: #222;
   --text-secondary: #555;
   --tab-bg: rgba(255,255,255,0.7);
@@ -20,356 +21,200 @@
   --input-bg: rgba(255,255,255,0.8);
 }
 [data-theme="dark"] {
-  --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  --card-bg: rgba(30, 30, 30, 0.95);
-  --btn-bg: linear-gradient(45deg, #6a11cb, #2575fc);
-  --btn-hover: linear-gradient(45deg, #5b0eaa, #1b5be0);
-  --text: #fff;
-  --text-secondary: #aaa;
+  --bg-gradient: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  --card-bg: rgba(30,30,30,0.95);
+  --btn-bg: linear-gradient(45deg,#6a11cb,#2575fc);
+  --btn-hover: linear-gradient(45deg,#5b0eaa,#1b5be0);
+  --text:#fff;
+  --text-secondary:#aaa;
   --tab-bg: rgba(255,255,255,0.15);
   --tab-active: #1b5be0;
   --input-bg: rgba(255,255,255,0.15);
 }
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', sans-serif;
-}
-body {
-  background: var(--bg-gradient);
-  color: var(--text);
-  padding: 20px;
-  min-height: 100vh;
-  position: relative;
-}
-.container {
-  max-width: 1000px;
-  margin: auto;
-}
-.title-area {
-  text-align: center;
-  margin-bottom: 25px;
-}
-.title-area h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  animation: titleColor 6s infinite alternate;
-}
-.title-area h2 {
-  font-size: 2.6rem;
-  font-weight: 900;
-  background: linear-gradient(45deg, #6a11cb, #2575fc, #ff6ec4, #7873f5);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: subtitleGlow 4s infinite alternate;
-}
-@keyframes titleColor {
-  0% { color: #6a11cb; }
-  50% { color: #2575fc; }
-  100% { color: #ff6ec4; }
-}
-@keyframes subtitleGlow {
-  0% { text-shadow: 0 0 5px #6a11cb; }
-  100% { text-shadow: 0 0 20px #2575fc; }
-}
-.theme-toggle {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  background: var(--btn-bg);
-  border: none;
-  color: white;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  z-index: 1000;
-}
-.input-card {
-  background: var(--card-bg);
-  padding: 25px;
-  border-radius: 20px;
-  margin-bottom: 25px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-}
-input, textarea, select {
-  width: 100%;
-  padding: 14px;
-  margin: 10px 0;
-  border-radius: 12px;
-  border: none;
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 1rem;
-}
-button {
-  padding: 12px 20px;
-  border-radius: 50px;
-  border: none;
-  background: var(--btn-bg);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-}
-button:hover {
-  background: var(--btn-hover);
-  transform: scale(1.05);
-}
-.mode-tab {
-  display: inline-block;
-  padding: 10px 24px;
-  margin: 0 8px 8px 0;
-  border-radius: 50px;
-  cursor: pointer;
-  background: var(--tab-bg);
-  transition: all 0.3s ease;
-  font-weight: 600;
-}
-.mode-tab.active {
-  background: var(--tab-active);
-  color: #fff;
-}
-#response {
-  background: var(--card-bg);
-  padding: 20px;
-  border-radius: 20px;
-  min-height: 150px;
-  white-space: pre-wrap;
-  overflow: auto;
-  margin-top: 15px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-.preview-wrapper {
-  margin-top: 15px;
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 8px;
-  resize: vertical;
-  overflow: auto;
-  min-height: 120px;
-}
-#previewIframe {
-  width: 100%;
-  border: none;
-  height: 100%;
-}
-.controls {
-  margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.small { font-size: 0.85rem; color: var(--text-secondary); }
-@media (max-width: 600px) {
-  .title-area h2 { font-size: 2rem; }
-}
+*{ box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+body{background:var(--bg-gradient);color:var(--text);padding:20px;min-height:100vh;}
+.container{max-width:800px;margin:auto;}
+.title-area{text-align:center;margin-bottom:25px;}
+.title-area h1{font-size:2.5rem;font-weight:900;background:linear-gradient(90deg,#ff6ec4,#6a11cb,#2575fc,#ffb347);background-clip:text;-webkit-background-clip:text;color:transparent;animation:gradientMove 5s infinite linear;}
+@keyframes gradientMove{0%{background-position:0%}100%{background-position:100%}}
+.title-area h2{font-size:2.8rem;font-weight:700;background:linear-gradient(45deg,#6a11cb,#2575fc,#ff6ec4,#7873f5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:glow 4s infinite alternate;}
+@keyframes glow{0%{text-shadow:0 0 5px #6a11cb;}100%{text-shadow:0 0 20px #2575fc;}}
+.theme-toggle{position:absolute;right:20px;top:20px;background:var(--btn-bg);border:none;color:white;border-radius:50%;width:40px;height:40px;cursor:pointer;}
+.input-card{background:var(--card-bg);padding:25px;border-radius:20px;margin-bottom:25px;backdrop-filter:blur(12px);box-shadow:0 15px 25px rgba(0,0,0,0.2);}
+input,textarea,select{width:100%;padding:14px;margin:10px 0;border-radius:12px;border:none;background:var(--input-bg);color:var(--text);font-size:1rem;}
+button{padding:12px 20px;border-radius:50px;border:none;background:var(--btn-bg);color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 8px 15px rgba(0,0,0,0.2);}
+button:hover{background:var(--btn-hover);transform:scale(1.05);}
+.mode-tab{display:inline-block;padding:12px 28px;margin:0 8px 10px 0;border-radius:50px;cursor:pointer;background:var(--tab-bg);transition:all 0.3s ease;font-weight:600;}
+.mode-tab.active{background:var(--tab-active);color:#fff;}
+#response{background:var(--card-bg);padding:20px;border-radius:20px;min-height:150px;white-space:pre-wrap;overflow:auto;margin-top:15px;box-shadow:0 8px 25px rgba(0,0,0,0.2);}
+.preview-box{margin-top:15px;background:#111;color:#0f0;padding:10px;border-radius:8px;resize:both;overflow:auto;min-height:150px;font-family:monospace;}
+.controls{margin-top:10px;display:flex;gap:10px;}
+.history-section{margin-top:30px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,0.2);}
+.history-section h3{text-align:center;margin-bottom:10px;}
+.history-item{padding:10px;margin-bottom:8px;border-radius:10px;background:var(--tab-bg);cursor:pointer;transition:0.2s;}
+.history-item:hover{background:var(--tab-active);color:#fff;}
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-
 <div class="container">
+  <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
   <div class="title-area">
     <h1>Saksham Intelligence</h1>
     <h2>Gemma AI Hub</h2>
   </div>
 
   <div class="input-card">
-    <label><i class="fas fa-key"></i> Generative API Key:</label>
-    <input id="apiKey" type="password" placeholder="Enter your API key">
+    <label><i class="fas fa-key"></i> Google AI API Key:</label>
+    <input type="password" id="apiKey" placeholder="Enter API Key">
 
     <label><i class="fas fa-layer-group"></i> Gemma Model:</label>
     <select id="gemmaVersion">
-      <option value="gemma-3n-e2b-it">gemma-3n-e2b-it</option>
-      <option value="gemma-3n-e4b-it">gemma-3n-e4b-it</option>
-      <option value="gemma-3-1b-it">gemma-3-1b-it</option>
-      <option value="gemma-3-4b-it">gemma-3-4b-it</option>
-      <option value="gemma-3-12b-it">gemma-3-12b-it</option>
-      <option value="gemma-3-27b-it">gemma-3-27b-it</option>
+      <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
+      <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
+      <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
+      <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
+      <option value="gemma-3-12b-it">Gemma 3 12B IT</option>
+      <option value="gemma-3-27b-it">Gemma 3 27B IT</option>
     </select>
 
-    <div style="margin-top:10px;">
+    <div>
       <div class="mode-tab active" data-mode="standard">Standard</div>
-      <div class="mode-tab" data-mode="deepthink">DeepThink</div>
+      <div class="mode-tab" data-mode="reasoning">Reasoning</div>
       <div class="mode-tab" data-mode="deepresearch">Deep Research</div>
       <div class="mode-tab" data-mode="canva">Canva</div>
     </div>
 
-    <label style="margin-top:12px;"><i class="fas fa-edit"></i> Prompt:</label>
-    <textarea id="userPrompt" rows="4" placeholder="Type your prompt..."></textarea>
-
-    <button style="margin-top:10px;" id="generateBtn"><i class="fas fa-play"></i> Generate</button>
+    <label><i class="fas fa-edit"></i> Prompt:</label>
+    <textarea id="userPrompt" rows="4" placeholder="Type your prompt here..."></textarea>
+    <button onclick="generate()"><i class="fas fa-play"></i> Generate</button>
+    <button id="playPauseBtn" onclick="togglePause()" style="background:orange;"><i class="fas fa-pause"></i> Pause</button>
+    <button onclick="stopGeneration()" style="background:red;"><i class="fas fa-stop"></i> Stop</button>
   </div>
 
   <div id="response">Your output will appear here.</div>
-
   <div class="controls">
-    <button id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
-    <button id="downloadBtn"><i class="fas fa-file-download"></i> Download</button>
-    <button id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
+    <button onclick="copyOutput()"><i class="fas fa-copy"></i> Copy</button>
+    <button onclick="downloadOutput()"><i class="fas fa-file-download"></i> Download</button>
+    <button onclick="shareOutput()"><i class="fas fa-share"></i> Share</button>
   </div>
+  <div class="preview-box" id="codePreview" contenteditable="true"></div>
 
-  <div class="preview-wrapper" id="previewWrapper" style="display: none; height: 200px;">
-    <iframe id="previewIframe"></iframe>
+  <!-- Vertical History Section -->
+  <div class="history-section">
+    <h3>History</h3>
+    <div id="historyList"></div>
   </div>
 </div>
 
-<script>
-// Theme toggle & persistence
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener('click', () => {
-  const cur = document.body.dataset.theme || 'light';
-  const nxt = (cur === 'dark' ? 'light' : 'dark');
-  document.body.dataset.theme = nxt;
-  localStorage.setItem('theme', nxt);
-});
-document.body.dataset.theme = localStorage.getItem('theme') || 'light';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-markup.min.js"></script>
 
-// Mode tabs
-let selectedMode = 'standard';
-document.querySelectorAll('.mode-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+<script>
+let selectedMode='standard';
+let stopFlag=false, isPaused=false;
+let history=[];
+
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
-    selectedMode = tab.dataset.mode;
-    // hide preview when leaving canva
-    if (selectedMode !== 'canva') {
-      document.getElementById('previewWrapper').style.display = 'none';
-    }
+    selectedMode=tab.dataset.mode;
   });
 });
 
-// Utility: extract code-only if needed
-function sanitizeForIframe(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+const themeToggle=document.getElementById('themeToggle');
+themeToggle.addEventListener('click',()=>{
+  document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
+  localStorage.setItem('theme',document.body.dataset.theme);
+});
+document.body.dataset.theme=localStorage.getItem('theme')||'light';
+
+function togglePause(){
+  isPaused=!isPaused;
+  const btn=document.getElementById('playPauseBtn');
+  btn.innerHTML=isPaused?'<i class="fas fa-play"></i> Resume':'<i class="fas fa-pause"></i> Pause';
 }
 
-// Try streaming via streamGenerateContent, fallback to generateContent
-async function generate() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  const model = document.getElementById('gemmaVersion').value;
-  const prompt = document.getElementById('userPrompt').value.trim();
-  const responseEl = document.getElementById('response');
-  const previewWr = document.getElementById('previewWrapper');
-  const previewIframe = document.getElementById('previewIframe');
+function stopGeneration(){ stopFlag=true; isPaused=false; document.getElementById('playPauseBtn').innerHTML='<i class="fas fa-pause"></i> Pause'; }
 
-  responseEl.textContent = 'Generating...';
-  previewWr.style.display = 'none';
-  previewIframe.srcdoc = '';
+async function generate(){
+  stopFlag=false; isPaused=false;
+  const apiKey=document.getElementById('apiKey').value.trim();
+  const model=document.getElementById('gemmaVersion').value;
+  const prompt=document.getElementById('userPrompt').value.trim();
+  const responseBox=document.getElementById('response');
+  const preview=document.getElementById('codePreview');
+  responseBox.textContent='Generating...';
+  preview.innerHTML='';
+  if(!apiKey || !prompt){responseBox.textContent='⚠️ API Key and Prompt required'; return;}
+  try{
+    let modifiedPrompt=prompt;
+    if(selectedMode==='reasoning'){modifiedPrompt=`You are a reasoning AI. Explain step by step, then give final answer. User: ${prompt}`;}
+    if(selectedMode==='canva'){modifiedPrompt=`Generate ${prompt} in programming code (HTML/CSS/JS/Python etc). Output code only.`;}
+    
+    const payload={contents:[{parts:[{text:modifiedPrompt}]}]};
+    const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'No response received.';
 
-  if (!apiKey || !prompt) {
-    responseEl.textContent = 'API Key and prompt are required.';
-    return;
-  }
+    // Save to history
+    history.unshift({prompt,response:text});
+    renderHistory();
 
-  // Build payload
-  const payload = {
-    contents: [
-      { parts: [ { text: prompt } ] }
-    ]
-    // Optionally you may add systemInstruction or similar fields
-  };
-
-  const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?key=${encodeURIComponent(apiKey)}`;
-  const normalUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-  // Try streaming
-  try {
-    const res = await fetch(streamUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok || !res.body) {
-      throw new Error(`Streaming request failed: ${res.status}`);
-    }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    responseEl.textContent = '';
-    while (!done) {
-      const { value, done: d } = await reader.read();
-      done = d;
-      if (value) {
-        const chunk = decoder.decode(value);
-        responseEl.textContent += chunk;
-      }
+    // Word-by-word streaming
+    responseBox.textContent='';
+    const words=text.split(/\s+/);
+    for(let i=0;i<words.length;i++){
+      if(stopFlag) break;
+      while(isPaused){await new Promise(r=>setTimeout(r,100)); if(stopFlag) break;}
+      responseBox.textContent+=words[i]+' ';
+      await new Promise(r=>setTimeout(r,30));
     }
 
-    // After streaming done, show preview if canva
-    if (selectedMode === 'canva') {
-      const fullText = responseEl.textContent;
-      previewWr.style.display = 'block';
-      previewIframe.srcdoc = sanitizeForIframe(fullText);
-    }
+    // Canva live preview
+    if(selectedMode==='canva'){
+      preview.innerHTML='';
+      const pre=document.createElement('pre');
+      const code=document.createElement('code');
+      code.className='language-js';
+      code.textContent=text;
+      pre.appendChild(code);
+      preview.appendChild(pre);
+      Prism.highlightElement(code);
 
-  } catch (err) {
-    console.warn("Streaming failed, falling back:", err);
-    // fallback: fetch full response
-    try {
-      const r2 = await fetch(normalUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const iframe=document.createElement('iframe');
+      iframe.style.width='100%'; iframe.style.height='300px'; iframe.style.border='none';
+      preview.appendChild(iframe);
+      const doc=iframe.contentDocument||iframe.contentWindow.document;
+      doc.open(); doc.write(text); doc.close();
+
+      preview.addEventListener('input',()=>{
+        const doc=iframe.contentDocument||iframe.contentWindow.document;
+        doc.open(); doc.write(preview.innerText); doc.close();
       });
-      const data = await r2.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-      responseEl.textContent = text;
-      if (selectedMode === 'canva') {
-        document.getElementById('previewWrapper').style.display = 'block';
-        previewIframe.srcdoc = sanitizeForIframe(text);
-      }
-    } catch (err2) {
-      responseEl.textContent = 'Error: ' + (err2.message || err2);
     }
-  }
+  }catch(e){responseBox.textContent='⚠️ Error: '+e.message;}
 }
 
-// Buttons
-document.getElementById('generateBtn').addEventListener('click', generate);
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  list.innerHTML='';
+  history.forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='history-item';
+    div.innerHTML=`<strong>Prompt:</strong> ${item.prompt.substring(0,50)}...<br><strong>Response:</strong> ${item.response.substring(0,50)}...`;
+    div.onclick=()=>{document.getElementById('userPrompt').value=item.prompt; document.getElementById('response').textContent=item.response;};
+    list.appendChild(div);
+  });
+}
 
-document.getElementById('copyBtn').addEventListener('click', async () => {
-  const txt = document.getElementById('response').textContent;
-  try {
-    await navigator.clipboard.writeText(txt);
-    alert('Copied!');
-  } catch (e) {
-    console.warn("Clipboard failed:", e);
-    alert('Copy failed.');
-  }
-});
-
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const txt = document.getElementById('response').textContent;
-  const blob = new Blob([txt], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Gemma_AI_Output.txt';
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
-
-document.getElementById('shareBtn').addEventListener('click', async () => {
-  const txt = document.getElementById('response').textContent;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: 'Gemma AI Output', text: txt });
-    } catch (e) {
-      alert('Share failed: ' + e.message);
-    }
-  } else {
-    alert('Sharing not supported. Output copied to clipboard.');
-    try {
-      await navigator.clipboard.writeText(txt);
-    } catch (_) {}
-  }
-});
+function copyOutput(){navigator.clipboard.writeText(document.getElementById('response').textContent);alert('Copied!');}
+function downloadOutput(){const blob=new Blob([document.getElementById('response').textContent],{type:'text/plain'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='gemma_output.txt';link.click();}
+function shareOutput(){const text=document.getElementById('response').textContent;if(navigator.share) navigator.share({title:'Gemma Output',text}); else alert('Sharing not supported on this device.');}
 </script>
 </body>
 </html>
