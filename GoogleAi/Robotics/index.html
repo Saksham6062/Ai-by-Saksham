@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Saksham Intelligence - Robotics & Experimental Models</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --bg-gradient-light: linear-gradient(135deg,#e0c3fc,#8ec5fc);
+  --bg-gradient-dark: linear-gradient(135deg,#1e1e2f,#2b2b45);
+  --card-bg-light: rgba(255,255,255,0.95);
+  --card-bg-dark: rgba(40,40,55,0.95);
+  --btn-bg: linear-gradient(45deg,#6a11cb,#2575fc);
+  --btn-hover: linear-gradient(45deg,#5b0eaa,#1b5be0);
+  --text-light:#222;
+  --text-dark:#f2f2f2;
+  --tab-bg-light: rgba(255,255,255,0.8);
+  --tab-bg-dark: rgba(55,55,80,0.8);
+  --tab-active: #2575fc;
+  --input-bg-light: rgba(250,250,250,0.95);
+  --input-bg-dark: rgba(50,50,70,0.9);
+}
+* {box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;transition:background 0.3s,color 0.3s;}
+body {
+  min-height:100vh;padding:18px;
+  background:var(--bg-gradient-light);
+  color:var(--text-light);
+}
+body.dark {
+  background:var(--bg-gradient-dark);
+  color:var(--text-dark);
+}
+.container {max-width:1024px;margin:0 auto;}
+h1 {
+  text-align:center;font-size:2.6rem;margin-bottom:6px;
+  background:linear-gradient(45deg,#6a11cb,#2575fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+h2 {
+  text-align:center;font-weight:600;font-size:1.1rem;margin-bottom:20px;
+  background:linear-gradient(90deg,#ff005c,#ff9f00,#00ffcc,#007bff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation: hueShift 4s linear infinite;
+}
+@keyframes hueShift {0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+
+.card {
+  background:var(--card-bg-light);
+  padding:18px;border-radius:14px;margin-bottom:18px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.12);
+}
+body.dark .card {background:var(--card-bg-dark);}
+label {display:flex;align-items:center;gap:8px;font-weight:600;margin-top:6px;}
+input,textarea,select {
+  width:100%;padding:12px;margin:8px 0;border-radius:10px;
+  border:1px solid rgba(0,0,0,0.06);font-size:0.96rem;
+  background:var(--input-bg-light);color:var(--text-light);
+}
+body.dark input,body.dark textarea,body.dark select {
+  background:var(--input-bg-dark);color:var(--text-dark);border:1px solid rgba(255,255,255,0.08);
+}
+button {
+  padding:14px 20px;border-radius:999px;border:none;background:var(--btn-bg);color:#fff;
+  font-weight:700;cursor:pointer;transition:all 0.22s ease;
+  box-shadow:0 8px 18px rgba(0,0,0,0.12);font-size:1.05rem;
+}
+button:hover {background:var(--btn-hover);transform:translateY(-3px);}
+.mode-row {margin-top:8px;display:flex;flex-direction:column;gap:8px;}
+.mode-tab {
+  padding:12px 18px;border-radius:999px;cursor:pointer;
+  background:var(--tab-bg-light);font-weight:600;
+  box-shadow:0 6px 15px rgba(0,0,0,0.06);user-select:none;text-align:center;
+}
+body.dark .mode-tab {background:var(--tab-bg-dark);}
+.mode-tab.active {background:var(--tab-active);color:#fff;}
+#response {
+  background:rgba(255,255,255,0.98);padding:14px;border-radius:12px;min-height:160px;
+  white-space:pre-wrap;overflow:auto;margin-top:12px;border:1px solid rgba(0,0,0,0.04);
+}
+body.dark #response {background:rgba(30,30,50,0.95);color:var(--text-dark);}
+.output-controls {display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center;}
+.preview {background:#fff;border-radius:10px;padding:10px;margin-top:14px;box-shadow:0 8px 25px rgba(0,0,0,0.08);}
+body.dark .preview {background:#222;color:#fff;}
+#previewFrame {width:100%;height:360px;border:1px solid rgba(0,0,0,0.06);border-radius:8px;}
+.code-viewer {
+  max-height:360px;overflow:auto;background:#0b1020;color:#e6eef8;
+  padding:12px;border-radius:8px;font-family:monospace;font-size:13px;
+}
+.small {font-size:0.86rem;opacity:0.8;}
+.theme-toggle {
+  position:fixed;top:18px;right:18px;background:var(--btn-bg);
+  color:#fff;border:none;border-radius:50%;width:46px;height:46px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.2rem;box-shadow:0 8px 18px rgba(0,0,0,0.15);
+}
+.theme-toggle:hover {background:var(--btn-hover);}
+@media (max-width:720px){h1{font-size:2rem} #previewFrame{height:280px}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
+
+<div class="container">
+  <h1><i class="fas fa-robot"></i> Saksham Intelligence</h1>
+  <h2>Robotics & Experimental Models</h2>
+
+  <div class="card">
+    <label><i class="fas fa-key"></i> Generative API Key (Google Generative API):</label>
+    <input id="apiKey" type="password" placeholder="Enter your API key (required)">
+
+    <label class="small"><i class="fas fa-layer-group"></i> Model:</label>
+    <select id="gemmaVersion">
+      <option value="gemini-robotics-er-1.5-preview">gemini-robotics-er-1.5-preview</option>
+      <option value="learnlm-2.0-flash-experimental">learnlm-2.0-flash-experimental</option>
+    </select>
+
+    <div class="mode-row">
+      <div class="mode-tab active" data-mode="standard"><i class="fas fa-circle"></i> Standard</div>
+      <div class="mode-tab" data-mode="deepthink"><i class="fas fa-brain"></i> DeepThink</div>
+      <div class="mode-tab" data-mode="canva"><i class="fas fa-code"></i> Canva</div>
+    </div>
+
+    <label style="margin-top:12px;"><i class="fas fa-edit"></i> Prompt</label>
+    <textarea id="userPrompt" rows="4" placeholder="Type your prompt here..."></textarea>
+
+    <div style="margin-top:8px;">
+      <label for="fileInput"><i class="fas fa-file-upload"></i> Upload file/photo (optional)</label>
+      <input type="file" id="fileInput" accept="image/*,.txt,.pdf">
+      <div class="small">The uploaded file can be used by the AI to generate answers.</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <button id="generateBtn"><i class="fas fa-play"></i> Generate</button>
+      <button id="clearBtn" style="background:#e8e8e8;color:#222"><i class="fas fa-eraser"></i> Clear</button>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <div class="small">Mode: <span id="modeLabel">Standard</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="response" class="card">Your output will appear here.</div>
+
+  <div class="output-controls">
+    <button id="copyBtn"><i class="fas fa-copy"></i> Copy</button>
+    <button id="downloadBtn"><i class="fas fa-file-download"></i> Download TXT</button>
+    <button id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
+  </div>
+
+  <div id="previewArea" class="preview" style="display:none">
+    <h3 style="margin:0 0 8px 0"><i class="fas fa-eye"></i> Canva Preview (code-only)</h3>
+    <div id="previewFrameWrapper"><iframe id="previewFrame"></iframe></div>
+    <div style="margin-top:10px">
+      <div style="font-weight:700;margin-bottom:6px">Code viewer (extracted code):</div>
+      <pre id="codeViewer" class="code-viewer"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+/* -------- Mode Switching -------- */
+const modes=document.querySelectorAll('.mode-tab');
+let selectedMode='standard';
+const modeLabel=document.getElementById('modeLabel');
+modes.forEach(m=>{
+  m.addEventListener('click',()=>{
+    modes.forEach(x=>x.classList.remove('active'));
+    m.classList.add('active');
+    selectedMode=m.dataset.mode;
+    modeLabel.textContent=m.textContent.trim();
+    document.getElementById('previewArea').style.display=(selectedMode==='canva')?'block':'none';
+  });
+});
+
+/* -------- Theme Toggle -------- */
+const themeToggle=document.getElementById('themeToggle');
+const icon=themeToggle.querySelector('i');
+themeToggle.addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  icon.classList.toggle('fa-sun');
+  icon.classList.toggle('fa-moon');
+});
+
+/* -------- Generate Function -------- */
+const generateBtn=document.getElementById('generateBtn');
+const clearBtn=document.getElementById('clearBtn');
+const responseEl=document.getElementById('response');
+const previewArea=document.getElementById('previewArea');
+const previewFrame=document.getElementById('previewFrame');
+const codeViewer=document.getElementById('codeViewer');
+const fileInput=document.getElementById('fileInput');
+
+clearBtn.addEventListener('click',()=>{
+  document.getElementById('userPrompt').value='';
+  responseEl.textContent='Your output will appear here.';
+  previewArea.style.display='none';
+  codeViewer.textContent='';
+  previewFrame.src='about:blank';
+  fileInput.value='';
+});
+
+generateBtn.addEventListener('click',async()=>{
+  const apiKey=document.getElementById('apiKey').value.trim();
+  const model=document.getElementById('gemmaVersion').value;
+  const prompt=document.getElementById('userPrompt').value.trim();
+  const file=fileInput.files[0];
+
+  if(!apiKey){alert('Generative API Key is required.');return;}
+  if(!prompt && !file){alert('Please enter a prompt or upload a file/photo.');return;}
+
+  responseEl.textContent='Generating...';
+  previewArea.style.display='none';
+  codeViewer.textContent='';
+  previewFrame.src='about:blank';
+
+  let combinedPrompt=prompt;
+  if(file){combinedPrompt+=`\n\nAttached file: ${file.name}`;}
+
+  if(selectedMode==='deepthink'){
+    combinedPrompt="Provide numbered reasoning steps with a short conclusion.\n\nUser request:\n"+combinedPrompt;
+  }
+  if(selectedMode==='canva'){
+    combinedPrompt="Output the requested code only.\nUser request:\n"+combinedPrompt;
+  }
+
+  try{
+    const apiUrl=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const payload={contents:[{parts:[{text:combinedPrompt}]}]};
+    const res=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok){responseEl.textContent=`API error ${res.status}: ${res.statusText}`;return;}
+    const data=await res.json();
+    let text=data?.candidates?.[0]?.content?.parts?.[0]?.text||data?.output?.[0]?.content||'No response';
+
+    responseEl.textContent='';
+    const words=text.split(/(\s+)/);
+    for(let w of words){
+      responseEl.textContent+=w;
+      await new Promise(r=>setTimeout(r,20));
+    }
+  }catch(err){
+    responseEl.textContent='Error: '+(err?.message||String(err));
+    console.error(err);
+  }
+});
+</script>
+</body>
+</html>
