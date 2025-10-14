@@ -316,26 +316,16 @@
         <p class="card-description">Google's most advanced text-to-image model for creating photorealistic and artistic visuals.</p>
         <span class="launch-btn">Launch Imagen</span>
       </a>
-
-      <!-- Nano Banana (External Link) -->
-      <a href="https://aistudio.google.com/prompts/new_chat?model=gemini-2.5-flash-image" target="_blank" class="model-card" data-model="nano">
-        <div class="card-header">
-            <span class="card-icon">⚡</span>
-            <h2 class="card-title">Nano Banana <span class="external-icon">↗</span></h2>
-        </div>
-        <p class="card-description">The most efficient model designed for on-device tasks, balancing performance and speed.</p>
-        <span class="launch-btn">Launch Nano</span>
-      </a>
-
-      <!-- Robotics ER (External Link) -->
-      <a href="https://aistudio.google.com/prompts/135S4dE_PH4bLCLXQy-WBatS2xOGII4TR" target="_blank" class="model-card" data-model="robotics">
+      
+      <!-- Robotics ER (Modal) -->
+      <div class="model-card" data-model="robotics" id="robotics-launcher">
         <div class="card-header">
             <span class="card-icon">🤖</span>
-            <h2 class="card-title">Robotics ER <span class="external-icon">↗</span></h2>
+            <h2 class="card-title">Robotics ER</h2>
         </div>
         <p class="card-description">Models trained on robotics data to understand and generate code for robot actions.</p>
-        <span class="launch-btn">Launch Robotics</span>
-      </a>
+        <span class="launch-btn">Explore Robotics</span>
+      </div>
 
       <!-- TTS (External Link) -->
       <a href="https://aistudio.google.com/generate-speech" target="_blank" class="model-card" data-model="tts">
@@ -387,6 +377,19 @@
         </div>
     </div>
   </div>
+  <!-- Robotics Modal -->
+  <div class="modal-overlay" id="robotics-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Welcome to Robotics ER</h2>
+            <button class="modal-close" id="robotics-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+           <p>You are about to explore the Robotics ER model suite for coding robot actions.</p>
+           <a href="GoogleAi/Robotics/index.html">Click here to continue to the Robotics page</a>
+        </div>
+    </div>
+  </div>
 
   <script>
     // --- Theme Switching Logic ---
@@ -429,6 +432,12 @@
     const gemmaLauncher = document.getElementById('gemma-launcher');
     const gemmaModal = document.getElementById('gemma-modal');
     const gemmaCloseBtn = document.getElementById('gemma-close-btn');
+    
+    const roboticsLauncher = document.getElementById('robotics-launcher');
+    const roboticsModal = document.getElementById('robotics-modal');
+    const roboticsCloseBtn = document.getElementById('robotics-close-btn');
+
+    setupModal(roboticsLauncher, roboticsModal, roboticsCloseBtn);
 
     function setupModal(launcher, modal, closeBtn) {
         // Open modal
