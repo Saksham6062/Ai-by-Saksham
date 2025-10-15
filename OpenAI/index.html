@@ -3,296 +3,298 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenAI Multi-Model Interface</title>
+<title>Saksham Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg-dark:#1a1a2e;
+  --bg-light:#f0f4f8;
+  --card-dark:#16213e;
+  --card-light:#ffffff;
+  --text-dark:#e0e0e0;
+  --text-light:#2c3e50;
+  --secondary-dark:#a0a0c0;
+  --secondary-light:#7f8c8d;
+  --btn-bg:linear-gradient(45deg,#6a11cb,#2575fc);
+  --btn-hover:linear-gradient(45deg,#5b0eaa,#1b5be0);
+  --input-bg-dark:rgba(30,30,50,0.85);
+  --input-bg-light:#f0f4f8;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
-    min-height: 100vh;
-    padding: 20px;
-}
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
-    overflow: hidden;
-}
-.header {
-    background: linear-gradient(135deg, #10a37f 0%, #1a7f64 100%);
-    color: white;
-    padding: 40px;
-    text-align: center;
-}
-.header h1 { font-size:36px; margin-bottom:12px; font-weight:700; }
-.header p { opacity:0.95; font-size:15px; }
-
-/* --- Tab Navigation --- */
-.tabs {
-    display: flex;
-    background: #f7f7f8;
-    border-bottom: 2px solid #e5e5e5;
-}
-.tab {
-    flex: 1;
-    padding: 16px;
-    text-align: center;
-    font-weight: 600;
-    cursor: pointer;
-    background: #f7f7f8;
-    border-right: 1px solid #e5e5e5;
-    transition: background 0.3s;
-}
-.tab:last-child { border-right: none; }
-.tab.active {
-    background: white;
-    color: #10a37f;
-    border-bottom: 3px solid #10a37f;
+  font-family:'Poppins',sans-serif;
+  background-color:var(--bg-dark);
+  color:var(--text-dark);
+  margin:0;
+  padding:0;
+  min-height:100vh;
+  transition:0.3s all;
 }
 
-/* --- Controls / Chat Section --- */
-.section { display: none; }
-.section.active { display: block; }
+[data-theme="light"] body{
+  background-color:var(--bg-light);
+  color:var(--text-light);
+}
 
-.controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-    padding:30px;
-    background:#f7f7f8;
-    border-bottom:2px solid #e5e5e5;
+header{
+  position:fixed;
+  top:0;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  backdrop-filter:blur(10px);
+  z-index:100;
 }
-.control-group { display:flex; flex-direction:column; gap:10px; }
-.control-group label { font-weight:600; color:#1a1a1a; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; }
-select, input {
-    padding:14px;
-    border:2px solid #e5e5e5;
-    border-radius:10px;
-    font-size:14px;
-    transition: all 0.3s;
-    background:white;
-    font-family:inherit;
-}
-select:focus, input:focus { outline:none; border-color:#10a37f; box-shadow:0 0 0 3px rgba(16,163,127,0.1); }
-.chat-container {
-    height:550px;
-    overflow-y:auto;
-    padding:30px;
-    background:#ffffff;
-    scroll-behavior:smooth;
-}
-.message { margin-bottom:24px; display:flex; gap:14px; animation:slideIn 0.4s ease-out; }
-@keyframes slideIn { from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);} }
-.message.user { flex-direction:row-reverse; }
-.message-avatar {
-    width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-weight:bold; color:white; flex-shrink:0; font-size:18px;
-}
-.user .message-avatar { background: linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); }
-.assistant .message-avatar { background: linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%); }
-.message-content { max-width:75%; padding:16px 22px; border-radius:14px; line-height:1.6; font-size:15px; }
-.user .message-content { background: linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); color:white; border-bottom-right-radius:4px; }
-.assistant .message-content { background:#f7f7f8; color:#1a1a1a; border:1px solid #e5e5e5; border-bottom-left-radius:4px; }
-.model-badge { display:inline-block; padding:5px 12px; background: rgba(16,163,127,0.12); color:#10a37f; border-radius:16px; font-size:11px; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
-.input-container { padding:24px 30px; background:#f7f7f8; border-top:2px solid #e5e5e5; display:flex; gap:14px; align-items:flex-end; }
-.input-container textarea { flex:1; padding:14px; border:2px solid #e5e5e5; border-radius:12px; font-size:15px; font-family:inherit; resize:none; min-height:60px; max-height:150px; }
-.input-container textarea:focus { outline:none; border-color:#10a37f; box-shadow:0 0 0 3px rgba(16,163,127,0.1); }
-.input-container button { padding:14px 32px; background:linear-gradient(135deg,#10a37f 0%,#1a7f64 100%); color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; transition: all 0.3s; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; }
-.input-container button:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 20px rgba(16,163,127,0.3); }
-.input-container button:disabled { opacity:0.5; cursor:not-allowed; }
 
-.api-settings {
-    padding:40px;
-    background:#fff;
+h1{
+  font-size:2.8rem;
+  font-weight:700;
+  text-align:center;
+  margin-top:100px;
+  background:linear-gradient(45deg,#4285f4,#ea4335,#fbbc05,#34a853);
+  background-size:400%;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:colorShift 12s ease-in-out infinite;
 }
-.api-settings label { display:block; margin-bottom:10px; font-weight:600; color:#333; }
-.api-settings input {
-    width:100%; padding:14px; font-size:15px;
-    border:2px solid #e5e5e5; border-radius:10px;
-}
-.api-settings button {
-    margin-top:20px; padding:14px 32px;
-    background:linear-gradient(135deg,#10a37f 0%,#1a7f64 100%);
-    color:white; border:none; border-radius:12px;
-    font-weight:700; cursor:pointer;
-    font-size:15px; text-transform:uppercase;
-    letter-spacing:0.5px;
-}
-.api-settings button:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(16,163,127,0.3); }
 
-@media(max-width:768px){
-    .controls{grid-template-columns:1fr;}
-    .message-content{max-width:90%;}
-    .header h1{font-size:28px;}
+@keyframes colorShift{
+  0%,100%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
 }
+
+.subtitle{
+  text-align:center;
+  font-size:1.1rem;
+  margin-bottom:30px;
+  color:#aaa;
+}
+
+.container{max-width:1000px;margin:0 auto;padding:0 20px;}
+
+.card{
+  background-color:var(--card-dark);
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  transition:0.3s all;
+}
+
+[data-theme="light"] .card{
+  background-color:var(--card-light);
+  color:var(--text-light);
+}
+
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,0.1);
+  background-color:var(--input-bg-dark);
+  color:var(--text-dark);
+  font-size:1rem;
+}
+
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select{
+  background-color:var(--input-bg-light);
+  color:var(--text-light);
+}
+
+button{
+  padding:12px 20px;
+  border-radius:50px;
+  border:none;
+  background:var(--btn-bg);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  margin-top:10px;
+}
+
+button:hover{
+  background:var(--btn-hover);
+  transform:scale(1.05);
+}
+
+.mode-tabs{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;}
+.mode-tab{
+  padding:10px 20px;
+  border-radius:50px;
+  cursor:pointer;
+  background:rgba(255,255,255,0.2);
+  font-weight:600;
+  transition:0.2s;
+}
+.mode-tab.active{background:var(--btn-bg);color:#fff;}
+
+#response{
+  min-height:150px;
+  margin-top:15px;
+  padding:15px;
+  border-radius:12px;
+  background-color:var(--card-dark);
+  white-space:pre-wrap;
+  overflow:auto;
+  box-shadow:0 8px 25px rgba(0,0,0,0.2);
+}
+
+[data-theme="light"] #response{
+  background-color:var(--card-light);
+  color:var(--text-light);
+}
+
+#canvaPreview{display:none;margin-top:20px;}
+#previewFrame{width:100%;height:350px;border:1px solid rgba(0,0,0,0.1);border-radius:10px;margin-top:10px;}
+#codeViewer{width:100%;max-height:350px;overflow:auto;background:#0b1020;color:#e6eef8;padding:10px;border-radius:10px;font-family:monospace;font-size:13px;}
+
+[data-theme="light"] #codeViewer{background:#f4f4f4;color:#333;}
+
+.theme-toggle{
+  width:60px;
+  height:30px;
+  background:#ccc;
+  border-radius:15px;
+  position:relative;
+  cursor:pointer;
+}
+.toggle-circle{
+  width:26px;
+  height:26px;
+  background:#fff;
+  border-radius:50%;
+  position:absolute;
+  top:2px;
+  left:2px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:transform 0.3s;
+}
+[data-theme="light"] .toggle-circle{transform:translateX(30px);}
 </style>
 </head>
-<body>
+<body data-theme="dark">
+
+<header>
+<h2>Saksham Intelligence</h2>
+<div class="theme-toggle" id="themeToggle">
+  <div class="toggle-circle">🌙</div>
+</div>
+</header>
+
 <div class="container">
-    <div class="header">
-        <h1>🤖 OpenAI Multi-Model Interface</h1>
-        <p>Access GPT Mini models with deep modes & API key control</p>
-    </div>
+<h1>Saksham Intelligence</h1>
+<p class="subtitle">GPT (OpenAI)</p>
 
-    <div class="tabs">
-        <div class="tab active" id="chat-tab" onclick="switchTab('chat')">💬 Chat</div>
-        <div class="tab" id="api-tab" onclick="switchTab('api')">🔑 API Key</div>
-    </div>
+<div class="card">
+<label>OpenAI API Key:</label>
+<input type="password" id="apiKey" placeholder="Enter OpenAI API Key">
 
-    <!-- Chat Section -->
-    <div class="section active" id="chat-section">
-        <div class="controls">
-            <div class="control-group">
-                <label for="model-select">🎯 Select Model</label>
-                <select id="model-select">
-                    <option value="gpt-4.1-mini" selected>GPT-4.1 Mini</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                </select>
-            </div>
+<label>Model:</label>
+<select id="model">
+  <option value="gpt-4o-mini">gpt-4o-mini</option>
+  <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+</select>
 
-            <div class="control-group">
-                <label for="mode-select">⚙️ Interaction Mode</label>
-                <select id="mode-select">
-                    <option value="normal" selected>Normal Chat</option>
-                    <option value="deepthink">Deep Think</option>
-                    <option value="deep-research">Deep Research</option>
-                </select>
-                <div class="mode-description" id="mode-description">Standard conversational mode with real-time responses</div>
-            </div>
-        </div>
+<div class="mode-tabs">
+  <div class="mode-tab active" data-mode="standard">Standard</div>
+  <div class="mode-tab" data-mode="deepthink">DeepThink</div>
+  <div class="mode-tab" data-mode="canva">Canva</div>
+</div>
 
-        <div class="chat-container" id="chat-container">
-            <div class="message assistant">
-                <div class="message-avatar">AI</div>
-                <div class="message-content">
-                    <div class="model-badge">GPT-4.1 Mini - Normal Mode</div>
-                    Welcome! Enter your API key under the API tab before chatting.
-                </div>
-            </div>
-        </div>
+<label>Prompt:</label>
+<textarea id="userPrompt" rows="4" placeholder="Type your prompt or code here..."></textarea>
+<button id="generateBtn"><i class="fas fa-play"></i> Generate</button>
+</div>
 
-        <div class="input-container">
-            <textarea id="user-input" placeholder="Type your message here..."></textarea>
-            <button id="send-btn" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+<div id="response" class="card">Your output will appear here.</div>
 
-    <!-- API Key Section -->
-    <div class="section" id="api-section">
-        <div class="api-settings">
-            <label for="api-key-input">Enter your OpenAI API key:</label>
-            <input type="password" id="api-key-input" placeholder="sk-..." />
-            <button onclick="saveApiKey()">Save API Key</button>
-            <p id="api-status" style="margin-top:15px; color:#10a37f; font-weight:600;"></p>
-        </div>
-    </div>
+<div id="canvaPreview" class="card">
+<h3>Live Preview</h3>
+<iframe id="previewFrame"></iframe>
+<h3>Extracted Code</h3>
+<pre id="codeViewer"></pre>
+</div>
 </div>
 
 <script>
-const BACKEND_URL = '/api/ask'; // placeholder for backend endpoint
-let conversationHistory = [];
+const themeToggle = document.getElementById("themeToggle");
+const body = document.body;
+const toggleCircle = document.querySelector(".toggle-circle");
 
-function switchTab(tab){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.getElementById(`${tab}-tab`).classList.add('active');
-    document.getElementById(`${tab}-section`).classList.add('active');
-}
-
-// Save API key
-function saveApiKey(){
-    const key = document.getElementById('api-key-input').value.trim();
-    if(!key){ alert('Please enter a valid API key'); return; }
-    localStorage.setItem('openai_api_key', key);
-    document.getElementById('api-status').textContent = '✅ API Key saved securely (stored locally).';
-    document.getElementById('api-key-input').value = '';
-}
-
-// Load saved API key (optional)
-function getApiKey(){
-    return localStorage.getItem('openai_api_key');
-}
-
-const modeDescriptions = {
-    normal: 'Standard conversational mode with real-time responses',
-    deepthink: 'Extended reasoning with step-by-step explanation',
-    'deep-research': 'In-depth multi-perspective research and analysis'
-};
-
-document.getElementById('mode-select').addEventListener('change', function() {
-    document.getElementById('mode-description').textContent = modeDescriptions[this.value];
+themeToggle.addEventListener("click",()=>{
+  const current = body.getAttribute("data-theme");
+  const next = current==="dark"?"light":"dark";
+  body.setAttribute("data-theme",next);
+  toggleCircle.textContent = next==="dark"?"🌙":"☀️";
 });
 
-document.getElementById('user-input').addEventListener('keydown', function(e){
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+// Mode tabs
+let selectedMode='standard';
+document.querySelectorAll(".mode-tab").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".mode-tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    selectedMode=tab.dataset.mode;
+    document.getElementById("canvaPreview").style.display=(selectedMode==="canva")?"block":"none";
+    document.getElementById("response").style.display=(selectedMode!=="canva")?"block":"none";
+  });
 });
 
-function addMessage(role, content, model, mode){
-    const chatContainer = document.getElementById('chat-container');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}`;
-    const avatar = document.createElement('div');
-    avatar.className = 'message-avatar';
-    avatar.textContent = role==='user'?'U':'AI';
-    const messageContent = document.createElement('div');
-    messageContent.className='message-content';
-    if(role==='assistant'){
-        const badge = document.createElement('div');
-        badge.className='model-badge';
-        badge.textContent = `${model} - ${mode}`;
-        messageContent.appendChild(badge);
-    }
-    const text = document.createElement('div');
-    text.textContent = content;
-    messageContent.appendChild(text);
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(messageContent);
-    chatContainer.appendChild(messageDiv);
-    chatContainer.scrollTop=chatContainer.scrollHeight;
-}
+// OpenAI request
+document.getElementById("generateBtn").addEventListener("click",async()=>{
+  const apiKey=document.getElementById("apiKey").value.trim();
+  const model=document.getElementById("model").value;
+  const prompt=document.getElementById("userPrompt").value.trim();
+  const responseEl=document.getElementById("response");
+  const codeViewer=document.getElementById("codeViewer");
+  const previewFrame=document.getElementById("previewFrame");
 
-async function sendMessage(){
-    const input = document.getElementById('user-input');
-    const userText = input.value.trim();
-    if(!userText) return;
-    input.value = '';
-    const model = document.getElementById('model-select').value;
-    const mode = document.getElementById('mode-select').value;
-    const apiKey = getApiKey();
-    if(!apiKey){
-        alert('Please set your API key in the API tab first!');
-        return;
-    }
-    addMessage('user', userText, model, mode);
+  if(!apiKey || !prompt){alert("API Key and prompt required");return;}
 
-    let messages = [...conversationHistory, { role: 'user', content: userText }];
-    if(mode==='deepthink'){
-        messages.unshift({ role:'system', content:'Provide step-by-step reasoning.' });
-    } else if(mode==='deep-research'){
-        messages.unshift({ role:'system', content:'Provide multi-perspective in-depth analysis.' });
-    }
+  responseEl.textContent="Generating...";
+  codeViewer.textContent="";
+  previewFrame.src="about:blank";
 
-    try{
-        const response = await fetch(BACKEND_URL, {
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'Authorization':`Bearer ${apiKey}`
-            },
-            body: JSON.stringify({ model, messages })
-        });
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || 'No response';
-        conversationHistory.push({ role:'user', content:userText });
-        conversationHistory.push({ role:'assistant', content:reply });
-        addMessage('assistant', reply, model, mode);
-    } catch(err){
-        console.error(err);
-        addMessage('assistant','Error: '+err.message, model, mode);
+  let messages=[{role:"user", content: prompt}];
+  if(selectedMode==="deepthink"){
+    messages.unshift({role:"system", content:"Please provide concise numbered reasoning followed by a short conclusion."});
+  }
+  if(selectedMode==="canva"){
+    messages.unshift({role:"system", content:"Generate code only, multiple files if needed for games/apps. Include HTML, CSS, JS, TS, PHP, Dart etc. Do not include explanations."});
+  }
+
+  try{
+    const res=await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${apiKey}`
+      },
+      body:JSON.stringify({
+        model:model,
+        messages:messages,
+        temperature:0.7,
+        max_tokens:3000
+      })
+    });
+    const data=await res.json();
+    const text=data.choices?.[0]?.message?.content||"No response";
+
+    if(selectedMode==="canva"){
+      codeViewer.textContent=text;
+      previewFrame.srcdoc=text;
+    } else {
+      responseEl.textContent=text;
     }
-}
+  }catch(err){responseEl.textContent="Error: "+err.message;}
+});
 </script>
 </body>
 </html>
