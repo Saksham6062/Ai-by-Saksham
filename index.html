@@ -483,11 +483,33 @@ function createParticles() {
   
 applyTheme(getPreferredTheme());
 createParticles();
-  window.addEventListener('load', () => {
-  const splash = document.getElementById('splash-screen');
-  setTimeout(() => {
-    splash.classList.add('fade-out');
-  }, 5000); // 5.0 seconds splash
+  window.addEventListener("load", () => {
+  const splash = document.getElementById("splash-screen");
+  const video = document.getElementById("splash-video");
+
+  // Try to autoplay
+  const tryPlay = () => {
+    video.play().catch(() => {
+      // If autoplay fails, wait for first user tap/click
+      document.body.addEventListener(
+        "click",
+        () => {
+          video.play();
+        },
+        { once: true }
+      );
+    });
+  };
+
+  tryPlay();
+
+  // Fade out after 5 seconds (or after video ends, whichever is first)
+  const hideSplash = () => {
+    splash.classList.add("fade-out");
+  };
+
+  video.addEventListener("ended", hideSplash);
+  setTimeout(hideSplash, 5000);
 });
 </script>
 </body>
