@@ -1,621 +1,1122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarvam AI Full Model Stack Client</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            /* Theme colors inspired by modern tech aesthetics */
-            --bg-color: #0d121c; /* Deep Navy/Indigo */
-            --card-color: #1a2233;
-            --text-color: #e4e4f7;
-            --accent-color: #ff6e40; /* Vibrant Orange/Coral */
-            --success-color: #4CAF50;
-            --error-color: #F44336;
-            --warning-color: #FFC107;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s;
-        }
-        .card {
-            background-color: var(--card-color);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: var(--card-color);
-            font-weight: 700;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background-color: #ff8860;
-            transform: translateY(-1px);
-        }
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        textarea, input[type="text"], select, input[type="file"] {
-            background-color: #121827;
-            border: 1px solid #364055;
-            color: var(--text-color);
-            resize: none;
-        }
-        input[type="file"] {
-            padding: 0.5rem;
-        }
-        .response-box {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            min-height: 100px;
-            padding: 1rem;
-            border-left: 4px solid var(--accent-color);
-            background-color: #161e30;
-            border-radius: 0 8px 8px 0;
-            opacity: 0.9;
-            transition: all 0.3s;
-            overflow-x: auto;
-        }
-        /* Custom spinner for loading state */
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--accent-color);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            display: none; /* Controlled by JS */
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemma AI Hub -- Smart Multimodal Content & Code</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* --- THEME VARIABLES (Default: Light Mode) --- */
+:root {
+  /* Colors */
+  /* CHANGED TO PURPLE GRADIENT (Soft Lavender to Medium Violet) */
+  --bg-gradient: linear-gradient(135deg, #f3e8ff, #d8a7ff); 
+  --card-bg: #ffffffcc;
+  --text: #222;
+  --text-secondary: #666;
+  --input-bg: #ffffffb0;
+  --tab-bg: #f3f3f3cc;
+  --header-bg: rgba(255, 255, 255, 0.85);
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-        @media (min-width: 1024px) {
-            .grid-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+  /* Accents (All changed to Purple) */
+  --btn-bg: linear-gradient(45deg, #8338ec, #9d4edd); /* Purple */
+  --btn-hover: linear-gradient(45deg, #702ecc, #8e42d7);
+  --tab-active-standard: #9d4edd; /* Main Purple Accent */
+  --tab-active-canva: #1dd1a1; /* Teal for Canva (Kept teal for distinction) */
+  --tab-active-deepthink: #7aa1ff; /* Light Blue/Purple for DeepThink (Kept for distinction) */
+  --tab-active-deepresearch: #f368e0; /* Bright Pink/Magenta for DeepResearch (Kept for distinction) */
+  --canva-type-bg: #e0f2f1; /* Light teal for canva selector */
+  --canva-type-active: #0d9488; /* Darker teal */
+  /* Shadows */
+  --shadow-base: rgba(0,0,0,0.1);
+  --shadow-card: 0 10px 20px rgba(0,0,0,0.1);
+  --focus-ring-color: #9d4edd; /* Purple focus ring */
+  --input-focus-glow: 0 0 0 3px rgba(157, 77, 221, 0.5); /* Purple focus glow */
+}
+
+/* --- DARK MODE Overrides --- */
+[data-theme="dark"] {
+  /* Colors */
+  /* CHANGED TO DEEP PURPLE GRADIENT (Dark Eggplant) */
+  --bg-gradient: linear-gradient(135deg, #1a082b, #3f1163);
+  /* Adjusted card and header to match the deep purple background better */
+  --card-bg: #352a46cc;
+  --text: #f0f4f8;
+  --text-secondary: #aeb8c4;
+  --input-bg: #1f283d;
+  --tab-bg: #3f516acc;
+  --header-bg: rgba(26, 8, 43, 0.9);
+
+  /* Accents - Adjusted for visibility */
+  --btn-bg: linear-gradient(45deg, #b366ff, #9d4edd); /* Brighter Purple */
+  --btn-hover: linear-gradient(45deg, #c790ff, #a453e0);
+  --tab-active-standard: #b366ff; /* Main Purple Accent */
+  --tab-active-canva: #38c172;
+  --tab-active-deepthink: #9cbbff;
+  --tab-active-deepresearch: #ff6bcc;
+  --canva-type-bg: #354a63;
+  --canva-type-active: #1dd1a1;
+  /* Shadows - Lighter for dark mode */
+  --shadow-base: rgba(255,255,255,0.05);
+  --shadow-card: 0 10px 20px rgba(0,0,0,0.5);
+  --focus-ring-color: #b366ff; /* Bright Purple focus ring */
+  --input-focus-glow: 0 0 0 3px rgba(179, 102, 255, 0.5); /* Bright Purple focus glow */
+}
+
+
+/* Global Styles & Transitions */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Poppins', sans-serif; 
+    /* Smooth transition for all elements */
+    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s, border-color 0.3s, transform 0.15s;
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text);
+  padding: 15px;
+  min-height: 100vh;
+}
+
+/* --- Accessibility: Universal Focus Ring --- */
+*:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring-color);
+    border-radius: 15px; /* Apply to elements that aren't already rounded */
+}
+
+/* Override focus ring for elements with specific rounded styles */
+button:focus-visible, .mode-tab:focus-visible, .canva-type-btn:focus-visible, .lang-btn:focus-visible {
+    border-radius: 50px;
+    box-shadow: 0 0 0 3px var(--focus-ring-color);
+}
+
+
+/* --- Custom Scrollbar Styling (Aesthetic Polish) --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tab-active-standard);
+}
+
+
+/* --- Header & Theme Toggle --- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--shadow-base); /* Softened shadow */
+    display: flex;
+    justify-content: flex-end;
+}
+
+#theme-toggle {
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: var(--text-secondary);
+    color: var(--card-bg); /* Use card-bg for contrast */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#theme-toggle:hover {
+    background: var(--tab-active-deepthink);
+    transform: translateY(-1px); /* Micro-interaction lift */
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  margin-bottom: 20px;
+  /* Updated Gradient to use new purple standard color */
+  background: linear-gradient(45deg, var(--tab-active-standard), var(--tab-active-canva));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Added Effect: Subtle lift */
+  text-shadow: 0 0 5px var(--shadow-base);
+  transition: text-shadow 0.3s ease;
+}
+
+/* Card Styling */
+.input-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card); /* Using new variable for soft shadow */
+  border: 1px solid rgba(255,255,255,0.1); 
+}
+[data-theme="dark"] .input-card {
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* --- Input Focus Glow and Standard Styling --- */
+input[type="text"], input[type="password"], textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  /* Reset focus-visible for custom glow */
+  outline: none;
+  box-shadow: none; 
+}
+[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"], [data-theme="dark"] textarea, [data-theme="dark"] select {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Input Glow on Focus */
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus {
+    border-color: var(--focus-ring-color);
+    box-shadow: var(--input-focus-glow); 
+}
+
+/* Main Button Styling (Base) */
+button {
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  background: var(--btn-bg);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  outline: none; /* Controlled by focus-visible */
+}
+button:hover:not(:disabled) {
+  background: var(--btn-hover);
+}
+button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+
+/* 3D Generate Button Styling (Applied to #generateButton) */
+button#generateButton {
+    padding: 16px 32px; /* Increased size */
+    font-size: 1.2rem;
+    font-weight: 700;
+    /* 3D Effect: Outer shadow for lift, dark shadow for depth */
+    box-shadow: 
+        0 4px 0 0 rgba(0, 0, 0, 0.2), /* Dark base for depth */
+        0 10px 20px rgba(0, 0, 0, 0.25), /* Floating shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Highlight top */
+    transform: translateY(0);
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s;
+}
+
+button#generateButton:hover:not(:disabled) {
+    transform: translateY(-2px); /* Slight hover lift */
+    box-shadow: 
+        0 6px 0 0 rgba(0, 0, 0, 0.2),
+        0 15px 30px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: var(--btn-hover); /* Keep background hover effect */
+}
+
+button#generateButton:active:not(:disabled) {
+    /* Press down effect */
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 0 rgba(0, 0, 0, 0.3), /* Reduced base shadow */
+        0 5px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(0, 0, 0, 0.2); /* Inner depression shadow */
+}
+
+
+/* --- Mode Tab Styling (Refined Hover/Active States) --- */
+.mode-tab {
+  display: inline-block;
+  padding: 8px 18px;
+  margin: 5px 5px 8px 0;
+  border-radius: 30px;
+  cursor: pointer;
+  background: var(--tab-bg);
+  color: var(--text);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  outline: none; /* Controlled by focus-visible */
+}
+.mode-tab:hover:not(.active) {
+    background: var(--text-secondary);
+    color: var(--card-bg);
+    transform: scale(1.03); /* Hover scale micro-interaction */
+}
+
+/* Active Tab Styles: Added distinct shadow based on color */
+.mode-tab.active { 
+    transform: scale(1.03); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+}
+/* Updated shadow color for standard tab to match purple */
+.mode-tab.active.standard { background: var(--tab-active-standard); color: #fff; box-shadow: 0 4px 10px rgba(157, 77, 221, 0.5); }
+.mode-tab.active.canva { background: var(--tab-active-canva); color: #fff; box-shadow: 0 4px 10px rgba(29, 209, 161, 0.5); }
+.mode-tab.active.deepthink { background: var(--tab-active-deepthink); color: #fff; box-shadow: 0 4px 10px rgba(84, 160, 255, 0.5); }
+.mode-tab.active.deepresearch { background: var(--tab-active-deepresearch); color: #fff; box-shadow: 0 4px 10px rgba(243, 104, 224, 0.5); }
+
+
+/* Response Area Styling */
+#response {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 20px;
+  min-height: 100px;
+  white-space: pre-wrap;
+  overflow: auto;
+  margin-top: 15px;
+  box-shadow: 0 8px 20px var(--shadow-base);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Editor Styling */
+#editor {
+  width: 100%;
+  height: 250px;
+  background: #282c34; /* Dark background for code editor (fixed for readability) */
+  color: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  margin-top: 10px;
+  overflow: auto;
+  white-space: pre;
+  font-family: monospace;
+  font-size: 0.9rem;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Code Language Buttons (Two-Column Grid) */
+.lang-buttons {
+    display: grid; /* Changed from flex */
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 12px; /* Increased gap */
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
+}
+
+/* Canva Type Selector Styling */
+.canva-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--canva-type-bg);
+    border-radius: 12px;
+}
+
+.canva-type-btn {
+  padding: 8px 14px;
+  border-radius: 40px;
+  background: var(--canva-type-bg);
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  outline: none; /* Controlled by focus-visible */
+}
+.canva-type-btn.active-type {
+  background: var(--canva-type-active);
+  color: #fff;
+  border-color: var(--canva-type-active);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: scale(1.03); /* Active scale micro-interaction */
+}
+.canva-type-btn:hover:not(.active-type) {
+    background: #b2dfdb;
+    transform: scale(1.03); /* Hover scale micro-interaction */
+}
+
+.lang-btn {
+  padding: 8px 14px;
+  border-radius: 40px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center text within the grid item */
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  outline: none; /* Controlled by focus-visible */
+}
+.lang-btn.active-lang { 
+    background: var(--tab-active-canva); 
+    color: #fff; 
+    border-color: var(--tab-active-canva); 
+    transform: scale(1.03);
+}
+.lang-btn:hover:not(.active-lang) { 
+    background: #f0f0f0; 
+    transform: scale(1.03); /* Hover scale micro-interaction */
+}
+
+.sources-list {
+  margin-top: 15px;
+  list-style: none;
+  padding-left: 0;
+}
+.sources-list li {
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+.sources-list li a {
+  color: var(--tab-active-deepresearch);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  /* Updated loader color to purple */
+  border-top: 4px solid var(--tab-active-standard); 
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* File Input Custom Styling (Minimized) */
+.file-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 10px; /* Reduced padding */
+    margin-top: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.file-upload-container:hover {
+    /* Updated hover color to purple */
+    border-color: var(--focus-ring-color); 
+    box-shadow: 0 0 0 1px var(--focus-ring-color);
+}
+.file-upload-container input[type="file"] {
+    display: none;
+}
+.file-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Updated background to light purple */
+    background: #f1e4ff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+.file-clear-btn {
+    background: none;
+    color: #ff6b6b;
+    padding: 5px;
+    box-shadow: none;
+    margin: 0;
+    transform: scale(1);
+}
+.file-clear-btn:hover {
+    color: #ff4757;
+    background: none;
+    transform: scale(1.1);
+}
+
+/* iframe for code preview */
+#preview {
+    width: 100%;
+    height: 300px; /* Set a reasonable height */
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    margin-top: 15px;
+    background-color: white; /* Ensure visibility */
+}
+</style>
 </head>
-<body class="p-4 sm:p-8 flex items-start justify-center min-h-screen">
+<!-- Set default theme to light, as the CSS default is light -->
+<body data-theme="light">
 
-    <div id="app" class="w-full max-w-6xl">
+<header>
+    <!-- Dark Mode Toggle Button -->
+    <button id="theme-toggle"><i class="fas fa-moon"></i> Dark Mode</button>
+</header>
 
-        <h1 class="text-4xl font-bold mb-8 text-center text-white">Sarvam AI Full Model Stack Client</h1>
+<div class="container">
+<h1><i class="fas fa-magic"></i> Gemma AI Hub: Multimodal & Code Canvas</h1>
 
-        <!-- API Key Configuration Card -->
-        <div class="card p-6 rounded-xl mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2 text-yellow-400"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                Sarvam AI API Key
-            </h2>
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <input
-                    type="text"
-                    id="apiKeyInput"
-                    placeholder="Enter your Sarvam AI Key (e.g., sk_...)"
-                    class="flex-grow p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color"
-                >
-                <button
-                    id="saveKeyBtn"
-                    class="btn-primary p-3 rounded-lg whitespace-nowrap"
-                    onclick="saveApiKey()"
-                >
-                    Save Key
-                </button>
-            </div>
-            <p id="keyStatus" class="mt-2 text-sm"></p>
-        </div>
+<div class="input-card">
+  <label class="block mb-2 font-semibold"><i class="fas fa-key"></i> Google AI API Key:</label>
+  <input type="password" id="apiKey" placeholder="Enter API Key (required)">
 
-        <div class="grid-container">
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-layer-group"></i> Gemma Model:</label>
+  <!-- Model list updated to Gemma 3-series -->
+  <select id="gemmaVersion" class="block">
+    <option value="gemma-3-12b-it" selected>Gemma 3 12B IT (Recommended)</option>
+    <option value="gemma-3-27b-it">Gemma 3 27B IT (Powerful)</option>
+    <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
+    <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
+    <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
+    <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
+  </select>
+  
+  <!-- File Uploader (Minimized) -->
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-camera"></i> File Upload (Optional):</label>
+  <div class="file-upload-container text-center" onclick="document.getElementById('fileUpload').click()">
+    <i class="fas fa-cloud-upload-alt text-lg text-gray-500"></i>
+    <p class="text-sm text-gray-600">Click to select an image or file.</p>
+    <input type="file" id="fileUpload" accept="image/*,video/*,application/pdf,text/*">
+  </div>
+  
+  <div id="fileInfoDisplay" class="file-info" style="display:none;">
+      <span id="fileName"></span>
+      <button class="file-clear-btn" onclick="clearFile(event)"><i class="fas fa-times"></i> Clear</button>
+  </div>
 
-            <!-- 1. Sarvam-M Chat Interface Card -->
-            <div class="card p-6 rounded-xl">
-                <h2 class="text-xl font-semibold mb-4 text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2 text-blue-400"><path d="M12 2a10 10 0 0 0-9.22 13.9A1 1 0 0 1 3.2 17H.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5H5v-4H3.2a3 3 0 0 0-.8-3.72A8 8 0 1 1 12 2z"></path></svg>
-                    1. LLM Chat (sarvam-m)
-                </h2>
-                <textarea
-                    id="chatPromptInput"
-                    rows="4"
-                    placeholder="Ask the LLM anything in English or an Indic language..."
-                    class="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color mb-4"
-                    oninput="checkInputs('chat')"
-                ></textarea>
-                <div class="flex items-center justify-between">
-                    <button
-                        id="chatSubmitBtn"
-                        class="btn-primary p-3 rounded-lg flex items-center space-x-2"
-                        onclick="generateChatContent()"
-                        disabled
-                    >
-                        <span>Send Request</span>
-                    </button>
-                    <div id="chatLoadingIndicator" class="spinner"></div>
-                </div>
-                <div class="mt-4">
-                    <h3 class="text-base font-semibold mb-2 text-white opacity-80">Response:</h3>
-                    <div id="chatResponseText" class="response-box text-sm">The Sarvam-M response will appear here.</div>
-                </div>
-            </div>
 
-            <!-- 2. Sarvam Translate Interface Card -->
-            <div class="card p-6 rounded-xl">
-                <h2 class="text-xl font-semibold mb-4 text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2 text-red-400"><path d="M5 8h14"></path><path d="M5 12h14"></path><path d="M5 16h14"></path><path d="M8 7l-3-3-3 3"></path><path d="M16 17l3 3 3-3"></path></svg>
-                    2. Text Translation (mayura:v1)
-                </h2>
-                <div class="mb-4 flex items-center justify-between space-x-2">
-                    <label class="text-sm opacity-70">Source:</label>
-                    <select id="sourceLang" class="p-2 rounded-lg text-sm w-1/3">
-                        <option value="en-IN">English (en-IN)</option>
-                        <option value="hi-IN">Hindi (hi-IN)</option>
-                    </select>
-                    <label class="text-sm opacity-70">Target:</label>
-                    <select id="targetLang" class="p-2 rounded-lg text-sm w-1/3">
-                        <option value="hi-IN">Hindi (hi-IN)</option>
-                        <option value="en-IN">English (en-IN)</option>
-                    </select>
-                </div>
-                <textarea
-                    id="translateInput"
-                    rows="4"
-                    placeholder="Enter text to translate..."
-                    class="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color mb-4"
-                    oninput="checkInputs('translate')"
-                ></textarea>
-                <div class="flex items-center justify-between">
-                    <button
-                        id="translateSubmitBtn"
-                        class="btn-primary p-3 rounded-lg flex items-center space-x-2"
-                        onclick="translateText()"
-                        disabled
-                    >
-                        <span>Translate Text</span>
-                    </button>
-                    <div id="translateLoadingIndicator" class="spinner"></div>
-                </div>
-                <div class="mt-4">
-                    <h3 class="text-base font-semibold mb-2 text-white opacity-80">Translation:</h3>
-                    <div id="translateResponseText" class="response-box text-sm">The translation will appear here.</div>
-                </div>
-            </div>
+  <div class="mt-4">
+    <div class="mode-tab active standard" data-mode="standard" tabindex="0"><i class="fas fa-circle"></i> Standard Text</div>
+    <div class="mode-tab" data-mode="canva" tabindex="0"><i class="fas fa-paint-brush"></i> Canva Studio (File/Code)</div>
+    <div class="mode-tab" data-mode="deepthink" tabindex="0"><i class="fas fa-brain"></i> DeepThink Analysis</div>
+    <div class="mode-tab" data-mode="deepresearch" tabindex="0"><i class="fas fa-search"></i> DeepResearch (Grounded)</div>
+  </div>
 
-            <!-- 3. Saarika ASR Interface Card -->
-            <div class="card p-6 rounded-xl">
-                <h2 class="text-xl font-semibold mb-4 text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2 text-green-400"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                    3. Speech-to-Text (saarika:v1)
-                </h2>
-                <div class="mb-4">
-                    <label class="block text-sm opacity-70 mb-2">Upload Audio (.wav, .mp3, .flac):</label>
-                    <input
-                        type="file"
-                        id="asrFileInput"
-                        accept="audio/*"
-                        class="w-full p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color"
-                        onchange="checkInputs('asr')"
-                    >
-                </div>
-                <div class="flex items-center justify-between">
-                    <button
-                        id="asrSubmitBtn"
-                        class="btn-primary p-3 rounded-lg flex items-center space-x-2"
-                        onclick="asrAudioToText()"
-                        disabled
-                    >
-                        <span>Transcribe Audio</span>
-                    </button>
-                    <div id="asrLoadingIndicator" class="spinner"></div>
-                </div>
-                <div class="mt-4">
-                    <h3 class="text-base font-semibold mb-2 text-white opacity-80">Transcription:</h3>
-                    <div id="asrResponseText" class="response-box text-sm">Upload an audio file to see the transcribed text.</div>
-                </div>
-            </div>
+  <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-edit"></i> Prompt:</label>
+  <textarea id="userPrompt" rows="4" placeholder="Describe the document, code, or game you want to generate, or ask a question about the uploaded file..."></textarea>
 
-            <!-- 4. Bulbul TTS Interface Card -->
-            <div class="card p-6 rounded-xl">
-                <h2 class="text-xl font-semibold mb-4 text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-2 text-orange-400"><path d="M11 5v2.83a4 4 0 0 1 1.41 1.41L15 12l-2.59 2.76a4 4 0 0 1-1.41 1.41V19"></path><path d="M22 12h-3"></path><path d="M5 12H2"></path><path d="M12 22a10 10 0 0 0 10-10"></path><path d="M2 12A10 10 0 0 1 12 2"></path></svg>
-                    4. Text-to-Speech (bulbul:v1)
-                </h2>
-                <textarea
-                    id="ttsTextInput"
-                    rows="4"
-                    placeholder="Enter text to convert to speech..."
-                    class="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color mb-4"
-                    oninput="checkInputs('tts')"
-                ></textarea>
-                <div class="mb-4 flex items-center space-x-4">
-                     <label class="text-sm opacity-70">Language:</label>
-                    <select id="ttsLang" class="p-2 rounded-lg text-sm">
-                        <option value="hi">Hindi (hi)</option>
-                        <option value="en">English (en)</option>
-                        <option value="mr">Marathi (mr)</option>
-                        <option value="bn">Bengali (bn)</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button
-                        id="ttsSubmitBtn"
-                        class="btn-primary p-3 rounded-lg flex items-center space-x-2"
-                        onclick="ttsTextToAudio()"
-                        disabled
-                    >
-                        <span>Generate Speech</span>
-                    </button>
-                    <div id="ttsLoadingIndicator" class="spinner"></div>
-                </div>
-                <div class="mt-4">
-                    <h3 class="text-base font-semibold mb-2 text-white opacity-80">Playback:</h3>
-                    <audio id="ttsAudioPlayer" controls class="w-full bg-card-color rounded-lg mt-2 p-2 hidden"></audio>
-                    <div id="ttsResponseText" class="response-box text-sm">Enter text and generate audio to play it back.</div>
-                </div>
-            </div>
+  <!-- GENERATE BUTTON: Size Increased and 3D Styled -->
+  <button id="generateButton" class="mt-4 w-full"><i class="fas fa-rocket"></i> Generate Content</button>
+</div>
 
-        </div>
+<div id="canva-container" class="input-card" style="display:none;">
+    <h2 class="text-xl font-bold mb-3 text-center text-gray-700">Canva Studio Configuration</h2>
+    
+    <!-- Canva Type Selector (Simplified) -->
+    <div class="canva-type-selector" id="canva-type-selector">
+        <div class="canva-type-btn active-type" data-type="document" tabindex="0"><i class="fas fa-file-word"></i> Document (Markdown)</div>
+        <div class="canva-type-btn" data-type="code" tabindex="0"><i class="fas fa-code"></i> Code / Game Development</div>
+    </div>
+    
+    <!-- Code Language Selector (Now 2-Column Grid) -->
+    <div class="lang-buttons" id="lang-buttons" style="display:none;">
+        <button class="lang-btn active-lang" data-lang="html" tabindex="0"><i class="fas fa-code"></i> HTML</button>
+        <button class="lang-btn" data-lang="python" tabindex="0"><i class="fab fa-python"></i> Python</button>
+        <button class="lang-btn" data-lang="javascript" tabindex="0"><i class="fab fa-js"></i> JavaScript</button>
+        <button class="lang-btn" data-lang="typescript" tabindex="0"><i class="fab fa-js"></i> TypeScript</button>
+        <button class="lang-btn" data-lang="java" tabindex="0"><i class="fab fa-java"></i> Java</button>
+        <button class="lang-btn" data-lang="php" tabindex="0"><i class="fab fa-php"></i> PHP</button>
+        <button class="lang-btn" data-lang="csharp" title="C#" tabindex="0"><i class="fas fa-sharp"></i> C#</button>
+        <button class="lang-btn" data-lang="cpp" title="C/C++" tabindex="0"><i class="fas fa-file-code"></i> C/C++</button>
+        <button class="lang-btn" data-lang="go" tabindex="0"><i class="fas fa-code-branch"></i> Go</button>
+        <button class="lang-btn" data-lang="rust" tabindex="0"><i class="fab fa-rust"></i> Rust</button>
+        <button class="lang-btn" data-lang="ruby" tabindex="0"><i class="fas fa-gem"></i> Ruby</button>
+        <button class="lang-btn" data-lang="sql" tabindex="0"><i class="fas fa-database"></i> SQL</button>
+        <button class="lang-btn" data-lang="r" tabindex="0"><i class="fas fa-chart-line"></i> R</button>
+        <button class="lang-btn" data-lang="lua" tabindex="0"><i class="fas fa-moon"></i> Lua</button>
+        <button class="lang-btn" data-lang="dart" tabindex="0"><i class="fas fa-mobile-alt"></i> Dart</button>
+        <button class="lang-btn" data-lang="kotlin" tabindex="0"><i class="fas fa-mobile-alt"></i> Kotlin</button>
+        <button class="lang-btn" data-lang="swift" tabindex="0"><i class="fab fa-swift"></i> Swift</button>
+        
+        <!-- Hidden button for internal document use -->
+        <button class="lang-btn" data-lang="markdown" style="display:none;"></button>
     </div>
 
-    <script>
-        // --- Configuration & Initialization ---
-        // Endpoints
-        const SARVAM_CHAT_URL = 'https://api.sarvam.ai/v1/chat/completions';
-        const SARVAM_TRANSLATE_URL = 'https://api.sarvam.ai/v1/translate';
-        const SARVAM_ASR_URL = 'https://api.sarvam.ai/v1/asr';
-        const SARVAM_TTS_URL = 'https://api.sarvam.ai/v1/tts';
+    <!-- Actions for Editor Content -->
+    <div class="flex gap-3 mt-4">
+        <button id="copyEditorButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Editor Content</button>
+        <button id="downloadEditorButton" class="flex-1 bg-purple-500 hover:bg-purple-600"><i class="fas fa-download"></i> Download File</button>
+    </div>
 
-        // Models
-        const SARVAM_CHAT_MODEL = 'sarvam-m';
-        const SARVAM_TRANSLATE_MODEL = 'mayura:v1';
-        const SARVAM_ASR_MODEL = 'saarika:v1';
-        const SARVAM_TTS_MODEL = 'bulbul:v1';
+    <pre id="editor" contenteditable="true" class="mt-4">Generated content will appear here. For code, you can edit it live.</pre>
+    <!-- Updated editor note -->
+    <div class="text-xs text-gray-500 mt-2">
+        <i class="fas fa-info-circle"></i> Note: Content is generated as **text-based structures** (Markdown or Code) for editing and download.
+    </div>
 
-        const MAX_RETRIES = 3;
-        const INITIAL_BACKOFF = 1000;
+    <!-- Preview for HTML/Game code -->
+    <iframe id="preview" title="Code Preview"></iframe>
+</div>
 
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const keyStatus = document.getElementById('keyStatus');
+<!-- Response Area for Standard/DeepThink/DeepResearch -->
+<div class="input-card">
+    <h2 class="text-xl font-bold mb-3 text-gray-700">Output Result</h2>
+    
+    <!-- Actions for Response Content -->
+    <div class="flex gap-3">
+        <button id="copyResponseButton" class="flex-1 bg-green-500 hover:bg-green-600"><i class="fas fa-copy"></i> Copy Response Text</button>
+        <button id="downloadResponseButton" class="flex-1 bg-purple-500 hover:bg-purple-600" style="display:none;"><i class="fas fa-download"></i> Download Response</button>
+    </div>
 
-        // Chat elements
-        const chatPromptInput = document.getElementById('chatPromptInput');
-        const chatSubmitBtn = document.getElementById('chatSubmitBtn');
-        const chatLoadingIndicator = document.getElementById('chatLoadingIndicator');
-        const chatResponseText = document.getElementById('chatResponseText');
+    <div id="response" class="font-mono text-sm">Your output will appear here.</div>
+    <ul class="sources-list" id="sources-list"></ul>
+</div>
 
-        // Translate elements
-        const sourceLang = document.getElementById('sourceLang');
-        const targetLang = document.getElementById('targetLang');
-        const translateInput = document.getElementById('translateInput');
-        const translateSubmitBtn = document.getElementById('translateSubmitBtn');
-        const translateLoadingIndicator = document.getElementById('translateLoadingIndicator');
-        const translateResponseText = document.getElementById('translateResponseText');
+</div>
 
-        // ASR elements
-        const asrFileInput = document.getElementById('asrFileInput');
-        const asrSubmitBtn = document.getElementById('asrSubmitBtn');
-        const asrLoadingIndicator = document.getElementById('asrLoadingIndicator');
-        const asrResponseText = document.getElementById('asrResponseText');
+<script> 
 
-        // TTS elements
-        const ttsTextInput = document.getElementById('ttsTextInput');
-        const ttsLang = document.getElementById('ttsLang');
-        const ttsSubmitBtn = document.getElementById('ttsSubmitBtn');
-        const ttsLoadingIndicator = document.getElementById('ttsLoadingIndicator');
-        const ttsAudioPlayer = document.getElementById('ttsAudioPlayer');
-        const ttsResponseText = document.getElementById('ttsResponseText');
+let selectedMode = 'standard';
+let selectedCanvaType = 'document'; 
+let activeLang = 'markdown'; 
+let canvaFiles = { 
+    html: '', python: '', javascript: '', typescript: '', java: '', 
+    dart: '', kotlin: '', swift: '', php: '', csharp: '', cpp: '', 
+    go: '', rust: '', ruby: '', sql: '', r: '', lua: '',
+    markdown: '' 
+};
+let selectedFile = { 
+    file: null, 
+    base64Data: null, 
+    mimeType: null 
+};
+
+let currentTypingInterval = null; 
+
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const canvaContainer = document.getElementById('canva-container');
+const langButtonsContainer = document.getElementById('lang-buttons');
+const canvaTypeButtons = document.getElementById('canva-type-selector');
+const sourcesList = document.getElementById('sources-list');
+const generateButton = document.getElementById('generateButton');
+const apiKeyInput = document.getElementById('apiKey');
+const userPromptInput = document.getElementById('userPrompt');
+const responseDiv = document.getElementById('response');
+const fileUploadInput = document.getElementById('fileUpload');
+const fileInfoDisplay = document.getElementById('fileInfoDisplay');
+const fileNameDisplay = document.getElementById('fileName');
+const gemmaVersion = document.getElementById('gemmaVersion'); 
+
+const copyEditorButton = document.getElementById('copyEditorButton');
+const downloadEditorButton = document.getElementById('downloadEditorButton');
+const copyResponseButton = document.getElementById('copyResponseButton');
+const downloadResponseButton = document.getElementById('downloadResponseButton');
+const themeToggle = document.getElementById('theme-toggle');
 
 
-        let currentApiKey = '';
+// Utility Functions
+function updatePreview() {
+  if (selectedCanvaType === 'code' && activeLang === 'html') {
+    preview.srcdoc = canvaFiles.html; 
+  } else {
+    preview.srcdoc = '';
+  }
+}
 
-        // --- API Key Management ---
+// --- Streaming Simulation ---
+function typewriterEffect(element, text, delay = 15) {
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+    }
+    element.innerHTML = ''; 
+    let i = 0;
+    
+    element.innerHTML = '<pre id="typing-output" class="font-mono text-sm"></pre>';
+    const preElement = document.getElementById('typing-output');
 
-        function loadApiKey() {
-            const storedKey = localStorage.getItem('sarvamApiKey');
-            if (storedKey) {
-                currentApiKey = storedKey;
-                apiKeyInput.value = storedKey;
-                keyStatus.textContent = 'Sarvam AI Key loaded successfully.';
-                keyStatus.classList.remove('text-error-color', 'text-yellow-400');
-                keyStatus.classList.add('text-success-color');
-            } else {
-                keyStatus.textContent = 'Please enter your Sarvam AI API Key to enable features.';
-                keyStatus.classList.remove('text-success-color', 'text-error-color');
-                keyStatus.classList.add('text-yellow-400');
+    // Blink cursor styling
+    preElement.style.borderRight = '2px solid var(--text)';
+    preElement.style.animation = 'blink-cursor 0.75s step-end infinite';
+    const styleSheet = document.styleSheets[0];
+    if (!styleSheet.cssRules || Array.from(styleSheet.cssRules).every(rule => !rule.cssText.includes('blink-cursor'))) {
+        styleSheet.insertRule(`
+            @keyframes blink-cursor {
+                0%, 100% { border-color: var(--text); }
+                50% { border-color: transparent; }
             }
-            checkInputs('all');
+        `, styleSheet.cssRules.length);
+    }
+
+    
+    currentTypingInterval = setInterval(() => {
+        if (i < text.length) {
+            preElement.textContent += text.charAt(i); 
+            preElement.scrollTop = preElement.scrollHeight;
+            i++;
+        } else {
+            clearInterval(currentTypingInterval);
+            currentTypingInterval = null;
+            preElement.style.borderRight = 'none';
+            preElement.style.animation = 'none';
         }
+    }, delay);
+}
 
-        function saveApiKey() {
-            const newKey = apiKeyInput.value.trim();
-            if (newKey) {
-                localStorage.setItem('sarvamApiKey', newKey);
-                currentApiKey = newKey;
-                keyStatus.textContent = 'Key saved! All features are now active.';
-                keyStatus.classList.remove('text-error-color', 'text-yellow-400');
-                keyStatus.classList.add('text-success-color');
-            } else {
-                localStorage.removeItem('sarvamApiKey');
-                currentApiKey = '';
-                keyStatus.textContent = 'Key cannot be empty. Please enter your key.';
-                keyStatus.classList.remove('text-success-color', 'text-yellow-400');
-                keyStatus.classList.add('text-error-color');
-            }
-            checkInputs('all');
-        }
+function displayResponse(text, candidates = []) {
+  downloadResponseButton.style.display = 'none';
 
-        /**
-         * Checks if inputs are ready to enable buttons.
-         */
-        function checkInputs(type) {
-            const isKeyReady = !!currentApiKey;
+  if (selectedMode === 'canva') {
+      responseDiv.innerHTML = '<div class="text-lg font-bold text-teal-600"><i class="fas fa-check-circle"></i> Content generated and ready in the editor above.</div>';
+  } else {
+      typewriterEffect(responseDiv, text, 15);
+      downloadResponseButton.style.display = 'flex';
+  }
+}
 
-            if (type === 'chat' || type === 'all') {
-                const isChatPromptReady = chatPromptInput.value.trim().length > 0;
-                chatSubmitBtn.disabled = !(isKeyReady && isChatPromptReady);
-            }
+// --- File Handling ---
 
-            if (type === 'translate' || type === 'all') {
-                const isTranslateInputReady = translateInput.value.trim().length > 0;
-                translateSubmitBtn.disabled = !(isKeyReady && isTranslateInputReady);
-            }
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            if (type === 'asr' || type === 'all') {
-                const isAsrFileReady = asrFileInput.files && asrFileInput.files.length > 0;
-                asrSubmitBtn.disabled = !(isKeyReady && isAsrFileReady);
-            }
+    clearFileState();
+    selectedFile.file = file;
+    selectedFile.mimeType = file.type;
 
-            if (type === 'tts' || type === 'all') {
-                const isTtsTextReady = ttsTextInput.value.trim().length > 0;
-                ttsSubmitBtn.disabled = !(isKeyReady && isTtsTextReady);
-            }
-        }
-
-        /**
-         * Generic fetch function with exponential backoff for retries.
-         * Handles both JSON and FormData payloads.
-         */
-        async function apiFetch(url, payload, loadingElement, responseElement, isFormData = false, attempt = 0) {
-            loadingElement.style.display = 'block';
-            responseElement.textContent = 'Processing request...';
-            responseElement.style.borderLeftColor = 'var(--accent-color)';
-            
-            const apiKey = currentApiKey;
-            let finalResult = null;
-            let errorMessage = '';
-
-            try {
-                const headers = {
-                    'Authorization': `Bearer ${apiKey}`,
-                };
-                
-                // Do not set Content-Type header manually for FormData, the browser handles it.
-                if (!isFormData) {
-                    headers['Content-Type'] = 'application/json';
-                }
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: headers,
-                    body: isFormData ? payload : JSON.stringify(payload)
-                });
-
-                if (response.status === 429 && attempt < MAX_RETRIES) {
-                    const delay = INITIAL_BACKOFF * Math.pow(2, attempt) + Math.random() * 500;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return apiFetch(url, payload, loadingElement, responseElement, isFormData, attempt + 1);
-                }
-
-                if (!response.ok) {
-                    const errorJson = await response.json().catch(() => ({}));
-                    errorMessage = `API Request failed: ${response.status}.`;
-
-                    if (response.status === 401 || response.status === 403) {
-                        errorMessage = "Authentication Error: Invalid Sarvam AI API Key. Please check the key.";
-                    } else if (errorJson.error && errorJson.error.message) {
-                        errorMessage += ` Details: ${errorJson.error.message}`;
-                    } else if (errorJson.message) {
-                        errorMessage += ` Details: ${errorJson.message}`;
-                    } else {
-                        errorMessage += ` (Check console for raw error)`;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                const result = await response.json();
-                finalResult = result;
-
-            } catch (error) {
-                errorMessage = error.message;
-            } finally {
-                loadingElement.style.display = 'none';
-            }
-
-            if (errorMessage) {
-                responseElement.textContent = `Error: ${errorMessage}`;
-                responseElement.style.borderLeftColor = 'var(--error-color)';
-                return null;
-            }
-            return finalResult;
-        }
-
-        // --- 1. Chat Completion (Sarvam-M) ---
-        async function generateChatContent() {
-            chatSubmitBtn.disabled = true;
-            const userQuery = chatPromptInput.value.trim();
-
-            const payload = {
-                model: SARVAM_CHAT_MODEL,
-                messages: [
-                    { "role": "system", "content": "You are Sarvam AI, an assistant specialized in Indian languages and general knowledge. Respond concisely and accurately." },
-                    { "role": "user", "content": userQuery }
-                ],
-                max_tokens: 1024,
-                temperature: 0.7
-            };
-
-            const result = await apiFetch(SARVAM_CHAT_URL, payload, chatLoadingIndicator, chatResponseText);
-
-            if (result) {
-                const text = result.choices?.[0]?.message?.content || "No response text received.";
-
-                // Simple formatting for display
-                chatResponseText.innerHTML = text.replace(/(\*\*|__)(.*?)\1/g, '<strong>$2</strong>')
-                                                 .replace(/(\*|_)(.*?)\1/g, '<em>$2</em>')
-                                                 .replace(/\n/g, '<br>');
-            }
-
-            checkInputs('chat');
-        }
-
-        // --- 2. Text Translation (Mayura) ---
-        async function translateText() {
-            translateSubmitBtn.disabled = true;
-            const input = translateInput.value.trim();
-            const source_language_code = sourceLang.value;
-            const target_language_code = targetLang.value;
-
-            if (source_language_code === target_language_code) {
-                 translateResponseText.textContent = "Error: Source and target languages cannot be the same.";
-                 translateResponseText.style.borderLeftColor = 'var(--error-color)';
-                 translateSubmitBtn.disabled = false;
-                 return;
-            }
-
-            const payload = {
-                input: input,
-                source_language_code: source_language_code,
-                target_language_code: target_language_code,
-                model: SARVAM_TRANSLATE_MODEL,
-                mode: "formal"
-            };
-
-            const result = await apiFetch(SARVAM_TRANSLATE_URL, payload, translateLoadingIndicator, translateResponseText);
-
-            if (result && result.translated_text) {
-                translateResponseText.textContent = result.translated_text;
-            } else if (result && !result.translated_text) {
-                translateResponseText.textContent = "Translation failed or returned an empty result.";
-                translateResponseText.style.borderLeftColor = 'var(--warning-color)';
-            }
-
-            checkInputs('translate');
-        }
-
-        // --- 3. Speech-to-Text (Saarika) ---
-        async function asrAudioToText() {
-            asrSubmitBtn.disabled = true;
-            const file = asrFileInput.files[0];
-
-            if (!file) {
-                asrResponseText.textContent = "Please select an audio file.";
-                asrResponseText.style.borderLeftColor = 'var(--warning-color)';
-                asrSubmitBtn.disabled = false;
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file); // The file to upload
-            
-            // Add other parameters as a JSON string for the 'data' field
-            const configData = {
-                model_id: SARVAM_ASR_MODEL,
-                // Add language code if necessary (e.g., "hi", "en"), though model is usually auto-detecting
-            };
-            formData.append('data', JSON.stringify(configData));
-
-
-            const result = await apiFetch(SARVAM_ASR_URL, formData, asrLoadingIndicator, asrResponseText, true);
-
-            if (result && result.transcription) {
-                asrResponseText.textContent = result.transcription;
-            } else if (result && !result.transcription) {
-                asrResponseText.textContent = "Transcription failed or returned empty result.";
-                asrResponseText.style.borderLeftColor = 'var(--warning-color)';
-            }
-
-            checkInputs('asr');
-        }
-
-        // --- 4. Text-to-Speech (Bulbul) ---
-        async function ttsTextToAudio() {
-            ttsSubmitBtn.disabled = true;
-            ttsAudioPlayer.classList.add('hidden');
-            const inputText = ttsTextInput.value.trim();
-            const languageCode = ttsLang.value;
-            
-            const payload = {
-                model_id: SARVAM_TTS_MODEL,
-                text: inputText,
-                // voice_id: "random", // Can specify voice if known
-                language: languageCode
-            };
-
-            // Use apiFetch with the expectation that the API returns a JSON object 
-            // containing the audio data (typically base64) or a direct audio stream.
-            // Assuming it returns JSON with a 'audio_content' field (base64).
-            const result = await apiFetch(SARVAM_TTS_URL, payload, ttsLoadingIndicator, ttsResponseText, false);
-
-            if (result && result.audio_content) {
-                // The API returns base64 encoded audio data (e.g., MP3 or WAV)
-                const audioBase64 = result.audio_content;
-                const audioFormat = result.audio_format || 'audio/wav'; // Guessing default format
-                
-                const audioUrl = `data:${audioFormat};base64,${audioBase64}`;
-                ttsAudioPlayer.src = audioUrl;
-                ttsAudioPlayer.classList.remove('hidden');
-                ttsAudioPlayer.load();
-                ttsResponseText.textContent = "Audio generated successfully. Click play to listen.";
-            } else if (result) {
-                ttsResponseText.textContent = "TTS failed or audio content was missing from the response.";
-                ttsResponseText.style.borderLeftColor = 'var(--warning-color)';
-            }
-
-            checkInputs('tts');
-        }
-
-        // Initialize the app
-        window.onload = () => {
-            loadApiKey();
-
-            // Setup listeners for language swap in translate card
-            sourceLang.addEventListener('change', () => {
-                if (sourceLang.value === targetLang.value) {
-                    targetLang.value = sourceLang.value === 'en-IN' ? 'hi-IN' : 'en-IN';
-                }
-                checkInputs('translate');
-            });
-            targetLang.addEventListener('change', () => {
-                if (sourceLang.value === targetLang.value) {
-                    sourceLang.value = targetLang.value === 'en-IN' ? 'hi-IN' : 'en-IN';
-                }
-                checkInputs('translate');
-            });
-
-            // Add event listener for Enter key on the chat input
-            chatPromptInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !chatSubmitBtn.disabled) {
-                    e.preventDefault();
-                    generateChatContent();
-                }
-            });
+    fileNameDisplay.textContent = file.name;
+    fileInfoDisplay.style.display = 'flex';
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedFile.base64Data = e.target.result.split(',')[1];
+            userPromptInput.placeholder = `Ask a question about the image (${file.name})...`;
         };
+        reader.readAsDataURL(file);
+    } else {
+        userPromptInput.placeholder = `A ${file.type} file (${file.name}) is selected. Ask for an analysis of its content/purpose.`;
+    }
+}
 
-    </script>
+function clearFileState() {
+    selectedFile = { file: null, base64Data: null, mimeType: null };
+    fileUploadInput.value = '';
+    fileInfoDisplay.style.display = 'none';
+    fileNameDisplay.textContent = '';
+    userPromptInput.placeholder = "Describe the document, code, game, or analysis you want to generate...";
+}
+
+function clearFile(event) {
+    event.stopPropagation(); 
+    clearFileState();
+}
+
+// --- Canva Type & Language Switching ---
+
+// Event Listener for Main Mode Tabs
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active', 'standard', 'canva', 'deepthink', 'deepresearch'));
+    tab.classList.add('active', tab.dataset.mode);
+    selectedMode = tab.dataset.mode;
+    canvaContainer.style.display = (selectedMode === 'canva') ? 'block' : 'none';
+    sourcesList.innerHTML = '';
+    
+    if (currentTypingInterval) clearInterval(currentTypingInterval);
+    
+    if (selectedMode === 'canva') {
+        setCanvaType(selectedCanvaType);
+        downloadResponseButton.style.display = 'none';
+        responseDiv.innerHTML = '<div class="text-xs text-gray-500">Output for Canva Studio appears in the editable editor above.</div>';
+    } else {
+        editor.textContent = ''; // Clear editor for non-canva modes
+        preview.srcdoc = '';
+        responseDiv.innerHTML = 'Your output will appear here.';
+    }
+  });
+});
+
+function setCanvaType(type) {
+    document.querySelectorAll('.canva-type-btn').forEach(b => b.classList.remove('active-type'));
+    const targetButton = canvaTypeButtons.querySelector(`[data-type="${type}"]`);
+    if (targetButton) {
+        targetButton.classList.add('active-type');
+    }
+    
+    selectedCanvaType = type;
+    langButtonsContainer.style.display = (type === 'code') ? 'grid' : 'none';
+    
+    if (type === 'code') {
+        // Ensure an active language is set if switching to code mode
+        const currentActiveLangBtn = langButtonsContainer.querySelector('.active-lang');
+        activeLang = currentActiveLangBtn ? currentActiveLangBtn.dataset.lang : 'html';
+    } else {
+        activeLang = 'markdown';
+    }
+
+    editor.textContent = canvaFiles[activeLang] || '';
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+}
+
+// Event Listener for Canva Type Buttons (Document/Code)
+canvaTypeButtons.querySelectorAll('.canva-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newType = btn.dataset.type;
+    setCanvaType(newType);
+  });
+});
+
+// Event Listener for Code Language Buttons
+langButtonsContainer.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (selectedCanvaType !== 'code') return;
+    
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-lang'));
+    btn.classList.add('active-lang');
+    
+    // Save current editor content before switching language
+    canvaFiles[activeLang] = editor.textContent;
+    
+    activeLang = btn.dataset.lang;
+    editor.textContent = canvaFiles[activeLang] || '';
+    
+    if (activeLang === 'html') updatePreview();
+    else preview.srcdoc = '';
+  });
+});
+
+editor.addEventListener('input', () => {
+  canvaFiles[activeLang] = editor.textContent;
+  if (activeLang === 'html') updatePreview();
+});
+
+// --- API Generation ---
+
+async function generate() {
+  const apiKey = apiKeyInput.value.trim();
+  const model = gemmaVersion.value; // Use gemmaVersion
+  const prompt = userPromptInput.value.trim();
+
+  if (currentTypingInterval) {
+      clearInterval(currentTypingInterval);
+      currentTypingInterval = null;
+  }
+  
+  responseDiv.innerHTML = '';
+  sourcesList.innerHTML = '';
+
+  if (!apiKey || !prompt) { 
+    responseDiv.innerHTML = '<div class="text-red-500 font-semibold">API Key and Prompt required.</div>'; 
+    return; 
+  }
+  
+  if (selectedFile.file && !selectedFile.base64Data && selectedFile.file.type.startsWith('image/')) {
+    responseDiv.innerHTML = '<div class="text-yellow-500 font-semibold">Please wait for the image to finish loading before generating.</div>';
+    return;
+  }
+
+  generateButton.disabled = true; 
+  responseDiv.innerHTML = '<div class="loader"></div> Awaiting response...';
+
+  // API URL remains the same structure for all Google models
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  let systemPrompt = '';
+  let tools = [];
+  let contentsParts = [];
+
+  // 1. Build Content Parts (Text + Multimodal)
+  contentsParts.push({ text: prompt });
+  if (selectedFile.base64Data) {
+      contentsParts.push({
+          inlineData: {
+              mimeType: selectedFile.mimeType,
+              data: selectedFile.base64Data
+          }
+      });
+  } else if (selectedFile.file) {
+      // For non-image files where we don't read content, provide a textual hint
+      contentsParts.push({ text: `[User has attached a file named: ${selectedFile.file.name} of type: ${selectedFile.file.type}. Please analyze based on the prompt, acknowledging the file attachment.]` });
+  }
+
+  // 2. Dynamic System Prompt Setup
+  if (selectedMode === 'deepthink') { 
+      systemPrompt = "You are a master analytical thinker. Provide a structured, concise, multi-perspective analysis on the user's prompt. Do not use any external tools or search.";
+  } else if (selectedMode === 'deepresearch') { 
+      systemPrompt = "You are a live researcher. Use verified online information to answer the user's query and cite all sources at the end. Provide a detailed, grounded response. Ensure the response is informative and based on the retrieved web content."; 
+      tools = [{ google_search: {} }]; 
+  } else if (selectedMode === 'canva') { 
+      let formatInstruction = '';
+      if (selectedCanvaType === 'document') {
+          formatInstruction = `Generate the complete content for a ${prompt} in **clean, structured Markdown format**. Only output the Markdown text, ready for conversion to a document format. Do not include any explanation or surrounding text.`;
+          activeLang = 'markdown';
+      } else if (selectedCanvaType === 'code') {
+          // If the user hasn't explicitly set the language yet, use the active one (default 'html')
+          const currentLang = langButtonsContainer.querySelector('.active-lang')?.dataset?.lang || 'html'; 
+          formatInstruction = `You are a coding assistant. Generate a complete, single-file, and runnable ${currentLang.toUpperCase()} program or game based on the prompt: "${prompt}". For HTML, include all CSS and JavaScript in the single file. Only output the code itself, with no explanations or surrounding text.`;
+      }
+      
+      systemPrompt = `You are the AI engine for the 'Canva Studio'. Your task is to strictly follow the format instruction: ${formatInstruction}`;
+  }
+  
+  // 3. Construct Final Payload
+  const payload = { 
+    contents: [{ parts: contentsParts }], 
+    ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } }), 
+    ...(tools.length > 0 && { tools: tools }) 
+  };
+
+  try {
+    let data;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.status === 429 && attempt < 2) { await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1500)); continue; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json(); 
+        break;
+      } catch (e) {
+        if (attempt === 2) throw e;
+      }
+    }
+
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || 'No response.';
+    
+    // Handle Canva mode output
+    if (selectedMode === 'canva') { 
+        canvaFiles[activeLang] = text; 
+        editor.textContent = text; 
+        if (activeLang === 'html') updatePreview();
+        displayResponse('Content generated and ready in the editor above.', data?.candidates || []); 
+    } else {
+        editor.textContent = '';
+        preview.srcdoc = '';
+        displayResponse(text, data?.candidates || []); 
+    }
+
+    // Handle Grounding/Sources for DeepResearch
+    if (selectedMode === 'deepresearch') {
+      const grounding = candidate?.groundingMetadata?.groundingAttributions || [];
+      sourcesList.innerHTML = '<li class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle"></i> Research is powered by Google Search grounding for real-time information.</li>';
+
+      if (grounding.length > 0) {
+        sourcesList.innerHTML += '<li class="font-bold mt-2 text-pink-500"><i class="fas fa-atlas"></i> Grounding Sources Used:</li>';
+        grounding.forEach((src, i) => {
+          let uri = src.web?.uri || null, title = src.web?.title || `Source ${i+1}`;
+          if (uri) { 
+              const li = document.createElement('li'); 
+              li.innerHTML = `<i class="fas fa-link text-xs mr-1"></i> <a href="${uri}" target="_blank">${title}</a>`; 
+              sourcesList.appendChild(li); 
+          }
+        });
+      } else {
+        sourcesList.innerHTML += '<li class="text-xs text-gray-500 mt-2">No external sources were used for this response.</li>';
+      }
+    }
+
+  } catch (err) { 
+      responseDiv.innerHTML = `<div class="text-red-500 font-semibold">Error: Could not complete request. ${err.message}. Check your API key.</div>`; 
+  }
+  finally { 
+      generateButton.disabled = false; 
+  }
+}
+
+// --- Action Button Functions (Copy & Download) ---
+
+function copyText(elementId, buttonElement) {
+    const element = document.getElementById(elementId);
+    let textToCopy;
+    
+    if (elementId === 'editor') {
+        textToCopy = element.textContent;
+    } else { 
+        const pre = element.querySelector('#typing-output');
+        textToCopy = pre ? pre.textContent : '';
+        if (!textToCopy && element.innerText.includes('Content generated')) {
+            textToCopy = 'Content generated and ready in the editor above.';
+        }
+    }
+
+    if (!textToCopy || textToCopy.trim() === 'Your output will appear here.' || textToCopy.trim() === 'Generated content will appear here. For code, you can edit it live.' || textToCopy.trim() === '') {
+        showTemporaryMessage(buttonElement, 'Nothing to copy.', 'bg-yellow-500');
+        return;
+    }
+    
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.style.borderRight = 'none'; 
+    }
+
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showTemporaryMessage(buttonElement, 'Content Copied!', 'bg-teal-500');
+    } catch (err) {
+        console.error('Copy failed:', err);
+        showTemporaryMessage(buttonElement, 'Copy Failed!', 'bg-red-500');
+    }
+}
+
+function downloadContent(content, fileName, mimeType, buttonElement) {
+    if (!content.trim()) {
+        showTemporaryMessage(buttonElement, 'Nothing to download.', 'bg-yellow-500');
+        return;
+    }
+    
+    if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+        const pre = document.getElementById('typing-output');
+        if(pre) pre.style.borderRight = 'none'; 
+    }
+
+    try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showTemporaryMessage(buttonElement, 'Download Complete!', 'bg-teal-500');
+    } catch (err) {
+        showTemporaryMessage(buttonElement, 'Download Failed!', 'bg-red-500');
+        console.error('Download error:', err);
+    }
+}
+
+function showTemporaryMessage(originalButton, message, colorClass) {
+    const originalText = originalButton.innerHTML;
+    const originalClasses = originalButton.className;
+    
+    originalButton.innerHTML = message;
+    originalButton.classList.remove(...originalButton.classList.filter(c => c.startsWith('bg-') || c.startsWith('hover:bg-')));
+    originalButton.classList.add(colorClass, 'hover:bg-opacity-90');
+
+    setTimeout(() => {
+        originalButton.innerHTML = originalText;
+        originalButton.className = originalClasses;
+        
+        if(originalButton.id === 'generateButton') {
+            originalButton.style.transform = 'translateY(0)';
+            // Reapply 3D shadow style manually after temporary message clears
+            originalButton.style.boxShadow = '0 4px 0 0 rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+        }
+    }, 2000);
+}
+
+
+// --- Theme Toggle Logic ---
+const body = document.body;
+const THEME_KEY = 'geminiHubTheme';
+
+function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i> Light Mode' : '<i class="fas fa-moon"></i> Dark Mode';
+    
+    // Rerun tab updates to apply correct color shadows immediately after theme switch
+    updateActiveTabShadow();
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light'; 
+    applyTheme(savedTheme);
+}
+
+// Function to force update the active tab's shadow immediately after theme switch
+function updateActiveTabShadow() {
+    const activeTab = document.querySelector('.mode-tab.active');
+    if (activeTab) {
+        // Remove and re-add the active class to force the browser to recalculate the box-shadow based on the new CSS variables
+        const activeClass = activeTab.dataset.mode;
+        activeTab.classList.remove(activeClass);
+        // Force reflow/re-render before re-adding
+        void activeTab.offsetWidth; 
+        activeTab.classList.add(activeClass);
+    }
+}
+
+// --- Event Handlers ---
+
+copyEditorButton.addEventListener('click', (e) => copyText('editor', e.currentTarget));
+downloadEditorButton.addEventListener('click', (e) => {
+    let content = editor.textContent;
+    let extension;
+    let mimeType;
+    let fileNameBase = 'gemma_canva_output';
+    
+    if (selectedCanvaType === 'code') {
+        extension = activeLang;
+        mimeType = `text/${activeLang === 'html' ? 'html' : 'plain'}`;
+        if (activeLang === 'typescript') extension = 'ts';
+        if (activeLang === 'csharp') extension = 'cs';
+        if (activeLang === 'cpp') extension = 'cpp';
+        if (activeLang === 'python') extension = 'py';
+        if (activeLang === 'javascript') extension = 'js';
+    } else { 
+        extension = 'md';
+        mimeType = 'text/markdown';
+    }
+
+    downloadContent(content, `${fileNameBase}.${extension}`, mimeType, e.currentTarget);
+});
+
+downloadResponseButton.addEventListener('click', (e) => {
+    const pre = responseDiv.querySelector('#typing-output');
+    const content = pre ? pre.textContent : '';
+    downloadContent(content, 'gemma_response.txt', 'text/plain', e.currentTarget);
+});
+
+copyResponseButton.addEventListener('click', (e) => copyText('response', e.currentTarget));
+
+
+fileUploadInput.addEventListener('change', handleFileUpload);
+generateButton.addEventListener('click', generate);
+document.getElementById('userPrompt').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate(); });
+themeToggle.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    setCanvaType('document'); 
+    downloadResponseButton.style.display = 'none';
+    initTheme(); 
+});
+
+</script>
 </body>
 </html>
-
