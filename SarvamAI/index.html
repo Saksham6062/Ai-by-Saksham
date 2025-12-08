@@ -839,7 +839,7 @@ async function generate() {
   responseDiv.innerHTML = '<div class="loader"></div> Awaiting response...';
 
   // API URL remains the same structure for all Google models
-  const apiUrl = `https://api.sarvam.ai/chat/completions:generateContent?key=${apiKey}`;
+  const apiUrl = `https://api.sarvam.ai/chat/completions/${model}:generateContent?key=${apiKey}`;
   let systemPrompt = '';
   let tools = [];
   let contentsParts = [];
