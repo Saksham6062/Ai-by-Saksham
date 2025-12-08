@@ -492,15 +492,13 @@ button#generateButton:active:not(:disabled) {
 
   <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-layer-group"></i> Gemma Model:</label>
   <!-- Model list updated to Sarvam series -->
-  <select id="gemmaVersion" class="block">
-    <option value="gemma-3-12b-it" selected>Gemma 3 12B IT (Recommended)</option>
-    <option value="gemma-3-27b-it">Gemma 3 27B IT (Powerful)</option>
-    <option value="gemma-3-4b-it">Gemma 3 4B IT</option>
-    <option value="gemma-3-1b-it">Gemma 3 1B IT</option>
-    <option value="gemma-3n-e4b-it">Gemma 3n E4B IT</option>
-    <option value="gemma-3n-e2b-it">Gemma 3n E2B IT</option>
+  <select id="modelSelect" class="border px-3 py-1 rounded">
+    <option value="sarvam-2b">Sarvam 2B (Fast)</option>
+    <option value="sarvam-7b">Sarvam 7B (Balanced)</option>
+    <option value="sarvam-13b">Sarvam 13B</option>
+    <option value="sarvam-72b">Sarvam 72B (Powerful)</option>
+    <option value="sarvam-m-8b" selected>Sarvam M 8B (Recommended)</option>
   </select>
-  
   <!-- File Uploader (Minimized) -->
   <label class="block mb-2 mt-4 font-semibold"><i class="fas fa-camera"></i> File Upload (Optional):</label>
   <div class="file-upload-container text-center" onclick="document.getElementById('fileUpload').click()">
@@ -841,7 +839,7 @@ async function generate() {
   responseDiv.innerHTML = '<div class="loader"></div> Awaiting response...';
 
   // API URL remains the same structure for all Google models
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const apiUrl = `https://api.sarvam.ai/chat/completions:generateContent?key=${apiKey}`;
   let systemPrompt = '';
   let tools = [];
   let contentsParts = [];
