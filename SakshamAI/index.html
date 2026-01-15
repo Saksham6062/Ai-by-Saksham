@@ -1,1 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRouter Free Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 10px;
+        }
+
+        .glass-panel {
+            background: rgba(23, 23, 23, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-user {
+            background: #4f46e5;
+            border-radius: 18px 18px 0 18px;
+        }
+
+        .message-ai {
+            background: #1f1f1f;
+            border: 1px solid #333;
+            border-radius: 18px 18px 18px 0;
+        }
+
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .typing-dot {
+            animation: pulse-soft 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 glass-panel border-r border-neutral-800 transform -translate-x-full lg:translate-x-0 sidebar-transition flex flex-col">
+        <div class="p-6 border-b border-neutral-800 flex items-center justify-between">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-bolt text-indigo-500"></i>
+                FreeChat
+            </h1>
+            <button onclick="toggleSidebar()" class="lg:hidden text-neutral-400">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="model-list-container">
+            <div class="text-xs font-semibold text-neutral-500 uppercase tracking-widest px-2 mb-2">Available Free Models</div>
+            <div id="loading-models" class="p-4 text-center text-sm text-neutral-500">
+                <i class="fas fa-circle-notch fa-spin mr-2"></i> Fetching models...
+            </div>
+            <div id="models-list" class="space-y-1"></div>
+        </div>
+
+        <div class="p-4 border-t border-neutral-800 space-y-2">
+            <button onclick="openSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-800 transition-colors text-sm">
+                <i class="fas fa-cog w-5"></i> Settings
+            </button>
+            <button onclick="clearChat()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-900/20 text-red-400 transition-colors text-sm">
+                <i class="fas fa-trash w-5"></i> Clear Chat
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 relative h-full">
+        <!-- Header -->
+        <header class="h-16 flex items-center justify-between px-6 border-b border-neutral-800 bg-neutral-950/50 backdrop-blur-md">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-neutral-400 hover:text-white">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <h2 id="current-model-name" class="text-sm font-semibold truncate max-w-[150px] sm:max-w-xs">Select a Model</h2>
+                    <span id="status-indicator" class="text-[10px] text-neutral-500 flex items-center gap-1">
+                        <i class="fas fa-circle text-[6px]"></i> Ready
+                    </span>
+                </div>
+            </div>
+            <div id="api-status" class="text-[10px] bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
+                API Key Missing
+            </div>
+        </header>
+
+        <!-- Chat History -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6 chat-container">
+            <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6">
+                <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+                    <i class="fas fa-comments text-3xl text-indigo-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-2">OpenRouter Free Chat</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed">
+                        Connect your OpenRouter API key to chat with powerful free models like Llama 3, Gemini Flash, and Mistral.
+                    </p>
+                </div>
+                <button onclick="openSettings()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all text-sm font-medium">
+                    Configure API Key
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 lg:p-8 bg-gradient-to-t from-neutral-950 via-neutral-950">
+            <div class="max-w-4xl mx-auto relative group">
+                <textarea id="user-input" 
+                    placeholder="Ask me anything..."
+                    class="w-full bg-neutral-900 border border-neutral-800 rounded-2xl pl-4 pr-14 py-4 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all resize-none shadow-xl"
+                    rows="1"
+                    oninput="autoGrow(this)"></textarea>
+                <button id="send-btn" onclick="sendMessage()" 
+                    class="absolute right-2 bottom-2 p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <p class="text-center text-[10px] text-neutral-600 mt-4 uppercase tracking-widest font-bold">
+                100% Free Models Only • No Usage Charges
+            </p>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/80 p-4">
+        <div class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Settings</h3>
+                <button onclick="closeSettings()" class="text-neutral-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-neutral-500 uppercase mb-2">OpenRouter API Key</label>
+                    <input type="password" id="api-key-input" 
+                        placeholder="sk-or-v1-..."
+                        class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all">
+                    <p class="text-[10px] text-neutral-600 mt-2 italic text-center">Your key is never stored on a server.</p>
+                </div>
+                <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all">
+                    Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = '';
+        let selectedModelId = '';
+        let chatHistory = [];
+        let isTyping = false;
+
+        // Auto-grow textarea
+        function autoGrow(element) {
+            element.style.height = "5px";
+            element.style.height = (element.scrollHeight) + "px";
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            apiKey = document.getElementById('api-key-input').value.trim();
+            const statusBadge = document.getElementById('api-status');
+            
+            if (apiKey) {
+                statusBadge.textContent = 'API Key Set';
+                statusBadge.classList.replace('text-red-500', 'text-green-500');
+                statusBadge.classList.replace('bg-red-500/10', 'bg-green-500/10');
+                statusBadge.classList.replace('border-red-500/20', 'border-green-500/20');
+            }
+            closeSettings();
+        }
+
+        async function fetchModels() {
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/models');
+                const data = await response.json();
+                
+                // Filter for models with 0 price
+                const freeModels = data.data.filter(m => {
+                    const pPrice = parseFloat(m.pricing?.prompt || '0');
+                    const cPrice = parseFloat(m.pricing?.completion || '0');
+                    return pPrice === 0 && cPrice === 0;
+                });
+
+                renderModels(freeModels);
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                document.getElementById('loading-models').textContent = 'Error loading models.';
+            }
+        }
+
+        function renderModels(models) {
+            const list = document.getElementById('models-list');
+            document.getElementById('loading-models').classList.add('hidden');
+            list.innerHTML = '';
+
+            models.forEach(model => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl hover:bg-neutral-800 transition-all group flex items-center gap-3 mb-1";
+                btn.onclick = () => selectModel(model);
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs text-neutral-500 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="truncate">
+                        <div class="text-sm font-medium truncate text-neutral-300 group-hover:text-white">${model.name}</div>
+                        <div class="text-[10px] text-neutral-500 truncate">${model.id.split('/')[0]}</div>
+                    </div>
+                `;
+                list.appendChild(btn);
+            });
+
+            if (models.length > 0) selectModel(models[0]);
+        }
+
+        function selectModel(model) {
+            selectedModelId = model.id;
+            document.getElementById('current-model-name').textContent = model.name;
+            
+            // UI cleanup for mobile
+            if (window.innerWidth < 1024) toggleSidebar();
+
+            // Highlight active model (visual only, simple approach)
+            const btns = document.querySelectorAll('#models-list button');
+            btns.forEach(b => {
+                if (b.innerText.includes(model.name)) {
+                    b.classList.add('bg-indigo-900/20', 'border', 'border-indigo-500/30');
+                } else {
+                    b.classList.remove('bg-indigo-900/20', 'border', 'border-indigo-500/30');
+                }
+            });
+        }
+
+        function appendMessage(role, content) {
+            const container = document.getElementById('chat-container');
+            const welcome = document.getElementById('welcome-screen');
+            if (welcome) welcome.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
+            
+            msgDiv.innerHTML = `
+                <div class="max-w-[85%] lg:max-w-[75%] p-4 ${role === 'user' ? 'message-user shadow-indigo-500/10' : 'message-ai shadow-black/20'}">
+                    <div class="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">${role === 'user' ? 'You' : 'Assistant'}</div>
+                    <div class="text-sm sm:text-base whitespace-pre-wrap leading-relaxed">${content}</div>
+                </div>
+            `;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('user-input');
+            const text = inputEl.value.trim();
+            
+            if (!text || !apiKey || !selectedModelId || isTyping) {
+                if (!apiKey) openSettings();
+                return;
+            }
+
+            isTyping = true;
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+            
+            appendMessage('user', text);
+            chatHistory.push({ role: 'user', content: text });
+
+            // Show Typing Indicator
+            const container = document.getElementById('chat-container');
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.className = 'flex justify-start items-center gap-2 p-4 text-neutral-500 text-xs italic';
+            typingIndicator.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> AI is thinking...';
+            container.appendChild(typingIndicator);
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.origin,
+                        'X-Title': 'OpenRouter Free Chat Web'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModelId,
+                        messages: chatHistory
+                    })
+                });
+
+                const data = await response.json();
+                typingIndicator.remove();
+
+                if (data.choices && data.choices[0]) {
+                    const aiContent = data.choices[0].message.content;
+                    appendMessage('assistant', aiContent);
+                    chatHistory.push({ role: 'assistant', content: aiContent });
+                } else {
+                    throw new Error(data.error?.message || 'Unknown error occurred');
+                }
+            } catch (error) {
+                typingIndicator.remove();
+                appendMessage('assistant', `Error: ${error.message}. Please check your API key and network connection.`);
+            } finally {
+                isTyping = false;
+            }
+        }
+
+        function clearChat() {
+            document.getElementById('chat-container').innerHTML = `
+                <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6">
+                    <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+                        <i class="fas fa-comments text-3xl text-indigo-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-2">Chat Cleared</h3>
+                        <p class="text-neutral-400 text-sm leading-relaxed">Ready for a new conversation.</p>
+                    </div>
+                </div>
+            `;
+            chatHistory = [];
+        }
+
+        // Initialize
+        window.onload = () => {
+            fetchModels();
+            
+            // Handle Enter key for sending
+            document.getElementById('user-input').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
 
