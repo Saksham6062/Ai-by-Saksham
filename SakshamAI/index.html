@@ -11,39 +11,40 @@
     /* --- CSS Variables for Light/Dark Theme --- */
     :root {
       /* Dark Theme Defaults */
-      --bg-color: #1a1a2e;
-      --card-color: #16213e;
-      --primary-text: #e0e0e0;
-      --secondary-text: #a0a0c0;
-      --border-color: #0f3460;
-      --shadow-color: rgba(93, 93, 224, 0.2);
-      --hover-glow: 0 10px 25px var(--shadow-color);
-      --header-bg: rgba(26, 26, 46, 0.8);
+      --bg-color: #0f172a;
+      --card-color: #1e293b;
+      --primary-text: #f8fafc;
+      --secondary-text: #94a3b8;
+      --border-color: #334155;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+      --hover-glow: 0 10px 25px rgba(59, 130, 246, 0.2);
+      --header-bg: rgba(15, 23, 42, 0.9);
 
       /* Accent Colors */
-      --gemini: #1abc9c;
-      --gemma: #e67e22;
-      --imagen: #9b59b6;
-      --nano: #e74c3c;
-      --robotics: #34495e;
-      --tts: #f1c40f;
-      --lyre: #3498db;
+      --openrouter: #3b82f6;
+      --huggingface: #f59e0b;
+      --robotics: #10b981;
     }
 
     /* Light Theme Overrides */
     [data-theme="light"] {
-      --bg-color: #f0f4f8;
+      --bg-color: #f1f5f9;
       --card-color: #ffffff;
-      --primary-text: #2c3e50;
-      --secondary-text: #7f8c8d;
-      --border-color: #e0e0e0;
-      --shadow-color: rgba(44, 62, 80, 0.1);
-      --hover-glow: 0 10px 20px rgba(44, 62, 80, 0.15);
+      --primary-text: #0f172a;
+      --secondary-text: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-color: rgba(0, 0, 0, 0.05);
+      --hover-glow: 0 10px 20px rgba(0, 0, 0, 0.1);
       --header-bg: rgba(255, 255, 255, 0.9);
     }
 
     /* --- Global Styles --- */
-    * { margin: 0; padding: 0; box-sizing: border-box; transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+      transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; 
+    }
 
     html { scroll-behavior: smooth; }
     
@@ -52,34 +53,34 @@
       background-color: var(--bg-color);
       color: var(--primary-text);
       min-height: 100vh;
-      padding-top: 100px; /* Space for sticky header */
+      padding-top: 100px;
+      overflow-x: hidden;
     }
 
-    /* --- Header & Theme Switch --- */
+    /* --- Header --- */
     header {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        padding: 20px 40px;
+        padding: 15px 40px;
         background-color: var(--header-bg);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 6px -1px var(--shadow-color);
         z-index: 100;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: background-color 0.3s;
     }
 
     .theme-toggle {
-      width: 60px;
-      height: 30px;
+      width: 56px;
+      height: 28px;
       background-color: var(--border-color);
-      border-radius: 15px;
+      border-radius: 20px;
       position: relative;
       cursor: pointer;
-      padding: 3px;
+      padding: 2px;
     }
 
     .toggle-circle {
@@ -88,151 +89,148 @@
       background-color: var(--primary-text);
       border-radius: 50%;
       position: absolute;
-      top: 3px;
-      left: 3px;
+      top: 2px;
+      left: 2px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.1rem;
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      color: var(--bg-color);
+      font-size: 0.9rem;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     [data-theme="light"] .toggle-circle {
-      transform: translateX(30px);
-      background-color: var(--primary-text);
-    }
-    
-    [data-theme="dark"] .toggle-circle {
-        transform: translateX(0);
-        background-color: var(--primary-text);
+      transform: translateX(28px);
     }
 
-
-    /* --- Layout & Typography --- */
+    /* --- Hero Section --- */
     .container {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 20px 40px;
+      padding: 0 20px 60px;
       text-align: center;
     }
 
     h1 {
-      font-size: 3rem;
-      font-weight: 700;
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 800;
       margin-bottom: 15px;
-      /* Glowing Gradient Title */
-      background: linear-gradient(45deg, #4285f4, #ea4335, #fbbc05, #34a853);
-      background-size: 400%;
+      background: linear-gradient(90deg, #60a5fa, #c084fc, #fb7185, #60a5fa);
+      background-size: 300%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: colorShift 12s ease-in-out infinite;
+      animation: gradientFlow 8s linear infinite;
     }
 
-    @keyframes colorShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 300% 50%; }
     }
 
     .subtitle {
       font-size: 1.1rem;
       color: var(--secondary-text);
-      margin-bottom: 50px;
+      margin-bottom: 60px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     /* --- Grid & Cards --- */
     .launcher-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 30px;
     }
 
     .model-card {
       background-color: var(--card-color);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 30px;
+      border-radius: 16px;
+      padding: 32px;
       text-align: left;
-      color: var(--primary-text);
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
       flex-direction: column;
-      position: relative;
       cursor: pointer;
-      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .model-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: transparent;
+        transition: background 0.3s;
     }
 
     .model-card:hover {
-      transform: translateY(-8px);
+      transform: translateY(-12px);
       box-shadow: var(--hover-glow);
+      border-color: var(--secondary-text);
     }
+
+    .model-card[data-model="openrouter"]:hover::after { background: var(--openrouter); }
+    .model-card[data-model="huggingface"]:hover::after { background: var(--huggingface); }
+    .model-card[data-model="robotics"]:hover::after { background: var(--robotics); }
 
     .card-header {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-bottom: 15px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
-    .card-icon { font-size: 1.8rem; }
+    .card-icon { 
+        font-size: 2rem; 
+        background: var(--bg-color);
+        width: 50px; height: 50px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 12px;
+    }
 
-    .card-title { font-size: 1.5rem; font-weight: 600; }
-
-    /* Accent Colors for Icons (Remained the same) */
-    .model-card[data-model="gemini"] .card-icon { color: var(--gemini); }
-    .model-card[data-model="gemma"] .card-icon { color: var(--gemma); }
-    .model-card[data-model="imagen"] .card-icon { color: var(--imagen); }
-    .model-card[data-model="nano"] .card-icon { color: var(--nano); }
-    .model-card[data-model="robotics"] .card-icon { color: var(--robotics); }
-    .model-card[data-model="tts"] .card-icon { color: var(--tts); }
-    .model-card[data-model="lyre"] .card-icon { color: var(--lyre); }
+    .card-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
 
     .card-description {
       color: var(--secondary-text);
-      font-size: 0.95rem;
+      font-size: 1rem;
       line-height: 1.6;
+      margin-bottom: 24px;
       flex-grow: 1;
     }
 
     .launch-btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      color: var(--primary-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
       background-color: var(--border-color);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 600;
-      text-align: center;
-      transition: background-color 0.2s;
+      gap: 8px;
+      transition: all 0.3s;
     }
 
-    .model-card:hover .launch-btn { 
-        background-color: var(--secondary-text);
-        color: var(--bg-color); /* Contrast change on hover */
+    .model-card:hover .launch-btn {
+        background-color: var(--primary-text);
+        color: var(--bg-color);
     }
 
-    .external-icon {
-      font-size: 0.9rem;
-      margin-left: 5px;
-      vertical-align: middle;
-      opacity: 0.6;
-    }
-
-    /* --- Modal Styles --- */
+    /* --- Modals --- */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(5px);
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(8px);
       display: flex;
       justify-content: center;
       align-items: center;
       opacity: 0; visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-      z-index: 1000;
+      transition: all 0.3s ease;
+      z-index: 2000;
+      padding: 20px;
     }
 
     .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -240,192 +238,202 @@
     .modal-content {
       background: var(--card-color);
       padding: 40px;
-      border-radius: 12px;
+      border-radius: 24px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      width: 90%; max-width: 500px;
-      transform: scale(0.9);
-      transition: transform 0.3s ease;
+      width: 100%;
+      max-width: 500px;
+      transform: translateY(20px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .modal-overlay.active .modal-content { transform: scale(1); }
+    .modal-overlay.active .modal-content { transform: translateY(0); }
 
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-title { font-size: 1.8rem; color: var(--gemini); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 1.8rem; font-weight: 700; }
+    
     .modal-close {
-      background: none; border: none; color: var(--secondary-text);
-      font-size: 2rem; cursor: pointer; transition: color 0.2s;
+      background: var(--border-color);
+      border: none; color: var(--primary-text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer; 
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
     }
-    .modal-close:hover { color: var(--primary-text); }
-    .modal-body p { color: var(--secondary-text); line-height: 1.7; margin-bottom: 15px; }
-    .modal-body a { color: var(--gemini); text-decoration: none; font-weight: 600; }
-    .modal-body a:hover { text-decoration: underline; }
 
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
+    .modal-body p { color: var(--secondary-text); font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; }
+    
+    .modal-link {
+        display: block;
+        text-align: center;
+        padding: 16px;
+        background: var(--openrouter);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+    .modal-link:hover { opacity: 0.9; }
+
+    /* Modal themes */
+    #gemini-modal .modal-title { color: var(--openrouter); }
+    #gemini-modal .modal-link { background: var(--openrouter); }
+    
+    #gemma-modal .modal-title { color: var(--huggingface); }
+    #gemma-modal .modal-link { background: var(--huggingface); }
+    
+    #robotics-modal .modal-title { color: var(--robotics); }
+    #robotics-modal .modal-link { background: var(--robotics); }
+
+    @media (max-width: 640px) {
         header { padding: 15px 20px; }
-        h1 { font-size: 2.2rem; }
-        .subtitle { font-size: 1rem; margin-bottom: 30px; }
-        .launcher-grid { gap: 20px; }
+        .container { padding-top: 20px; }
+        .launcher-grid { grid-template-columns: 1fr; }
+        .modal-content { padding: 30px 20px; }
     }
-
   </style>
 </head>
 <body data-theme="dark">
 
   <header>
-    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-text);">AI Model Hub</h2>
-    <!-- Theme Toggle Switch -->
-    <div class="theme-toggle" id="themeToggle" role="switch" aria-checked="true">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 32px; height: 32px; background: var(--openrouter); border-radius: 8px;"></div>
+        <h2 style="font-size: 1.2rem; font-weight: 700;">Intelligence Hub</h2>
+    </div>
+    <div class="theme-toggle" id="themeToggle" role="button" aria-label="Toggle Theme">
         <div class="toggle-circle">🌙</div>
     </div>
   </header>
 
   <div class="container">
     <h1>Saksham's Intelligence</h1>
-    <p class="subtitle">Your central launchpad for OpenRuoter's powerful AI models.</p>
+    <p class="subtitle">A unified gateway to the world's most powerful AI architectures and experimental robotics controllers.</p>
 
     <div class="launcher-grid">
-
-      <!-- Gemini (Modal) -->
-      <div class="model-card" data-model="gemini" id="gemini-launcher">
+      <!-- OpenRouter -->
+      <div class="model-card" data-model="openrouter" id="openrouter-launcher">
         <div class="card-header">
-            <span class="card-icon">✨</span>
-            <h2 class="card-title">OpenRuoter</h2>
+            <span class="card-icon">🌐</span>
+            <h2 class="card-title">OpenRouter</h2>
         </div>
-        <p class="card-description">The most capable and general model series. Handle complex reasoning, multimodal tasks, and advanced coding.</p>
-        <span class="launch-btn">Explore OpenRuoter's Model</span>
+        <p class="card-description">Access the full spectrum of state-of-the-art models including GPT-4, Claude 3, and Llama 3 via a single API interface.</p>
+        <div class="launch-btn">Enter Gateway <span>→</span></div>
       </div>
 
-      <!-- Gemma (Modal) -->
-      <div class="model-card" data-model="gemma" id="gemma-launcher">
+      <!-- HuggingFace -->
+      <div class="model-card" data-model="huggingface" id="huggingface-launcher">
         <div class="card-header">
-            <span class="card-icon">🔥</span>
+            <span class="card-icon">🤗</span>
             <h2 class="card-title">HuggingFace</h2>
         </div>
-        <p class="card-description">Advanced AI model for research, deep thinking, and creative exploration.</p>
-        <span class="launch-btn">Explore HuggingFace Chat</span>
+        <p class="card-description">The heart of open-source AI. Explore millions of models, datasets, and demo spaces for research and creativity.</p>
+        <div class="launch-btn">Explore Community <span>→</span></div>
+      </div>
+
+      <!-- Robotics -->
+      <div class="model-card" data-model="robotics" id="robotics-launcher">
+        <div class="card-header">
+            <span class="card-icon">🤖</span>
+            <h2 class="card-title">Robotics ER</h2>
+        </div>
+        <p class="card-description">Experimental robotics environment for testing agentic workflows and real-time machine instructions.</p>
+        <div class="launch-btn">Initialize System <span>→</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Gemini Modal -->
+  <!-- Modals -->
   <div class="modal-overlay" id="gemini-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Welcome to OpenRuoter</h2>
-            <button class="modal-close" id="gemini-close-btn">&times;</button>
+            <h2 class="modal-title">OpenRouter Hub</h2>
+            <button class="modal-close" onclick="closeModal('gemini-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>You are about to explore the comprehensive OpenRuoter model suite.</p>
-           <a href="SakshamAI/OpenRouter/index.html">Click here to continue to the OpenRuoter models page</a>
+           <p>Accessing the OpenRouter directory for Saksham's Intelligence models.</p>
+           <a href="SakshamAI/OpenRouter/index.html" class="modal-link">Launch OpenRouter Dashboard</a>
         </div>
     </div>
   </div>
 
-  <!-- Gemma Modal -->
   <div class="modal-overlay" id="gemma-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Welcome to HuggingFace Chat</h2>
-            <button class="modal-close" id="gemma-close-btn">&times;</button>
+            <h2 class="modal-title">HuggingFace Chat</h2>
+            <button class="modal-close" onclick="closeModal('gemma-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>You are about to explore the HuggingFace Chat ideal for customization and research.</p>
-           <a href="HuggingFace/index.html">Click here to continue to the HuggingFace Chat models page</a>
+           <p>Connect to the global open-source community and specialized inference endpoints.</p>
+           <a href="HuggingFace/index.html" class="modal-link">Open HuggingFace Workspace</a>
         </div>
     </div>
   </div>
-  <!-- Robotics Modal -->
+
   <div class="modal-overlay" id="robotics-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Welcome to Robotics & Expatimental</h2>
-            <button class="modal-close" id="robotics-close-btn">&times;</button>
+            <h2 class="modal-title">Robotics Terminal</h2>
+            <button class="modal-close" onclick="closeModal('robotics-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>You are about to explore the Robotics ER model suite for coding robot actions.</p>
-           <a href="Robotics/index.html">Click here to continue to the Robotics page</a>
+           <p>Preparing the experimental environment for robotics control and action modeling.</p>
+           <a href="Robotics/index.html" class="modal-link">Connect to Robotics Lab</a>
         </div>
     </div>
   </div>
 
   <script>
-    // --- Theme Switching Logic ---
-    const STORAGE_KEY = "ai-model-hub-theme";
-    const root = document.querySelector('body');
-    const toggle = document.getElementById("themeToggle");
-    const toggleCircle = document.querySelector('.toggle-circle');
+    // --- Theme Management ---
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    const toggleCircle = themeToggle.querySelector('.toggle-circle');
 
-    /**
-     * Applies the theme to the body element and updates localStorage.
-     * @param {string} theme - 'light' or 'dark'
-     */
-    function applyTheme(theme) {
-      root.setAttribute("data-theme", theme);
-      localStorage.setItem(STORAGE_KEY, theme);
-      toggleCircle.textContent = theme === 'dark' ? '🌙' : '☀️';
+    function setTheme(theme) {
+        body.setAttribute('data-theme', theme);
+        localStorage.setItem('saksham-ai-theme', theme);
+        toggleCircle.textContent = theme === 'dark' ? '🌙' : '☀️';
     }
 
-    /** Initializes theme from storage or defaults to dark. */
-    function initializeTheme() {
-        const savedTheme = localStorage.getItem(STORAGE_KEY) || 'dark';
-        applyTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = body.getAttribute('data-theme');
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('saksham-ai-theme') || 'dark';
+    setTheme(savedTheme);
+
+    // --- Modal Management ---
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 
-    /** Toggles the theme on button click. */
-    function toggleTheme() {
-        const current = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
-        const next = current === "dark" ? "light" : "dark";
-        applyTheme(next);
-        toggle.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false');
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
 
-    // --- Modal Logic ---
+    // Event Listeners for Launchers
+    document.getElementById('openrouter-launcher').onclick = () => openModal('gemini-modal');
+    document.getElementById('huggingface-launcher').onclick = () => openModal('gemma-modal');
+    document.getElementById('robotics-launcher').onclick = () => openModal('robotics-modal');
 
-    // Gemini modal setup
-    const geminiLauncher = document.getElementById('gemini-launcher');
-    const geminiModal = document.getElementById('gemini-modal');
-    const geminiCloseBtn = document.getElementById('gemini-close-btn');
+    // Close on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeModal(overlay.id);
+        };
+    });
 
-    const gemmaLauncher = document.getElementById('gemma-launcher');
-    const gemmaModal = document.getElementById('gemma-modal');
-    const gemmaCloseBtn = document.getElementById('gemma-close-btn');
-    
-    const roboticsLauncher = document.getElementById('robotics-launcher');
-    const roboticsModal = document.getElementById('robotics-modal');
-    const roboticsCloseBtn = document.getElementById('robotics-close-btn');
-
-    setupModal(roboticsLauncher, roboticsModal, roboticsCloseBtn);
-
-    function setupModal(launcher, modal, closeBtn) {
-        // Open modal
-        launcher.addEventListener('click', () => {
-            // Only show modal if the target isn't an external link (which is not applicable here, but good practice)
-            modal.classList.add('active');
-        });
-        
-        // Close modal via button
-        closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-        
-        // Close modal via overlay click
-        modal.addEventListener('click', (e) => { 
-            if(e.target === modal) modal.classList.remove('active'); 
-        });
-    }
-
-    // --- Initialization ---
-    window.onload = function() {
-        // 1. Initialize Theme
-        initializeTheme();
-        toggle.addEventListener("click", toggleTheme);
-
-        // 2. Setup Modals
-        setupModal(geminiLauncher, geminiModal, geminiCloseBtn);
-        setupModal(gemmaLauncher, gemmaModal, gemmaCloseBtn);
-    };
-
+    // Escape key to close
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => closeModal(m.id));
+        }
+    });
   </script>
-
 </body>
 </html>
+
