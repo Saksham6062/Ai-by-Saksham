@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saksham AI Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saksham AI Studio </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -13,7 +13,7 @@
             --bg-main: #ffffff;
             --bg-side: #f9fafb;
             --border: #e5e7eb;
-            --text-main: #111827;
+            --text-main: #1d1d1f;
             --accent: #4f46e5;
         }
 
@@ -29,7 +29,11 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
-            transition: all 0.2s ease;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            overflow: hidden; /* Prevents whole page scroll */
+            transition: background-color 0.2s;
         }
 
         .sidebar { background-color: var(--bg-side); border-color: var(--border); }
@@ -43,248 +47,259 @@
         .mode-btn.active {
             background-color: var(--accent) !important;
             color: white !important;
-            border-color: var(--accent) !important;
         }
 
+        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         
         .panel-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* Ensure dark mode colors for Tailwind classes */
-        .dark-mode .text-slate-400 { color: #94a3b8; }
-        .dark-mode .bg-white { background-color: #0f172a; }
-        .dark-mode .bg-slate-50 { background-color: #1e293b; }
+
+        /* Ensuring the input stays at the bottom */
+        #main-chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 120px; /* Space for the floating input bar */
+        }
+
+        #input-area-sticky {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, var(--bg-main) 70%, transparent);
+            pointer-events: none; /* Allows clicking through the gradient area */
+        }
+
+        #input-container-inner {
+            pointer-events: auto; /* Re-enables clicks for the actual bar */
+            max-width: 56rem;
+            margin: 0 auto;
+        }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden">
+<body class="flex">
 
-    <!-- Left: History Sidebar -->
+    <!-- Mobile Overlay -->
+    <div id="overlay" onclick="closeSidebars()" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+
+    <!-- Left Sidebar: History -->
     <aside id="history-sidebar" class="w-64 sidebar border-r flex flex-col fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 panel-transition">
-        <div class="p-5 flex items-center justify-between border-b border-theme">
-            <span class="font-bold tracking-tight flex items-center gap-2">
-                <i class="fas fa-layer-group text-indigo-500"></i> API Key Configure
-            </span>
-            <button onclick="toggleSidebar('history-sidebar')" class="lg:hidden">
-                <i class="fas fa-times"></i>
-            </button>
+        <div class="p-6 flex items-center justify-between border-b border-theme">
+            <span class="font-bold text-lg tracking-tight">Saksham AI Studio</span>
+            <button onclick="toggleSidebar('history-sidebar')" class="lg:hidden p-2"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-4">
-            <button onclick="clearChat()" class="w-full py-2.5 rounded-xl border-theme border flex items-center justify-center gap-2 text-sm font-medium hover:opacity-80 transition-colors">
-                <i class="fas fa-plus"></i> New Chat
+            <button onclick="window.location.reload()" class="w-full py-3 rounded-xl border-theme border flex items-center justify-center gap-2 text-sm font-semibold hover:bg-black/5 transition-all">
+                <i class="fas fa-plus"></i> New Conversation
             </button>
         </div>
-        <div class="flex-1 overflow-y-auto px-4 custom-scrollbar space-y-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 px-2">Recent</div>
-            <div id="history-list" class="space-y-1">
-                <div class="p-3 text-xs text-slate-400 italic text-center">No history yet</div>
+        <div class="flex-1 overflow-y-auto px-4 custom-scrollbar" id="history-list">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-3 px-2">History</div>
+            <div id="history-items" class="space-y-1">
+                <div class="p-3 text-xs text-slate-400 italic text-center">Empty</div>
             </div>
         </div>
         <div class="p-4 border-t border-theme">
-            <button onclick="openSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 transition-colors text-sm">
-                <i class="fas fa-setting w-4 text-indigo-500></i> Settings
+            <button onclick="openSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 text-sm font-medium">
+                <i class="fas fa-key text-indigo-500"></i> API Configure Settings
             </button>
         </div>
     </aside>
 
-    <!-- Center: Main Workspace -->
-    <main class="flex-1 flex flex-col min-w-0 transition-colors">
-        <header class="h-16 flex items-center justify-between px-6 border-b border-theme">
+    <!-- Main Chat Workspace -->
+    <div id="main-chat-wrapper">
+        <!-- Header -->
+        <header class="h-16 flex items-center justify-between px-6 border-b border-theme shrink-0 z-20">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar('history-sidebar')" class="p-2 -ml-2 text-slate-400">
+                <button onclick="toggleSidebar('history-sidebar')" class="p-2 -ml-2 text-slate-400 hover:text-slate-600">
                     <i class="fas fa-bars-staggered"></i>
                 </button>
                 <div class="flex flex-col">
-                    <h2 id="display-model" class="text-xs font-bold uppercase tracking-widest text-indigo-500">Loading Models...</h2>
-                    <span id="display-mode" class="text-[10px] font-medium text-slate-400">Standard Mode</span>
+                    <h2 id="display-model" class="text-xs font-bold uppercase text-indigo-500 tracking-tighter">Initializing...</h2>
+                    <span id="display-mode" class="text-[10px] text-slate-400 font-semibold">Standard Mode</span>
                 </div>
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-full border-theme border hover:bg-black/5 transition-colors">
+                <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-full border-theme border hover:bg-black/5 transition-all">
                     <i id="theme-icon" class="fas fa-sun text-amber-500"></i>
                 </button>
-                <button onclick="toggleSidebar('config-sidebar')" class="p-2 text-slate-400">
+                <button onclick="toggleSidebar('config-sidebar')" class="p-2 text-slate-400 hover:text-slate-600">
                     <i class="fas fa-sliders-h"></i>
                 </button>
             </div>
         </header>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 lg:p-10 space-y-6 custom-scrollbar">
-            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto py-12">
-                <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6">
-                    <i class="fas fa-sparkles text-2xl text-indigo-500"></i>
+        <!-- Scrollable Messages -->
+        <div id="chat-container" class="custom-scrollbar p-4 lg:p-10 space-y-6">
+            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <div class="w-16 h-16 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-500 mb-6">
+                    <i class="fas fa-wand-magic-sparkles text-2xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold mb-2">Welcome to Saksham AI Studio</h3>
-                <p class="text-slate-400 text-sm mb-8">Select a mode or model and enter your API key to begin.</p>
-                <div class="grid grid-cols-2 gap-3 w-full">
-                    <button onclick="setMode('deepthink')" class="p-4 rounded-2xl border-theme border hover:border-indigo-400 transition-all text-left">
-                        <i class="fas fa-brain text-indigo-500 mb-2"></i>
-                        <div class="text-xs font-bold">Deep Think</div>
-                    </button>
-                    <button onclick="setMode('canva')" class="p-4 rounded-2xl border-theme border hover:border-emerald-400 transition-all text-left">
-                        <i class="fas fa-palette text-emerald-500 mb-2"></i>
-                        <div class="text-xs font-bold">Canvas</div>
-                    </button>
-                </div>
+                <h3 class="text-2xl font-bold mb-3">Saksham AI Studio</h3>
+                <p class="text-sm text-slate-400 mb-8 leading-relaxed">Welcome to Salsham AI Studio. You can explore diffrent AI models</p>
             </div>
         </div>
 
-        <div class="p-4 lg:p-8">
-            <div class="max-w-4xl mx-auto">
-                <div class="bg-slate-50 dark:bg-slate-800 border-theme border rounded-3xl p-2 shadow-sm">
-                    <div id="attachment-preview" class="hidden px-4 py-2 border-b border-theme flex gap-2 overflow-x-auto"></div>
-                    <div class="flex items-end gap-2">
-                        <button onclick="triggerFileInput()" class="p-3 text-slate-400 hover:text-indigo-500">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <input type="file" id="file-input" class="hidden" multiple onchange="handleFiles(this)">
-                        <textarea id="user-input" rows="1" placeholder="Send a message..." class="flex-1 bg-transparent border-none py-3 px-1 text-sm focus:outline-none resize-none min-h-[46px] max-h-[200px]" oninput="autoGrow(this)"></textarea>
-                        <button id="send-btn" onclick="sendMessage()" class="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                    </div>
+        <!-- Sticky Bottom Bar -->
+        <div id="input-area-sticky">
+            <div id="input-container-inner">
+                <div class="bg-white dark:bg-slate-800 border-theme border rounded-[1.5rem] shadow-2xl p-2 flex items-end gap-2 ring-1 ring-black/5">
+                    <button onclick="document.getElementById('file-input').click()" class="p-3 text-slate-400 hover:text-indigo-500 transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <input type="file" id="file-input" class="hidden" multiple onchange="handleFiles(this)">
+                    
+                    <textarea id="user-input" rows="1" placeholder="Type your message..." 
+                        class="flex-1 bg-transparent border-none py-3 px-1 text-sm sm:text-base focus:outline-none resize-none min-h-[46px] max-h-[160px] leading-relaxed"
+                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    
+                    <button id="send-btn" onclick="sendMessage()" class="p-3.5 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex-shrink-0">
+                        <i class="fas fa-paper-plane text-sm"></i>
+                    </button>
                 </div>
+                <!-- File Preview -->
+                <div id="attachment-preview" class="hidden flex gap-2 mt-3 px-2 overflow-x-auto pb-1"></div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- Right: Config Sidebar -->
+    <!-- Right Sidebar: Config -->
     <aside id="config-sidebar" class="w-72 sidebar border-l flex flex-col fixed lg:static inset-y-0 right-0 z-40 translate-x-full lg:translate-x-0 panel-transition">
-        <div class="p-5 border-b border-theme flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Settings</span>
-            <button onclick="toggleSidebar('config-sidebar')" class="lg:hidden"><i class="fas fa-times"></i></button>
+        <div class="p-6 border-b border-theme flex items-center justify-between">
+            <span class="text-xs font-bold uppercase text-slate-400 tracking-widest">Settings</span>
+            <button onclick="toggleSidebar('config-sidebar')" class="lg:hidden p-2"><i class="fas fa-times"></i></button>
         </div>
-        
         <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Mode</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">Active Mode</label>
                 <div class="grid grid-cols-1 gap-2">
-                    <button onclick="setMode('standard')" id="mode-standard" class="mode-btn active w-full flex items-center gap-3 p-3 rounded-xl border-theme border text-xs font-semibold bg-white dark:bg-slate-800">
-                        <i class="fas fa-comment-dots w-4"></i> Standard
+                    <button onclick="setMode('standard')" id="mode-standard" class="mode-btn active w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
+                        <i class="fas fa-comment-alt"></i> Standard
                     </button>
-                    <button onclick="setMode('deepthink')" id="mode-deepthink" class="mode-btn w-full flex items-center gap-3 p-3 rounded-xl border-theme border text-xs font-semibold bg-white dark:bg-slate-800">
-                        <i class="fas fa-brain w-4"></i> Deep Think
+                    <button onclick="setMode('deepthink')" id="mode-deepthink" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
+                        <i class="fas fa-brain"></i> Deep Think
                     </button>
-                    <button onclick="setMode('canva')" id="mode-canva" class="mode-btn w-full flex items-center gap-3 p-3 rounded-xl border-theme border text-xs font-semibold bg-white dark:bg-slate-800">
-                        <i class="fas fa-wand-magic-sparkles w-4"></i> Canva
+                    <button onclick="setMode('canva')" id="mode-canva" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
+                        <i class="fas fa-palette"></i> Canva
                     </button>
-                    <button onclick="setMode('research')" id="mode-research" class="mode-btn w-full flex items-center gap-3 p-3 rounded-xl border-theme border text-xs font-semibold bg-white dark:bg-slate-800">
-                        <i class="fas fa-search w-4"></i> Research
+                    <button onclick="setMode('research')" id="mode-research" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
+                        <i class="fas fa-search"></i> Deep Research
                     </button>
                 </div>
             </div>
-
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Model</label>
-                <div id="model-list" class="space-y-2"></div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">Model Switcher</label>
+                <div id="model-list" class="space-y-2">
+                    <div class="text-xs text-slate-400 animate-pulse">Syncing models...</div>
+                </div>
             </div>
         </div>
     </aside>
 
-    <!-- API Modal -->
-    <div id="api-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-2xl border-theme border text-center">
-            <h3 class="text-xl font-bold mb-2">OpenRouter Key</h3>
-            <p class="text-xs text-slate-400 mb-6">Enter your API key to start chatting.</p>
-            <input type="password" id="api-key-input" placeholder="sk-or-v1-..." class="w-full bg-slate-50 dark:bg-slate-800 border-theme border rounded-2xl px-5 py-4 text-sm mb-4 outline-none focus:ring-2 ring-indigo-500/20">
-            <button onclick="saveApiKey()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Save Key</button>
-            <button onclick="closeSettings()" class="mt-4 text-xs text-slate-400">Cancel</button>
+    <!-- Settings Modal -->
+    <div id="api-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-theme border">
+            <h3 class="text-xl font-bold mb-2">API Key</h3>
+            <p class="text-xs text-slate-400 mb-6">Your key is stored locally in this session only.</p>
+            <input type="password" id="api-key-input" placeholder="sk-or-v1-..." class="w-full bg-slate-50 dark:bg-slate-800 border-theme border p-4 rounded-2xl text-sm mb-6 outline-none focus:ring-2 ring-indigo-500/20">
+            <button onclick="saveApiKey()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30">Save Configuration</button>
+            <button onclick="closeSettings()" class="w-full py-2 text-xs text-slate-400 mt-4">Close Settings</button>
         </div>
     </div>
 
     <script>
         let apiKey = '';
         let selectedModelId = null;
-        let currentMode = 'standard';
-        let isDarkMode = false;
         let messages = [];
+        let isDarkMode = false;
 
         function toggleTheme() {
             isDarkMode = !isDarkMode;
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            
-            if (isDarkMode) {
-                body.classList.add('dark-mode');
-                icon.className = 'fas fa-moon text-indigo-400';
-            } else {
-                body.classList.remove('dark-mode');
-                icon.className = 'fas fa-sun text-amber-500';
-            }
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            document.getElementById('theme-icon').className = isDarkMode ? 'fas fa-moon text-indigo-400' : 'fas fa-sun text-amber-500';
         }
 
         function toggleSidebar(id) {
             const el = document.getElementById(id);
+            const overlay = document.getElementById('overlay');
             const isLeft = id === 'history-sidebar';
             const hideClass = isLeft ? '-translate-x-full' : 'translate-x-full';
-            el.classList.toggle(hideClass);
+            
+            if (el.classList.contains(hideClass)) {
+                el.classList.remove(hideClass);
+                overlay.classList.remove('hidden');
+            } else {
+                el.classList.add(hideClass);
+                overlay.classList.add('hidden');
+            }
         }
 
-        function autoGrow(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
+        function closeSidebars() {
+            document.getElementById('history-sidebar').classList.add('-translate-x-full');
+            document.getElementById('config-sidebar').classList.add('translate-x-full');
+            document.getElementById('overlay').classList.add('hidden');
         }
 
         function setMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`mode-${mode}`).classList.add('active');
             document.getElementById('display-mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1) + ' Mode';
         }
 
         async function fetchModels() {
+            const list = document.getElementById('model-list');
             try {
                 const res = await fetch('https://openrouter.ai/api/v1/models');
                 const data = await res.json();
-                const freeModels = data.data.filter(m => {
-                    const price = parseFloat(m.pricing?.prompt || '0');
-                    return price === 0;
-                });
+                const freeModels = data.data.filter(m => parseFloat(m.pricing?.prompt || '1') === 0);
                 
-                const list = document.getElementById('model-list');
                 list.innerHTML = '';
-                
-                freeModels.forEach((m, idx) => {
+                freeModels.forEach((m, i) => {
                     const btn = document.createElement('button');
-                    btn.className = "model-item w-full flex items-center gap-3 p-3 rounded-xl border-theme border text-[11px] font-bold text-slate-500 bg-white dark:bg-slate-800 hover:opacity-80 transition-all text-left truncate";
+                    btn.className = "model-item w-full text-left p-3 rounded-xl text-[11px] font-bold border-theme border flex items-center gap-3 transition-all truncate";
                     btn.onclick = () => {
                         selectedModelId = m.id;
                         document.getElementById('display-model').textContent = m.name;
-                        document.querySelectorAll('.model-item').forEach(el => el.style.borderColor = 'var(--border)');
-                        btn.style.borderColor = 'var(--accent)';
+                        document.querySelectorAll('.model-item').forEach(el => el.classList.remove('border-indigo-500', 'bg-indigo-50/10', 'text-indigo-500'));
+                        btn.classList.add('border-indigo-500', 'bg-indigo-50/10', 'text-indigo-500');
                     };
-                    btn.innerHTML = `<i class="fas fa-robot"></i> <span class="truncate">${m.name}</span>`;
+                    btn.innerHTML = `<i class="fas fa-microchip"></i> <span>${m.name}</span>`;
                     list.appendChild(btn);
-                    
-                    if (idx === 0 && !selectedModelId) {
-                        btn.click();
-                    }
+                    if (i === 0 && !selectedModelId) btn.click();
                 });
-            } catch (err) {
-                console.error("Failed to load models");
-            }
+            } catch (err) { list.innerHTML = '<p class="text-xs text-red-400">Sync Error</p>'; }
         }
 
         function appendMessage(role, content) {
-            const container = document.getElementById('chat-container');
+            const chat = document.getElementById('chat-container');
             const welcome = document.getElementById('welcome-view');
             if (welcome) welcome.remove();
 
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`;
+            const wrap = document.createElement('div');
+            wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`;
             
-            const bubble = document.createElement('div');
-            bubble.className = `max-w-[85%] lg:max-w-[70%] p-4 rounded-2xl ${role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'chat-bubble-ai rounded-bl-none'}`;
-            
-            bubble.innerHTML = `
-                <div class="text-[9px] font-black uppercase tracking-widest mb-1 opacity-50">${role === 'user' ? 'User' : 'Assistant'}</div>
-                <div class="text-sm leading-relaxed whitespace-pre-wrap">${content}</div>
+            const msg = document.createElement('div');
+            msg.className = `max-w-[88%] lg:max-w-[75%] p-4 rounded-[1.25rem] text-sm leading-relaxed ${role === 'user' ? 'bg-indigo-600 text-white rounded-br-none shadow-md' : 'chat-bubble-ai rounded-bl-none shadow-sm'}`;
+            msg.innerHTML = `
+                <div class="text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">${role}</div>
+                <div class="whitespace-pre-wrap">${content}</div>
             `;
             
-            wrapper.appendChild(bubble);
-            container.appendChild(wrapper);
-            container.scrollTop = container.scrollHeight;
+            wrap.appendChild(msg);
+            chat.appendChild(wrap);
+            chat.scrollTop = chat.scrollHeight;
         }
 
         async function sendMessage() {
@@ -304,66 +319,51 @@
             messages.push({ role: 'user', content: text });
 
             const indicator = document.createElement('div');
-            indicator.id = 'typing-indicator';
-            indicator.className = 'flex gap-2 p-2 text-[10px] text-slate-400 font-bold';
-            indicator.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> AI Processing...';
+            indicator.id = 'ai-typing';
+            indicator.className = 'flex gap-2 p-2 text-[10px] font-bold text-slate-400 items-center';
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERATING RESPONSE...';
             document.getElementById('chat-container').appendChild(indicator);
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
 
             try {
                 const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`,
+                    headers: { 
+                        'Authorization': `Bearer ${apiKey}`, 
                         'Content-Type': 'application/json',
                         'HTTP-Referer': window.location.origin,
-                        'X-Title': 'AI Studio'
+                        'X-Title': 'AI Studio Pro'
                     },
-                    body: JSON.stringify({
-                        model: selectedModelId,
-                        messages: messages
+                    body: JSON.stringify({ 
+                        model: selectedModelId, 
+                        messages: messages 
                     })
                 });
-
+                
                 const data = await res.json();
-                document.getElementById('typing-indicator').remove();
+                document.getElementById('ai-typing').remove();
                 
                 if (data.choices && data.choices[0]) {
                     const reply = data.choices[0].message.content;
                     appendMessage('assistant', reply);
                     messages.push({ role: 'assistant', content: reply });
                     updateHistory(text);
-                } else {
-                    throw new Error();
-                }
+                } else { throw new Error(); }
             } catch (err) {
-                if(document.getElementById('typing-indicator')) document.getElementById('typing-indicator').remove();
-                appendMessage('assistant', 'Error: Connection failed or API key invalid.');
+                if(document.getElementById('ai-typing')) document.getElementById('ai-typing').remove();
+                appendMessage('assistant', 'System Error: Connection failed. Check your API key or model availability.');
             }
         }
 
-        function updateHistory(title) {
-            const list = document.getElementById('history-list');
-            if (list.innerHTML.includes('No history')) list.innerHTML = '';
-            const item = document.createElement('div');
-            item.className = "p-3 rounded-xl hover:bg-black/5 transition-all cursor-pointer text-xs text-slate-500 truncate";
-            item.innerHTML = `<i class="far fa-comment-alt mr-2"></i> ${title.substring(0, 24)}...`;
-            list.prepend(item);
+        function updateHistory(text) {
+            const items = document.getElementById('history-items');
+            if (items.innerHTML.includes('Empty')) items.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = "p-3 rounded-xl hover:bg-black/5 text-xs text-slate-500 truncate cursor-pointer transition-all";
+            div.innerHTML = `<i class="far fa-comment mr-2"></i> ${text.substring(0, 30)}...`;
+            items.prepend(div);
         }
 
-        function openSettings() { document.getElementById('api-modal').classList.remove('hidden'); }
-        function closeSettings() { document.getElementById('api-modal').classList.add('hidden'); }
-        function saveApiKey() {
-            apiKey = document.getElementById('api-key-input').value.trim();
-            closeSettings();
-        }
-
-        function clearChat() {
-            messages = [];
-            document.getElementById('chat-container').innerHTML = '';
-            location.reload();
-        }
-
-        function triggerFileInput() { document.getElementById('file-input').click(); }
         function handleFiles(input) {
             const preview = document.getElementById('attachment-preview');
             preview.innerHTML = '';
@@ -371,11 +371,18 @@
                 preview.classList.remove('hidden');
                 Array.from(input.files).forEach(f => {
                     const tag = document.createElement('div');
-                    tag.className = "px-3 py-1 bg-indigo-500/10 text-indigo-500 rounded-full text-[10px] font-bold";
-                    tag.textContent = f.name;
+                    tag.className = "px-3 py-1.5 bg-indigo-500/10 text-indigo-500 rounded-lg text-[10px] font-bold flex-shrink-0 flex items-center gap-2";
+                    tag.innerHTML = `<i class="fas fa-file"></i> ${f.name}`;
                     preview.appendChild(tag);
                 });
             }
+        }
+
+        function openSettings() { document.getElementById('api-modal').classList.remove('hidden'); }
+        function closeSettings() { document.getElementById('api-modal').classList.add('hidden'); }
+        function saveApiKey() { 
+            apiKey = document.getElementById('api-key-input').value.trim(); 
+            closeSettings(); 
         }
 
         window.onload = fetchModels;
