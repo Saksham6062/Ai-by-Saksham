@@ -1,1 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saksham AI Studio | 128+ Models</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-main: #ffffff;
+            --bg-side: #f8fafc;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --accent: #fcd34d;
+        }
+
+        .dark-mode {
+            --bg-main: #020617;
+            --bg-side: #0f172a;
+            --border: #1e293b;
+            --text-main: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar { background-color: var(--bg-side); border-color: var(--border); }
+        .border-theme { border-color: var(--border); }
+        
+        .chat-bubble-ai {
+            background-color: var(--bg-side);
+            border: 1px solid var(--border);
+        }
+
+        .model-card-active {
+            border-color: #fbbf24 !important;
+            background-color: rgba(251, 191, 36, 0.1) !important;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        
+        .panel-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        #main-chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 140px;
+        }
+
+        #input-area-sticky {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, var(--bg-main) 60%, transparent);
+            pointer-events: none;
+        }
+
+        #input-container-inner {
+            pointer-events: auto;
+            max-width: 52rem;
+            margin: 0 auto;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        .status-pulse {
+            position: relative;
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+        }
+        .status-pulse::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            top: -8px;
+            left: -8px;
+            border: 2px solid #10b981;
+            border-radius: 50%;
+            animation: pulse-ring 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+    </style>
+</head>
+<body class="flex">
+
+    <!-- Mobile Overlays -->
+    <div id="overlay" onclick="closeSidebars()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+
+    <!-- Left Sidebar: History -->
+    <aside id="history-sidebar" class="w-64 sidebar border-r flex flex-col fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 panel-transition">
+        <div class="p-6 flex items-center gap-3 border-b border-theme">
+            <div class="w-8 h-8 bg-amber-400 rounded-xl flex items-center justify-center text-slate-900 font-extrabold">S</div>
+            <span class="font-extrabold text-sm tracking-tighter">SAKSHAM STUDIO</span>
+        </div>
+        
+        <div class="p-4">
+            <button onclick="createNewChat()" class="w-full py-3 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center gap-2 text-xs font-bold hover:brightness-110 active:scale-95 transition-all">
+                <i class="fas fa-plus"></i> NEW CONVERSATION
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-4 custom-scrollbar" id="history-list">
+            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4 mb-3 px-2">Recent</div>
+            <div id="history-items" class="space-y-1">
+                <div class="p-3 text-[11px] text-slate-400 italic text-center opacity-50">History clear</div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-theme">
+            <button onclick="openSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 transition-all text-[11px] font-bold">
+                <i class="fas fa-shield-halved text-amber-500"></i> API CONFIGURATION
+            </button>
+        </div>
+    </aside>
+
+    <div id="main-chat-wrapper">
+        <header class="h-16 flex items-center justify-between px-6 border-b border-theme shrink-0 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar('history-sidebar')" class="lg:hidden p-2 text-slate-400"><i class="fas fa-bars"></i></button>
+                <div class="flex flex-col">
+                    <h2 id="display-model" class="text-xs font-black uppercase text-amber-500 tracking-widest">Select Model</h2>
+                    <div class="flex items-center gap-2">
+                        <span id="status-indicator" class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        <span id="status-text" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Disconnected</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-xl border-theme border hover:bg-black/5 transition-all">
+                    <i id="theme-icon" class="fas fa-sun text-amber-500 text-sm"></i>
+                </button>
+                <button onclick="toggleSidebar('config-sidebar')" class="p-2 text-slate-400 hover:text-amber-500 transition-colors">
+                    <i class="fas fa-layer-group"></i>
+                </button>
+            </div>
+        </header>
+
+        <div id="chat-container" class="custom-scrollbar p-4 lg:p-10 space-y-6">
+            <!-- Initialized via JS -->
+        </div>
+
+        <div id="input-area-sticky">
+            <div id="input-container-inner">
+                <div class="bg-white dark:bg-slate-900 border-theme border rounded-[1.5rem] shadow-2xl p-2 flex items-end gap-2 ring-1 ring-black/5">
+                    <textarea id="user-input" rows="1" placeholder="Type message..." 
+                        class="flex-1 bg-transparent border-none py-3 px-4 text-sm focus:outline-none resize-none min-h-[46px] max-h-[160px]"
+                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    
+                    <button onclick="sendMessage()" class="w-11 h-11 bg-amber-400 text-slate-900 rounded-2xl shadow-lg hover:bg-amber-500 transition-all flex items-center justify-center flex-shrink-0 active:scale-90">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar: 128+ Models -->
+    <aside id="config-sidebar" class="w-80 sidebar border-l flex flex-col fixed lg:static inset-y-0 right-0 z-40 translate-x-full lg:translate-x-0 panel-transition">
+        <div class="p-6 border-b border-theme">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Model Library (128+)</span>
+                <button onclick="toggleSidebar('config-sidebar')" class="lg:hidden p-1"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="model-search" oninput="filterModels()" placeholder="Search free models..." 
+                    class="w-full bg-white dark:bg-slate-800 border-theme border pl-9 p-2.5 rounded-xl text-xs outline-none focus:ring-1 ring-amber-400">
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar" id="model-grid">
+            <div class="flex flex-col items-center justify-center py-10 opacity-50">
+                <i class="fas fa-spinner fa-spin mb-2"></i>
+                <span class="text-[10px] font-bold">LOADING HUB...</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Modal -->
+    <div id="api-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl border-theme border">
+            <h3 class="text-xl font-extrabold mb-2">HF TOKEN</h3>
+            <p class="text-[11px] text-slate-400 mb-6 leading-relaxed uppercase tracking-tighter">Enter your Hugging Face Read Token to access the inference API.</p>
+            <input type="password" id="api-key-input" placeholder="hf_..." class="w-full bg-slate-50 dark:bg-slate-800 border-theme border p-4 rounded-2xl text-sm mb-6 outline-none focus:ring-2 ring-amber-400">
+            <button onclick="saveApiKey()" class="w-full py-4 bg-amber-400 text-slate-900 rounded-2xl font-black shadow-xl shadow-amber-400/20 active:scale-95 transition-all">INITIALIZE</button>
+            <button onclick="closeSettings()" class="w-full py-2 text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">Maybe Later</button>
+        </div>
+    </div>
+
+    <script>
+        let hfToken = localStorage.getItem('saksham_hf_token') || '';
+        let selectedModelId = 'meta-llama/Llama-3.2-3B-Instruct';
+        let allModels = [];
+        let messages = [];
+        let isDarkMode = false;
+
+        const welcomeHTML = `
+            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto p-6">
+                <div class="w-20 h-20 bg-amber-400/10 rounded-3xl flex items-center justify-center text-amber-500 mb-8">
+                    <i class="fas fa-brain text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black mb-2 tracking-tighter">SAKSHAM STUDIO</h2>
+                <p class="text-xs text-slate-400 mb-8 leading-relaxed font-medium">Access 128+ free models via Hugging Face Inference. Your token is stored locally for this session.</p>
+                <button onclick="openSettings()" class="px-6 py-3 bg-amber-400 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-400/20">Setup Token</button>
+            </div>
+        `;
+
+        async function fetchHuggingFaceModels() {
+            try {
+                // Fetch top 200 text-generation models, filtered by popularity/tags
+                const res = await fetch('https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=200');
+                const data = await res.json();
+                
+                // Filter to ensure they have an ID and clean up names
+                allModels = data.map(m => ({
+                    id: m.id,
+                    name: m.id.split('/').pop().replace(/-/g, ' ').toUpperCase(),
+                    author: m.author || 'Community',
+                    downloads: m.downloads
+                }));
+
+                renderModelGrid(allModels);
+            } catch (err) {
+                document.getElementById('model-grid').innerHTML = '<p class="text-center text-xs text-red-500 p-10 font-bold">API FAILED TO LOAD HUB</p>';
+            }
+        }
+
+        function renderModelGrid(models) {
+            const grid = document.getElementById('model-grid');
+            grid.innerHTML = '';
+            models.forEach(m => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-theme border cursor-pointer transition-all hover:scale-[1.02] ${selectedModelId === m.id ? 'model-card-active' : ''}`;
+                card.onclick = () => selectModel(m.id);
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-black text-amber-500 tracking-tighter">${m.author}</span>
+                        <span class="text-[8px] opacity-40 font-bold"><i class="fas fa-download"></i> ${Math.floor(m.downloads/1000)}K</span>
+                    </div>
+                    <div class="text-[11px] font-extrabold truncate">${m.name}</div>
+                    <div class="text-[8px] text-slate-400 truncate opacity-60 mt-1">${m.id}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterModels() {
+            const query = document.getElementById('model-search').value.toLowerCase();
+            const filtered = allModels.filter(m => m.id.toLowerCase().includes(query) || m.name.toLowerCase().includes(query));
+            renderModelGrid(filtered);
+        }
+
+        function selectModel(id) {
+            selectedModelId = id;
+            document.getElementById('display-model').textContent = id.split('/').pop().toUpperCase();
+            renderModelGrid(allModels);
+            if (window.innerWidth < 1024) closeSidebars();
+        }
+
+        function createNewChat() {
+            messages = [];
+            document.getElementById('chat-container').innerHTML = welcomeHTML;
+            document.getElementById('user-input').value = '';
+            document.getElementById('user-input').style.height = 'auto';
+            updateKeyStatus();
+            if (window.innerWidth < 1024) closeSidebars();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text || !hfToken) {
+                if (!hfToken) openSettings();
+                return;
+            }
+
+            input.value = '';
+            input.style.height = 'auto';
+            appendMessage('user', text);
+            messages.push({ role: 'user', content: text });
+
+            const indicator = document.createElement('div');
+            indicator.id = 'ai-typing';
+            indicator.className = 'flex gap-3 p-6 text-[10px] font-black text-slate-400 items-center animate-pulse';
+            indicator.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>GENERATING FROM HUB</span>';
+            document.getElementById('chat-container').appendChild(indicator);
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+
+            try {
+                // Simple prompt construction for multi-turn (works with most Instruct/Chat models)
+                const prompt = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n') + '\nAssistant: ';
+
+                const res = await fetch(`https://api-inference.huggingface.co/models/${selectedModelId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${hfToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        inputs: prompt,
+                        parameters: { max_new_tokens: 1024, return_full_text: false }
+                    })
+                });
+
+                const data = await res.json();
+                document.getElementById('ai-typing').remove();
+
+                if (data.error) throw new Error(data.error);
+                
+                let reply = Array.isArray(data) ? (data[0].generated_text || data[0].summary_text) : data.generated_text;
+                if (!reply) throw new Error("Connection failed");
+
+                appendMessage('assistant', reply.trim());
+                messages.push({ role: 'assistant', content: reply.trim() });
+                updateHistory(text);
+            } catch (err) {
+                if(document.getElementById('ai-typing')) document.getElementById('ai-typing').remove();
+                appendMessage('assistant', `HUB MESSAGE: ${err.message || 'Model loading. Please wait 10 seconds.'}`);
+            }
+        }
+
+        function appendMessage(role, content) {
+            const chat = document.getElementById('chat-container');
+            const welcome = document.getElementById('welcome-view');
+            if (welcome) welcome.remove();
+
+            const wrap = document.createElement('div');
+            wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`;
+            const msg = document.createElement('div');
+            msg.className = `max-w-[85%] lg:max-w-[70%] p-4 rounded-3xl text-[13px] leading-relaxed font-medium ${role === 'user' ? 'bg-slate-900 text-white dark:bg-amber-400 dark:text-slate-900 rounded-tr-none' : 'chat-bubble-ai rounded-tl-none shadow-sm'}`;
+            msg.innerHTML = `<div class="text-[8px] font-black uppercase tracking-widest mb-1.5 opacity-40">${role}</div><div class="whitespace-pre-wrap">${content}</div>`;
+            wrap.appendChild(msg);
+            chat.appendChild(wrap);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function updateHistory(text) {
+            const items = document.getElementById('history-items');
+            if (items.innerHTML.includes('clear')) items.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = "p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-[10px] text-slate-500 font-bold truncate cursor-pointer transition-all";
+            div.innerHTML = `<i class="far fa-comment-dots mr-2 opacity-30"></i> ${text.substring(0, 30)}...`;
+            items.prepend(div);
+        }
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            document.getElementById('theme-icon').className = isDarkMode ? 'fas fa-moon text-indigo-400' : 'fas fa-sun text-amber-500';
+        }
+
+        function toggleSidebar(id) {
+            const el = document.getElementById(id);
+            const overlay = document.getElementById('overlay');
+            const isLeft = id === 'history-sidebar';
+            const hideClass = isLeft ? '-translate-x-full' : 'translate-x-full';
+            if (el.classList.contains(hideClass)) {
+                el.classList.remove(hideClass);
+                overlay.classList.remove('hidden');
+            } else {
+                el.classList.add(hideClass);
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function closeSidebars() {
+            document.getElementById('history-sidebar').classList.add('-translate-x-full');
+            document.getElementById('config-sidebar').classList.add('translate-x-full');
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        function openSettings() { document.getElementById('api-modal').classList.remove('hidden'); }
+        function closeSettings() { document.getElementById('api-modal').classList.add('hidden'); }
+
+        function saveApiKey() {
+            hfToken = document.getElementById('api-key-input').value.trim();
+            localStorage.setItem('saksham_hf_token', hfToken);
+            updateKeyStatus();
+            closeSettings();
+        }
+
+        function updateKeyStatus() {
+            const dot = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            if (hfToken) {
+                dot.className = 'status-pulse';
+                text.textContent = 'HUB CONNECTED';
+                text.classList.replace('text-slate-400', 'text-emerald-500');
+            } else {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-red-500';
+                text.textContent = 'TOKEN REQUIRED';
+            }
+        }
+
+        window.onload = () => {
+            createNewChat();
+            fetchHuggingFaceModels();
+            document.getElementById('api-key-input').value = hfToken;
+        };
+    </script>
+</body>
+</html>
 
