@@ -1,1 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saksham's Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* --- CSS Variables for Light/Dark Theme --- */
+    :root {
+      /* Dark Theme Defaults */
+      --bg-color: #1a1a2e;
+      --card-color: #16213e;
+      --primary-text: #e0e0e0;
+      --secondary-text: #a0a0c0;
+      --border-color: #0f3460;
+      --shadow-color: rgba(93, 93, 224, 0.2);
+      --hover-glow: 0 10px 25px var(--shadow-color);
+      --header-bg: rgba(26, 26, 46, 0.8);
 
+      /* Accent Colors */
+      --gemini: #1abc9c;
+      --gemma: #e67e22;
+      --imagen: #9b59b6;
+      --nano: #e74c3c;
+      --robotics: #34495e;
+      --tts: #f1c40f;
+      --lyre: #3498db;
+    }
+
+    /* Light Theme Overrides */
+    [data-theme="light"] {
+      --bg-color: #f0f4f8;
+      --card-color: #ffffff;
+      --primary-text: #2c3e50;
+      --secondary-text: #7f8c8d;
+      --border-color: #e0e0e0;
+      --shadow-color: rgba(44, 62, 80, 0.1);
+      --hover-glow: 0 10px 20px rgba(44, 62, 80, 0.15);
+      --header-bg: rgba(255, 255, 255, 0.9);
+    }
+
+    /* --- Global Styles --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-text);
+      min-height: 100vh;
+      padding-top: 100px; /* Space for sticky header */
+    }
+
+    /* --- Header & Theme Switch --- */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px 40px;
+        background-color: var(--header-bg);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.3s;
+    }
+
+    .theme-toggle {
+      width: 60px;
+      height: 30px;
+      background-color: var(--border-color);
+      border-radius: 15px;
+      position: relative;
+      cursor: pointer;
+      padding: 3px;
+    }
+
+    .toggle-circle {
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary-text);
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1rem;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      color: var(--bg-color);
+    }
+
+    [data-theme="light"] .toggle-circle {
+      transform: translateX(30px);
+      background-color: var(--primary-text);
+    }
+    
+    [data-theme="dark"] .toggle-circle {
+        transform: translateX(0);
+        background-color: var(--primary-text);
+    }
+
+
+    /* --- Layout & Typography --- */
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      /* Glowing Gradient Title */
+      background: linear-gradient(45deg, #4285f4, #ea4335, #fbbc05, #34a853);
+      background-size: 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: colorShift 12s ease-in-out infinite;
+    }
+
+    @keyframes colorShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--secondary-text);
+      margin-bottom: 50px;
+    }
+
+    /* --- Grid & Cards --- */
+    .launcher-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .model-card {
+      background-color: var(--card-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: left;
+      color: var(--primary-text);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .model-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--hover-glow);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .card-icon { font-size: 1.8rem; }
+
+    .card-title { font-size: 1.5rem; font-weight: 600; }
+
+    /* Accent Colors for Icons (Remained the same) */
+    .model-card[data-model="gemini"] .card-icon { color: var(--gemini); }
+    .model-card[data-model="gemma"] .card-icon { color: var(--gemma); }
+    .model-card[data-model="imagen"] .card-icon { color: var(--imagen); }
+    .model-card[data-model="nano"] .card-icon { color: var(--nano); }
+    .model-card[data-model="robotics"] .card-icon { color: var(--robotics); }
+    .model-card[data-model="tts"] .card-icon { color: var(--tts); }
+    .model-card[data-model="lyre"] .card-icon { color: var(--lyre); }
+
+    .card-description {
+      color: var(--secondary-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .launch-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      color: var(--primary-text);
+      background-color: var(--border-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+
+    .model-card:hover .launch-btn { 
+        background-color: var(--secondary-text);
+        color: var(--bg-color); /* Contrast change on hover */
+    }
+
+    .external-icon {
+      font-size: 0.9rem;
+      margin-left: 5px;
+      vertical-align: middle;
+      opacity: 0.6;
+    }
+
+    /* --- Modal Styles --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal-content {
+      background: var(--card-color);
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      width: 90%; max-width: 500px;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content { transform: scale(1); }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.8rem; color: var(--gemini); }
+    .modal-close {
+      background: none; border: none; color: var(--secondary-text);
+      font-size: 2rem; cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--primary-text); }
+    .modal-body p { color: var(--secondary-text); line-height: 1.7; margin-bottom: 15px; }
+    .modal-body a { color: var(--gemini); text-decoration: none; font-weight: 600; }
+    .modal-body a:hover { text-decoration: underline; }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        header { padding: 15px 20px; }
+        h1 { font-size: 2.2rem; }
+        .subtitle { font-size: 1rem; margin-bottom: 30px; }
+        .launcher-grid { gap: 20px; }
+    }
+
+  </style>
+</head>
+<body data-theme="dark">
+
+  <header>
+    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-text);">AI Model Hub</h2>
+    <!-- Theme Toggle Switch -->
+    <div class="theme-toggle" id="themeToggle" role="switch" aria-checked="true">
+        <div class="toggle-circle">🌙</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1>Saksham's Intelligence</h1>
+    <p class="subtitle">Your central launchpad for OpenRuoter's powerful AI models.</p>
+
+    <div class="launcher-grid">
+
+      <!-- Gemini (Modal) -->
+      <div class="model-card" data-model="gemini" id="gemini-launcher">
+        <div class="card-header">
+            <span class="card-icon">✨</span>
+            <h2 class="card-title">OpenRuoter</h2>
+        </div>
+        <p class="card-description">The most capable and general model series. Handle complex reasoning, multimodal tasks, and advanced coding.</p>
+        <span class="launch-btn">Explore OpenRuoter's Model</span>
+      </div>
+
+      <!-- Gemma (Modal) -->
+      <div class="model-card" data-model="gemma" id="gemma-launcher">
+        <div class="card-header">
+            <span class="card-icon">🔥</span>
+            <h2 class="card-title">HuggingFace</h2>
+        </div>
+        <p class="card-description">Advanced AI model for research, deep thinking, and creative exploration.</p>
+        <span class="launch-btn">Explore HuggingFace Chat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini Modal -->
+  <div class="modal-overlay" id="gemini-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Welcome to OpenRuoter</h2>
+            <button class="modal-close" id="gemini-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+           <p>You are about to explore the comprehensive OpenRuoter model suite.</p>
+           <a href="OpenRouter/index.html">Click here to continue to the OpenRuoter models page</a>
+        </div>
+    </div>
+  </div>
+
+  <!-- Gemma Modal -->
+  <div class="modal-overlay" id="gemma-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Welcome to HuggingFace Chat</h2>
+            <button class="modal-close" id="gemma-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+           <p>You are about to explore the HuggingFace Chat ideal for customization and research.</p>
+           <a href="HuggingFace/index.html">Click here to continue to the HuggingFace Chat models page</a>
+        </div>
+    </div>
+  </div>
+  <!-- Robotics Modal -->
+  <div class="modal-overlay" id="robotics-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Welcome to Robotics & Expatimental</h2>
+            <button class="modal-close" id="robotics-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+           <p>You are about to explore the Robotics ER model suite for coding robot actions.</p>
+           <a href="Robotics/index.html">Click here to continue to the Robotics page</a>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Theme Switching Logic ---
+    const STORAGE_KEY = "ai-model-hub-theme";
+    const root = document.querySelector('body');
+    const toggle = document.getElementById("themeToggle");
+    const toggleCircle = document.querySelector('.toggle-circle');
+
+    /**
+     * Applies the theme to the body element and updates localStorage.
+     * @param {string} theme - 'light' or 'dark'
+     */
+    function applyTheme(theme) {
+      root.setAttribute("data-theme", theme);
+      localStorage.setItem(STORAGE_KEY, theme);
+      toggleCircle.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+
+    /** Initializes theme from storage or defaults to dark. */
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem(STORAGE_KEY) || 'dark';
+        applyTheme(savedTheme);
+    }
+
+    /** Toggles the theme on button click. */
+    function toggleTheme() {
+        const current = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        const next = current === "dark" ? "light" : "dark";
+        applyTheme(next);
+        toggle.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false');
+    }
+
+    // --- Modal Logic ---
+
+    // Gemini modal setup
+    const geminiLauncher = document.getElementById('gemini-launcher');
+    const geminiModal = document.getElementById('gemini-modal');
+    const geminiCloseBtn = document.getElementById('gemini-close-btn');
+
+    const gemmaLauncher = document.getElementById('gemma-launcher');
+    const gemmaModal = document.getElementById('gemma-modal');
+    const gemmaCloseBtn = document.getElementById('gemma-close-btn');
+    
+    const roboticsLauncher = document.getElementById('robotics-launcher');
+    const roboticsModal = document.getElementById('robotics-modal');
+    const roboticsCloseBtn = document.getElementById('robotics-close-btn');
+
+    setupModal(roboticsLauncher, roboticsModal, roboticsCloseBtn);
+
+    function setupModal(launcher, modal, closeBtn) {
+        // Open modal
+        launcher.addEventListener('click', () => {
+            // Only show modal if the target isn't an external link (which is not applicable here, but good practice)
+            modal.classList.add('active');
+        });
+        
+        // Close modal via button
+        closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+        
+        // Close modal via overlay click
+        modal.addEventListener('click', (e) => { 
+            if(e.target === modal) modal.classList.remove('active'); 
+        });
+    }
+
+    // --- Initialization ---
+    window.onload = function() {
+        // 1. Initialize Theme
+        initializeTheme();
+        toggle.addEventListener("click", toggleTheme);
+
+        // 2. Setup Modals
+        setupModal(geminiLauncher, geminiModal, geminiCloseBtn);
+        setupModal(gemmaLauncher, gemmaModal, gemmaCloseBtn);
+    };
+
+  </script>
+
+</body>
+</html>
