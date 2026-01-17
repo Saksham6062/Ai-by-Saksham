@@ -17,350 +17,328 @@
         }
     </script>
     <style>
-        body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; transition: background-color 0.3s ease; }
+        body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; transition: background-color 0.3s ease; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
         .chat-container { flex: 1; overflow-y: auto; padding-bottom: 2rem; scroll-behavior: smooth; }
         .message-user { border-radius: 1.25rem 1.25rem 0.25rem 1.25rem; }
         .message-ai { border-radius: 1.25rem 1.25rem 1.25rem 0.25rem; }
         .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        pre { border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.85rem; background: #1e293b; color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); }
-        .dot-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        ::-webkit-scrollbar { width: 5px; }
+        pre { border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.85rem; background: #0f172a; color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .deepthink-active { border-color: #3b82f6 !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); }
+        .thinking-block { font-style: italic; color: #64748b; border-left: 3px solid #3b82f6; padding-left: 1rem; margin-bottom: 1rem; font-size: 0.85rem; opacity: 0.8; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
-    <!-- Navbar -->
+    <!-- Header -->
     <nav class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between z-50">
         <div class="flex items-center gap-3">
-            <button id="toggleSidebar" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg lg:hidden">
+            <button id="toggleSidebar" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                 <i class="fas fa-bars text-slate-500"></i>
             </button>
             <div>
-                <h1 class="font-bold text-lg leading-none">Saksham AI Hub</h1>
-                <p class="text-[10px] uppercase tracking-widest text-blue-500 font-bold">Model Intelligence Suite</p>
+                <h1 class="font-black text-xl tracking-tight italic">SAKSHAM <span class="text-blue-600">HUB</span></h1>
             </div>
         </div>
 
         <div class="flex items-center gap-2">
-            <button id="themeToggle" class="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <i class="fas fa-moon dark:hidden text-slate-600"></i>
+            <!-- DeepThink Toggle -->
+            <button id="deepThinkToggle" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                <i id="deepThinkIcon" class="fas fa-brain text-slate-300"></i>
+                <span class="text-[10px] font-black uppercase tracking-widest hidden sm:inline">DeepThink</span>
+                <div id="deepThinkStatus" class="w-2 h-2 rounded-full bg-slate-300"></div>
+            </button>
+
+            <div class="w-[1px] h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                <i class="fas fa-moon dark:hidden"></i>
                 <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
             </button>
-            <button id="settingsBtn" class="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                <i class="fas fa-cog"></i>
+
+            <!-- Restore: API Settings Button -->
+            <button id="settingsBtn" class="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 group">
+                <i class="fas fa-cog group-hover:rotate-45 transition-transform"></i>
             </button>
         </div>
     </nav>
 
     <div class="flex flex-1 overflow-hidden relative">
-        
-        <!-- Sidebar (History) -->
+        <!-- Sidebar -->
         <aside id="sidebar" class="sidebar-transition absolute inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-40 -translate-x-full lg:relative lg:translate-x-0">
             <div class="p-4 flex flex-col h-full">
-                <button id="newChatBtn" class="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-500 hover:text-blue-500 transition-all font-bold text-sm mb-4 text-slate-500">
-                    <i class="fas fa-plus"></i> New Chat
+                <button id="newChatBtn" class="w-full p-3 bg-blue-600 text-white rounded-xl font-bold mb-4 shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-plus mr-2"></i> New Session
                 </button>
                 <div class="flex-1 overflow-y-auto space-y-1" id="historyList"></div>
-                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <button id="clearAllHistory" class="w-full p-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors">
-                        Clear All History
-                    </button>
-                </div>
             </div>
         </aside>
 
-        <!-- Main Chat Area -->
-        <main class="flex-1 flex flex-col relative min-w-0">
-            <!-- Model Selection Bar -->
-            <div class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                <select id="modelSelect" class="bg-transparent text-sm font-semibold focus:outline-none cursor-pointer flex-1 py-1 dark:text-white">
-                    <optgroup label="Qwen">
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col relative min-w-0 bg-white dark:bg-slate-950">
+            <!-- Model Dropdown (Friendly Names) -->
+            <div class="p-2 px-4 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-800">
+                <select id="modelSelect" class="bg-transparent text-[11px] font-black uppercase tracking-wider text-slate-500 focus:outline-none cursor-pointer w-full">
+                    <optgroup label="QWEN">
                         <option value="qwen/qwen3-32b">Qwen 3 32B</option>
                     </optgroup>
-                    
-                    <optgroup label="Groq">
+                    <optgroup label="GROQ">
                         <option value="groq/compound">Groq Compound</option>
                         <option value="groq/compound-mini">Groq Compound Mini</option>
                     </optgroup>
-                    <optgroup label="Meta">
+                    <optgroup label="META">
                         <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
                         <option value="llama-3.3-70b-versatile" selected>Llama 3.3 70B Versatile</option>
                         <option value="meta-llama/llama-4-maverick-17b-128e">Llama 4 Maverick 17B</option>
-                        <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B</option>
-                        <option value="meta-llama/llama-guard-4-12b">Llama Guard 4 (12B)</option>
-                        <option value="meta-llama/llama-prompt-guard-2-22m">Llama Prompt Guard 22M</option>
-                        <option value="meta-llama/llama-prompt-guard-2-86m">Llama Prompt Guard 86M</option>
+                        <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B Instruct</option>
+                        <option value="meta-llama/llama-guard-4-12b">Llama Guard 4 12B</option>
+                        <option value="meta-llama/llama-prompt-guard-2-22m">Llama Prompt Guard 2 22M</option>
+                        <option value="meta-llama/llama-prompt-guard-2-86m">Llama Prompt Guard 2 86M</option>
                     </optgroup>
-                    <optgroup label="Moonshot AI">
+                    <optgroup label="MOONSHOT AI">
                         <option value="moonshotai/kimi-k2-instruct">Kimi K2 Instruct</option>
-                        <option value="moonshotai/kimi-k2-instruct-0905">Kimi K2 Instruct (0905)</option>
+                        <option value="moonshotai/kimi-k2-instruct-0905">Kimi K2 Instruct 0905</option>
                     </optgroup>
-                    <optgroup label="OpenAI (Deprecated)">
+                    <optgroup label="OPENAI (DEPRECATED)">
                         <option value="openai/gpt-oss-120b">GPT OSS 120B</option>
                         <option value="openai/gpt-oss-20b">GPT OSS 20B</option>
                         <option value="openai/gpt-oss-safeguard-20b">GPT OSS Safeguard 20B</option>
                     </optgroup>
                 </select>
-                <div class="flex items-center gap-1">
-                    <span class="dot-indicator bg-emerald-500"></span>
-                    <span class="text-[10px] font-bold text-slate-400">READY</span>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chatMessages" class="chat-container p-4 sm:p-8 space-y-6">
+                <div id="welcome" class="m-auto text-center max-w-sm py-20 opacity-50">
+                    <i class="fas fa-microchip text-4xl mb-4"></i>
+                    <h2 class="text-xl font-black">AI Orchestrator</h2>
+                    <p class="text-sm">Configure your API Key using the gear icon to begin.</p>
                 </div>
             </div>
 
-            <!-- Messages -->
-            <div id="chatMessages" class="chat-container p-4 sm:p-6 space-y-6">
-                <!-- Welcome Screen -->
-                <div id="welcome" class="m-auto text-center max-w-sm py-20">
-                    <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/10">
-                        <i class="fas fa-microchip text-3xl"></i>
-                    </div>
-                    <h2 class="text-3xl font-black mb-2 tracking-tight">Saksham AI</h2>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Lightning-fast inference with the latest models. Select a model or share a file to get started.</p>
-                </div>
-            </div>
-
-            <!-- Input -->
-            <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                <!-- File Preview Bar -->
-                <div id="filePreview" class="hidden max-w-4xl mx-auto mb-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-2 truncate">
-                        <i class="fas fa-file-alt text-blue-500"></i>
-                        <span id="fileName" class="truncate font-medium text-blue-700 dark:text-blue-300"></span>
-                    </div>
-                    <button onclick="removeFile()" class="text-slate-400 hover:text-red-500 px-2"><i class="fas fa-times"></i></button>
+            <!-- Input Bar -->
+            <div class="p-4 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+                <div id="filePreview" class="hidden max-w-4xl mx-auto mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-between border border-blue-100 dark:border-blue-800">
+                    <span id="fileName" class="text-[10px] font-black text-blue-600 truncate px-2"></span>
+                    <button onclick="removeFile()" class="p-1 text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
                 </div>
 
-                <div class="max-w-4xl mx-auto flex items-end gap-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-2 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                    <!-- Plus Button for File Sharing -->
-                    <button id="attachBtn" class="text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-slate-700 w-12 h-12 flex items-center justify-center rounded-xl transition-all" title="Attach Text File">
+                <div id="inputBox" class="max-w-4xl mx-auto flex items-end gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded-2xl transition-all">
+                    <button id="attachBtn" class="text-slate-400 hover:text-blue-600 w-11 h-11 flex items-center justify-center">
                         <i class="fas fa-plus text-lg"></i>
                     </button>
-                    <input type="file" id="fileInput" class="hidden" accept=".txt,.js,.py,.html,.css,.md,.json,.csv,.ts">
-                    
-                    <textarea id="userInput" rows="1" placeholder="Type your message..." 
-                        class="flex-1 bg-transparent py-3 px-1 focus:outline-none resize-none text-[0.95rem] max-h-48 dark:text-white"
-                    ></textarea>
-                    
-                    <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-30 shadow-lg shadow-blue-500/20">
+                    <input type="file" id="fileInput" class="hidden">
+                    <textarea id="userInput" rows="1" placeholder="Type a message..." class="flex-1 bg-transparent py-3 focus:outline-none resize-none text-sm dark:text-white"></textarea>
+                    <button id="sendBtn" class="bg-blue-600 text-white w-11 h-11 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-md">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
-                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium tracking-wide">Enter to send, Shift + Enter for new line</p>
+                <p id="thinkingText" class="hidden text-center text-[10px] font-black text-blue-500 uppercase mt-2 animate-pulse tracking-widest">DeepThinking...</p>
             </div>
         </main>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] hidden p-6">
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] hidden p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h3 class="font-bold text-2xl mb-6">Settings</h3>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-2xl tracking-tight">API Configuration</h3>
+                <button id="closeSettings" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase mb-1 tracking-widest">Groq API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Groq API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm outline-none dark:text-white focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase mb-1 tracking-widest">System Instructions</label>
-                    <textarea id="systemPromptInput" rows="2" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">You are Saksham AI, a helpful and efficient AI assistant.</textarea>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">System Instructions</label>
+                    <textarea id="systemPromptInput" rows="3" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm outline-none dark:text-white focus:ring-2 focus:ring-blue-500">You are Saksham AI, a precise and intelligent assistant.</textarea>
                 </div>
-                <button id="saveSettings" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/30">Save Configuration</button>
+                <button id="saveSettings" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg">Save Settings</button>
             </div>
         </div>
     </div>
 
     <script>
         const state = {
-            apiKey: localStorage.getItem('saksham_api_v5') || '',
-            systemPrompt: localStorage.getItem('saksham_sys_v5') || 'You are Saksham AI, a helpful and efficient AI assistant.',
+            apiKey: localStorage.getItem('saksham_key_v9') || '',
+            systemPrompt: localStorage.getItem('saksham_sys_v9') || 'You are Saksham AI.',
             currentChatId: Date.now(),
             messages: [],
-            history: JSON.parse(localStorage.getItem('saksham_history_v5') || '[]'),
-            isDark: localStorage.getItem('saksham_theme_v5') !== 'dark' ? false : true,
-            isSidebarOpen: window.innerWidth >= 1024,
+            history: JSON.parse(localStorage.getItem('saksham_hist_v9') || '[]'),
+            isDark: localStorage.getItem('saksham_theme_v9') === 'dark',
+            deepThink: false,
             attachedFile: null,
             isBusy: false
         };
 
-        // Theme Toggle Logic
-        const applyTheme = () => {
-            if (state.isDark) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-        };
-        applyTheme();
+        if (state.isDark) document.documentElement.classList.add('dark');
+        document.getElementById('apiKeyInput').value = state.apiKey;
+        document.getElementById('systemPromptInput').value = state.systemPrompt;
 
         const chat = document.getElementById('chatMessages');
         const input = document.getElementById('userInput');
         const send = document.getElementById('sendBtn');
         const fileInput = document.getElementById('fileInput');
-        const preview = document.getElementById('filePreview');
 
-        const renderHistory = () => {
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-            state.history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = `p-3 rounded-xl cursor-pointer text-sm mb-1 truncate hover:bg-slate-100 dark:hover:bg-slate-800 transition-all ${item.id === state.currentChatId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400'}`;
-                div.innerHTML = `<i class="fas fa-message opacity-50 mr-2"></i> ${item.title}`;
-                div.onclick = () => {
-                    state.currentChatId = item.id;
-                    state.messages = item.messages;
-                    renderChat();
-                    if(window.innerWidth < 1024) toggleSidebar();
-                };
-                list.appendChild(div);
-            });
+        // DeepThink Logic
+        document.getElementById('deepThinkToggle').onclick = () => {
+            state.deepThink = !state.deepThink;
+            document.getElementById('deepThinkStatus').className = `w-2 h-2 rounded-full ${state.deepThink ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`;
+            document.getElementById('deepThinkIcon').className = `fas fa-brain ${state.deepThink ? 'text-blue-500' : 'text-slate-300'}`;
+            document.getElementById('inputBox').classList.toggle('deepthink-active', state.deepThink);
         };
 
-        const renderChat = () => {
-            chat.innerHTML = '';
-            if (state.messages.length === 0) {
-                chat.innerHTML = `<div id="welcome" class="m-auto text-center max-w-sm py-20"><div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/10"><i class="fas fa-microchip text-3xl"></i></div><h2 class="text-3xl font-black mb-2 tracking-tight">Saksham AI</h2><p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Lightning-fast intelligence. Send a message or share a file to start.</p></div>`;
-                return;
-            }
-            state.messages.forEach(m => addMsg(m.role, m.content, false));
-        };
-
-        const addMsg = (role, text, animate = true) => {
+        const addMsgBubble = (role) => {
             document.getElementById('welcome')?.remove();
             const div = document.createElement('div');
-            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} ${animate ? 'animate-in fade-in slide-in-from-bottom-2' : ''} mb-4`;
-            
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
             const inner = document.createElement('div');
-            inner.className = `max-w-[85%] px-4 py-3 shadow-sm text-sm leading-relaxed ${role === 'user' ? 'bg-blue-600 text-white message-user' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 message-ai dark:text-slate-200'}`;
-            
-            // Simple Markdown-ish parsing
-            const content = text
-                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-                .replace(/\n/g, '<br>');
-            
-            inner.innerHTML = content;
+            inner.className = `max-w-[85%] px-4 py-3 shadow-sm text-sm ${role === 'user' ? 'bg-blue-600 text-white message-user' : 'bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 message-ai'}`;
             div.appendChild(inner);
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
+            return inner;
         };
 
-        const toggleSidebar = () => {
-            state.isSidebarOpen = !state.isSidebarOpen;
-            document.getElementById('sidebar').classList.toggle('-translate-x-full', !state.isSidebarOpen);
-        };
-
-        // File Interaction
-        document.getElementById('attachBtn').onclick = () => fileInput.click();
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                state.attachedFile = { name: file.name, content: re.target.result };
-                preview.classList.remove('hidden');
-                document.getElementById('fileName').innerText = file.name;
-            };
-            reader.readAsText(file);
-        };
-
-        window.removeFile = () => {
-            state.attachedFile = null;
-            preview.classList.add('hidden');
-            fileInput.value = '';
-        };
-
-        async function talk() {
-            let promptText = input.value.trim();
-            if (!promptText && !state.attachedFile || state.isBusy) return;
-            if (!state.apiKey) { document.getElementById('settingsModal').classList.remove('hidden'); return; }
-
-            let apiPrompt = promptText;
-            if (state.attachedFile) {
-                apiPrompt = `[Analyzing File: ${state.attachedFile.name}]\n\nContent:\n${state.attachedFile.content}\n\nUser Question: ${promptText || "Please summarize or analyze this file."}`;
+        async function typewriterEffect(element, text) {
+            // Handle Thinking blocks first
+            const thinkMatch = text.match(/<thinking>([\s\S]*?)<\/thinking>/);
+            if (thinkMatch) {
+                const thoughtDiv = document.createElement('div');
+                thoughtDiv.className = 'thinking-block';
+                element.appendChild(thoughtDiv);
+                const thoughtWords = thinkMatch[1].split(' ');
+                for (let word of thoughtWords) {
+                    thoughtDiv.innerText += word + ' ';
+                    chat.scrollTop = chat.scrollHeight;
+                    await new Promise(r => setTimeout(r, 15));
+                }
+                text = text.replace(/<thinking>[\s\S]*?<\/thinking>/, '').trim();
             }
 
-            // Display UI message
-            const displayPrompt = state.attachedFile ? `📎 ${state.attachedFile.name}${promptText ? ': ' + promptText : ''}` : promptText;
-            addMsg('user', displayPrompt);
-            
-            const historyTitle = promptText || `File: ${state.attachedFile?.name}`;
-            input.value = '';
-            input.style.height = 'auto';
-            removeFile();
-            state.isBusy = true;
-            send.disabled = true;
+            const contentDiv = document.createElement('div');
+            element.appendChild(contentDiv);
+            const contentWords = text.split(' ');
+            let accumulated = '';
+            for (let word of contentWords) {
+                accumulated += word + ' ';
+                contentDiv.innerHTML = accumulated.replace(/\n/g, '<br>').replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                chat.scrollTop = chat.scrollHeight;
+                await new Promise(r => setTimeout(r, 40));
+            }
+        }
 
-            const fullContext = [{role: 'system', content: state.systemPrompt}, ...state.messages, {role: 'user', content: apiPrompt}];
+        async function talk() {
+            let userPrompt = input.value.trim();
+            if ((!userPrompt && !state.attachedFile) || state.isBusy) return;
+            if (!state.apiKey) { document.getElementById('settingsModal').classList.remove('hidden'); return; }
+
+            const display = state.attachedFile ? `📎 ${state.attachedFile.name}\n${userPrompt}` : userPrompt;
+            const finalPrompt = state.attachedFile ? `[ATTACHMENT: ${state.attachedFile.name}]\nContent: ${state.attachedFile.content}\n\nUser Question: ${userPrompt}` : userPrompt;
+
+            addMsgBubble('user').innerText = display;
+            input.value = ''; input.style.height = 'auto';
+            const originalFile = state.attachedFile;
+            removeFile();
+
+            state.isBusy = true; send.disabled = true;
+            if (state.deepThink) document.getElementById('thinkingText').classList.remove('hidden');
+
+            let persona = state.systemPrompt;
+            if (state.deepThink) persona += "\n\nCRITICAL: You must use <thinking> tags to brainstorm your internal logic before providing a final response.";
 
             try {
                 const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${state.apiKey}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: document.getElementById('modelSelect').value, messages: fullContext, temperature: 0.7 })
+                    body: JSON.stringify({ 
+                        model: document.getElementById('modelSelect').value, 
+                        messages: [{role: 'system', content: persona}, ...state.messages, {role: 'user', content: finalPrompt}]
+                    })
                 });
-
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error?.message || "Inference failed.");
-
+                if (!res.ok) throw new Error(data.error?.message || "Inference failed");
+                
                 const reply = data.choices[0].message.content;
-                addMsg('assistant', reply);
-                state.messages.push({role: 'user', content: apiPrompt}, {role: 'assistant', content: reply});
+                await typewriterEffect(addMsgBubble('assistant'), reply);
                 
-                // History Update
-                const idx = state.history.findIndex(h => h.id === state.currentChatId);
-                const item = { id: state.currentChatId, title: historyTitle.substring(0, 30), messages: state.messages };
-                if(idx > -1) state.history[idx] = item;
-                else state.history.unshift(item);
-                
-                localStorage.setItem('saksham_history_v5', JSON.stringify(state.history));
-                renderHistory();
+                state.messages.push({role: 'user', content: finalPrompt}, {role: 'assistant', content: reply});
+                saveSession(userPrompt || originalFile.name);
             } catch (e) {
-                addMsg('assistant', `<div class="text-red-500 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Error</div><p class="text-xs mt-1">${e.message}</p>`);
+                addMsgBubble('assistant').innerHTML = `<span class="text-red-500 font-bold">System Error:</span> ${e.message}`;
             } finally {
-                state.isBusy = false;
-                send.disabled = false;
+                state.isBusy = false; send.disabled = false;
+                document.getElementById('thinkingText').classList.add('hidden');
             }
         }
 
-        // Global Event Listeners
+        const saveSession = (title) => {
+            const idx = state.history.findIndex(h => h.id === state.currentChatId);
+            const data = { id: state.currentChatId, title: title.substring(0, 30), messages: state.messages };
+            if (idx > -1) state.history[idx] = data; else state.history.unshift(data);
+            localStorage.setItem('saksham_hist_v9', JSON.stringify(state.history));
+            renderHistory();
+        };
+
+        const renderHistory = () => {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            state.history.forEach(h => {
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-xl cursor-pointer text-xs mb-1 truncate ${h.id === state.currentChatId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 font-bold' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`;
+                item.innerHTML = `<i class="far fa-comment mr-2"></i> ${h.title}`;
+                item.onclick = () => { 
+                    state.currentChatId = h.id; state.messages = h.messages; chat.innerHTML = ''; 
+                    state.messages.forEach(m => addMsgBubble(m.role).innerText = m.content); 
+                };
+                list.appendChild(item);
+            });
+        };
+
+        // File handling
+        document.getElementById('attachBtn').onclick = () => fileInput.click();
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                state.attachedFile = { name: file.name, content: re.target.result };
+                document.getElementById('filePreview').classList.remove('hidden');
+                document.getElementById('fileName').innerText = file.name;
+            };
+            reader.readAsText(file);
+        };
+        window.removeFile = () => { state.attachedFile = null; document.getElementById('filePreview').classList.add('hidden'); fileInput.value = ''; };
+
+        // Sidebar & UI
+        document.getElementById('toggleSidebar').onclick = () => document.getElementById('sidebar').classList.toggle('-translate-x-full');
         document.getElementById('themeToggle').onclick = () => {
             state.isDark = !state.isDark;
-            applyTheme();
-            localStorage.setItem('saksham_theme_v5', state.isDark ? 'dark' : 'light');
+            document.documentElement.classList.toggle('dark', state.isDark);
+            localStorage.setItem('saksham_theme_v9', state.isDark ? 'dark' : 'light');
         };
-
-        document.getElementById('toggleSidebar').onclick = toggleSidebar;
+        document.getElementById('newChatBtn').onclick = () => { state.currentChatId = Date.now(); state.messages = []; chat.innerHTML = ''; renderHistory(); };
         
-        document.getElementById('newChatBtn').onclick = () => {
-            state.currentChatId = Date.now();
-            state.messages = [];
-            renderChat();
-            if(window.innerWidth < 1024) toggleSidebar();
-        };
-
+        // Settings Handlers
         document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
-        
+        document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
         document.getElementById('saveSettings').onclick = () => {
             state.apiKey = document.getElementById('apiKeyInput').value.trim();
             state.systemPrompt = document.getElementById('systemPromptInput').value.trim();
-            localStorage.setItem('saksham_api_v5', state.apiKey);
-            localStorage.setItem('saksham_sys_v5', state.systemPrompt);
+            localStorage.setItem('saksham_key_v9', state.apiKey);
+            localStorage.setItem('saksham_sys_v9', state.systemPrompt);
             document.getElementById('settingsModal').classList.add('hidden');
-        };
-
-        document.getElementById('clearAllHistory').onclick = () => {
-            if(confirm('This will permanently delete your chat history. Continue?')) {
-                localStorage.removeItem('saksham_history_v5');
-                state.history = []; state.messages = [];
-                renderHistory(); renderChat();
-            }
         };
 
         input.oninput = () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; };
         send.onclick = talk;
         input.onkeydown = (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); talk(); } };
-
-        // Init
-        document.getElementById('apiKeyInput').value = state.apiKey;
-        document.getElementById('systemPromptInput').value = state.systemPrompt;
         renderHistory();
     </script>
 </body>
