@@ -6,98 +6,118 @@
     <title>Sahu AI Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --bg-color: #020617;
+            --text-color: #f1f5f9;
+            --panel-bg: rgba(15, 23, 42, 0.8);
+            --border-color: rgba(255, 255, 255, 0.05);
+            --bubble-ai: #0f172a;
+        }
+
+        .light-mode {
+            --bg-color: #f8fafc;
+            --text-color: #0f172a;
+            --panel-bg: rgba(255, 255, 255, 0.9);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --bubble-ai: #ffffff;
+        }
+
         body {
             height: 100vh;
             height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
-            background-color: #020617;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             overflow: hidden;
+            transition: background-color 0.3s ease;
         }
+
         .chat-container {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .safe-area-bottom {
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+
         .glass-panel {
-            background: rgba(15, 23, 42, 0.8);
+            background: var(--panel-bg);
             backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid var(--border-color);
         }
+
         .sidebar-transition {
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .deepthink-active {
             color: #10b981 !important;
             border-color: #10b981 !important;
             background: rgba(16, 185, 129, 0.1);
         }
+
+        .ai-bubble {
+            background-color: var(--bubble-ai);
+            border: 1px solid var(--border-color);
+        }
+
         textarea { font-size: 16px !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="text-slate-100 font-sans">
+<body class="font-sans">
 
     <!-- Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm"></div>
 
     <!-- Left Sidebar -->
     <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-slate-900 border-r border-slate-800 z-50 sidebar-transition -translate-x-full flex flex-col">
-        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
             <h2 class="font-bold text-blue-500">Menu</h2>
-            <button id="closeSidebar" class="p-1 text-slate-500 hover:text-white">
+            <button id="closeSidebar" class="p-1 text-slate-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-4 space-y-6">
-            <!-- Model Selection Section -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-900">
             <div>
                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Models Selection</label>
                 <div id="sidebarModelList" class="space-y-1"></div>
             </div>
 
-            <!-- Chat History Section -->
             <div>
                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Chat History</label>
-                <div id="historyList" class="space-y-2">
-                    <p class="text-[11px] text-slate-600 italic px-2">No history yet...</p>
-                </div>
+                <div id="historyList" class="space-y-2"></div>
             </div>
         </div>
         
-        <div class="p-4 border-t border-slate-800">
-            <button id="newChatBtn" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors">New Chat</button>
+        <div class="p-4 border-t border-slate-800 bg-slate-900">
+            <button id="newChatBtn" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors text-white">New Chat</button>
         </div>
     </aside>
 
     <!-- Header -->
-    <header class="h-14 flex-none flex items-center justify-between px-4 bg-slate-950/50 border-b border-slate-800/50 z-30">
+    <header class="h-14 flex-none flex items-center justify-between px-4 bg-slate-950/10 border-b border-slate-800/10 z-30">
         <div class="flex items-center gap-3">
-            <button id="menuBtn" class="p-1 text-slate-400">
+            <button id="menuBtn" class="p-1 opacity-70">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <div class="flex items-center gap-2">
-                <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">S</div>
+                <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-sm text-white">S</div>
                 <h1 id="headerTitle" class="text-sm font-bold">Sahu AI</h1>
             </div>
         </div>
         
         <div class="flex items-center gap-2">
-            <!-- DeepThink Mode -->
-            <button id="deepThinkBtn" class="flex items-center gap-1.5 px-2.5 py-1.5 border border-slate-800 rounded-lg text-slate-400 transition-all">
+            <button id="deepThinkBtn" class="flex items-center gap-1.5 px-2.5 py-1.5 border border-slate-400/20 rounded-lg opacity-70 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
                 <span class="text-[10px] font-bold uppercase hidden sm:inline">DeepThink</span>
             </button>
 
-            <button id="settingsBtn" class="p-2 text-slate-400">
+            <button id="settingsBtn" class="p-2 opacity-70">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 </svg>
@@ -105,24 +125,21 @@
         </div>
     </header>
 
-    <!-- Chat History Area -->
+    <!-- Main Chat -->
     <main id="chatContainer" class="chat-container p-4 space-y-5"></main>
 
-    <!-- Input Section -->
+    <!-- Input -->
     <section class="flex-none glass-panel safe-area-bottom">
-        <div id="attachmentPreview" class="hidden px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-slate-900/30"></div>
+        <div id="attachmentPreview" class="hidden px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar"></div>
         <div class="p-3 max-w-4xl mx-auto flex items-end gap-2">
-            
-            <label class="flex items-center justify-center h-11 w-11 shrink-0 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-400 active:text-blue-400 cursor-pointer">
+            <label class="flex items-center justify-center h-11 w-11 shrink-0 bg-slate-400/10 border border-slate-400/20 rounded-xl opacity-70 cursor-pointer">
                 <input type="file" id="fileInput" class="hidden" multiple>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
             </label>
-
-            <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-500/50">
-                <textarea id="userInput" rows="1" placeholder="Type a message..." class="w-full bg-transparent border-none px-4 py-3 focus:ring-0 outline-none resize-none max-h-32 min-h-[44px] text-sm text-slate-100"></textarea>
+            <div class="flex-1 bg-slate-400/5 border border-slate-400/20 rounded-2xl overflow-hidden focus-within:border-blue-500/50">
+                <textarea id="userInput" rows="1" placeholder="Type a message..." class="w-full bg-transparent border-none px-4 py-3 focus:ring-0 outline-none resize-none max-h-32 min-h-[44px] text-sm"></textarea>
             </div>
-
-            <button id="sendBtn" class="h-11 w-11 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/40 shrink-0">
+            <button id="sendBtn" class="h-11 w-11 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                 </svg>
@@ -130,13 +147,39 @@
         </div>
     </section>
 
-    <!-- Settings Overlay -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-slate-900 w-full max-w-xs p-6 rounded-3xl border border-slate-800">
-            <h2 class="text-lg font-bold mb-5">Mistral Token</h2>
-            <input type="password" id="apiKeyInput" placeholder="Bearer Token..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 mb-6 outline-none text-sm">
-            <button id="saveSettings" class="w-full py-3 bg-blue-600 rounded-xl font-bold text-sm mb-2">Save Token</button>
-            <button id="closeSettings" class="w-full py-3 text-slate-500 text-sm">Cancel</button>
+    <!-- Combined Settings & Theme Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-slate-900 w-full max-w-xs p-6 rounded-3xl border border-slate-800 text-white">
+            <h2 class="text-lg font-bold mb-5 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
+                Settings
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- Theme Section -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Appearance</label>
+                    <button id="themeToggle" class="w-full flex items-center justify-between px-4 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition-colors">
+                        <span class="text-sm">Theme Mode</span>
+                        <div id="themeIcon" class="text-blue-400">
+                            <!-- Icon via JS -->
+                        </div>
+                    </button>
+                </div>
+
+                <!-- API Section -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mistral API Token</label>
+                    <input type="password" id="apiKeyInput" placeholder="Enter Token..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div class="mt-8 space-y-2">
+                <button id="saveSettings" class="w-full py-3 bg-blue-600 rounded-xl font-bold text-sm">Save & Close</button>
+                <button id="closeSettings" class="w-full py-3 text-slate-500 text-sm">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -164,6 +207,7 @@
             apiKey: localStorage.getItem('sahu_mistral_key') || '',
             activeAgent: AGENTS[0],
             deepThink: false,
+            isDarkMode: localStorage.getItem('sahu_theme') !== 'light',
             history: [],
             savedChats: JSON.parse(localStorage.getItem('sahu_chats') || '[]'),
             files: []
@@ -177,6 +221,26 @@
         const historyList = document.getElementById('historyList');
         const headerTitle = document.getElementById('headerTitle');
         const deepThinkBtn = document.getElementById('deepThinkBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // --- Theme Logic ---
+        function updateThemeUI() {
+            if (state.isDarkMode) {
+                document.body.classList.remove('light-mode');
+                themeIcon.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>`;
+                localStorage.setItem('sahu_theme', 'dark');
+            } else {
+                document.body.classList.add('light-mode');
+                themeIcon.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`;
+                localStorage.setItem('sahu_theme', 'light');
+            }
+        }
+
+        themeToggle.onclick = () => {
+            state.isDarkMode = !state.isDarkMode;
+            updateThemeUI();
+        };
 
         // --- Sidebar Logic ---
         function toggleSidebar(show) {
@@ -204,7 +268,7 @@
         function updateHistoryUI() {
             historyList.innerHTML = '';
             if (state.savedChats.length === 0) {
-                historyList.innerHTML = '<p class="text-[11px] text-slate-600 italic px-2">No history yet...</p>';
+                historyList.innerHTML = '<p class="text-[11px] text-slate-600 italic px-2">No history...</p>';
                 return;
             }
             state.savedChats.forEach((chat, idx) => {
@@ -216,11 +280,10 @@
             });
         }
 
-        // --- Chat Logic ---
         function startNewChat() {
             if (state.history.length > 2) saveCurrentChat();
             state.history = [];
-            chatContainer.innerHTML = `<div class="py-10 text-center opacity-20 text-xs font-bold uppercase tracking-widest">Chat with ${state.activeAgent.name}</div>`;
+            chatContainer.innerHTML = `<div class="py-10 text-center opacity-20 text-xs font-bold uppercase tracking-widest">New Session: ${state.activeAgent.name}</div>`;
         }
 
         function saveCurrentChat() {
@@ -246,11 +309,10 @@
             const wrap = document.createElement('div');
             wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
             const bubble = document.createElement('div');
-            bubble.className = `max-w-[85%] p-3.5 rounded-2xl text-[13px] leading-relaxed ${role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'}`;
+            bubble.className = `max-w-[85%] p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm ${role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'ai-bubble text-inherit rounded-tl-none'}`;
             
-            // Simulation of DeepThink visual style
             if (role === 'assistant' && state.deepThink) {
-                bubble.classList.add('border-emerald-500/30', 'bg-emerald-950/20');
+                bubble.classList.add('border-emerald-500/30', 'bg-emerald-500/5');
             }
             
             bubble.textContent = text;
@@ -270,7 +332,6 @@
             userInput.value = '';
             userInput.style.height = '44px';
             state.files = [];
-            document.getElementById('attachmentPreview').classList.add('hidden');
 
             try {
                 const res = await fetch('https://api.mistral.ai/v1/conversations', {
@@ -283,11 +344,11 @@
                 state.history.push({ role: "user", content: prompt }, { role: "assistant", content: reply });
                 appendMsg('assistant', reply);
             } catch (e) {
-                appendMsg('assistant', "⚠️ Connection Error");
+                appendMsg('assistant', "⚠️ Error: Connection failed.");
             }
         }
 
-        // --- Listeners ---
+        // --- Events ---
         document.getElementById('menuBtn').onclick = () => toggleSidebar(true);
         document.getElementById('closeSidebar').onclick = () => toggleSidebar(false);
         overlay.onclick = () => toggleSidebar(false);
@@ -301,7 +362,10 @@
         document.getElementById('sendBtn').onclick = onSend;
         userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); } };
         
-        document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
+        document.getElementById('settingsBtn').onclick = () => {
+            document.getElementById('apiKeyInput').value = state.apiKey;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        };
         document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
         document.getElementById('saveSettings').onclick = () => {
             state.apiKey = document.getElementById('apiKeyInput').value.trim();
@@ -312,8 +376,10 @@
         userInput.oninput = function() { this.style.height = '44px'; this.style.height = this.scrollHeight + 'px'; };
 
         // Init
+        updateThemeUI();
         initSidebarModels();
         updateHistoryUI();
+        headerTitle.textContent = state.activeAgent.name;
     </script>
 </body>
 </html>
