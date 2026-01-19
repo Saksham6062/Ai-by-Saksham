@@ -163,9 +163,7 @@
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Appearance</label>
                     <button id="themeToggle" class="w-full flex items-center justify-between px-4 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition-colors">
                         <span class="text-sm">Theme Mode</span>
-                        <div id="themeIcon" class="text-blue-400">
-                            <!-- Icon via JS -->
-                        </div>
+                        <div id="themeIcon" class="text-blue-400"></div>
                     </button>
                 </div>
 
@@ -203,9 +201,19 @@
             { id: "ag_019bd615fbb872f5a2f5dcaaa3de7c80", name: "Sahu Code 3 Pro" }
         ];
 
+        // --- Configuration ---
+        const DEFAULT_AGENT_ID = "ag_019bd5e9195c72c591ae1de889616331"; // Sahu 3 Pro
+
+        function getInitialAgent() {
+            const saved = localStorage.getItem('sahu_active_agent_id');
+            const found = AGENTS.find(a => a.id === saved);
+            if (found) return found;
+            return AGENTS.find(a => a.id === DEFAULT_AGENT_ID) || AGENTS[0];
+        }
+
         let state = {
             apiKey: localStorage.getItem('sahu_mistral_key') || '',
-            activeAgent: AGENTS[0],
+            activeAgent: getInitialAgent(),
             deepThink: false,
             isDarkMode: localStorage.getItem('sahu_theme') !== 'light',
             history: [],
@@ -256,6 +264,7 @@
                 btn.textContent = agent.name;
                 btn.onclick = () => {
                     state.activeAgent = agent;
+                    localStorage.setItem('sahu_active_agent_id', agent.id);
                     headerTitle.textContent = agent.name;
                     toggleSidebar(false);
                     initSidebarModels();
@@ -283,11 +292,12 @@
         function startNewChat() {
             if (state.history.length > 2) saveCurrentChat();
             state.history = [];
-            chatContainer.innerHTML = `<div class="py-10 text-center opacity-20 text-xs font-bold uppercase tracking-widest">New Session: ${state.activeAgent.name}</div>`;
+            chatContainer.innerHTML = `<div class="py-10 text-center opacity-20 text-xs font-bold uppercase tracking-widest">Chat: ${state.activeAgent.name}</div>`;
         }
 
         function saveCurrentChat() {
-            const title = state.history[0]?.content?.substring(0, 30) + '...';
+            const firstMsg = state.history.find(m => m.role === 'user');
+            const title = firstMsg ? firstMsg.content.substring(0, 30) + '...' : 'New Chat';
             state.savedChats.unshift({ title, agent: state.activeAgent.id, history: [...state.history] });
             if (state.savedChats.length > 20) state.savedChats.pop();
             localStorage.setItem('sahu_chats', JSON.stringify(state.savedChats));
@@ -344,7 +354,7 @@
                 state.history.push({ role: "user", content: prompt }, { role: "assistant", content: reply });
                 appendMsg('assistant', reply);
             } catch (e) {
-                appendMsg('assistant', "⚠️ Error: Connection failed.");
+                appendMsg('assistant', "⚠️ Connection failed.");
             }
         }
 
@@ -380,6 +390,7 @@
         initSidebarModels();
         updateHistoryUI();
         headerTitle.textContent = state.activeAgent.name;
+        startNewChat();
     </script>
 </body>
 </html>
