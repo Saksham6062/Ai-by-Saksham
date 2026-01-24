@@ -422,6 +422,42 @@ const SAHU_MOE = {
   el.innerHTML = `<i class="fas ${icon}"></i> ${tool} executing`;
   chat.appendChild(el);
 }
+        function createExpertGrid(experts) {
+  const chat = document.getElementById('chat-container');
+
+  const grid = document.createElement('div');
+  grid.className =
+    "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4";
+
+  const streams = {};
+
+  experts.forEach((expert, idx) => {
+    const safeId = `exp-${idx}-${btoa(expert).replace(/=/g, '')}`;
+
+    const card = document.createElement('div');
+    card.className =
+      "border border-theme rounded-2xl p-4 bg-white/60 dark:bg-slate-800/60";
+
+    card.innerHTML = `
+      <div class="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+        Expert ${idx + 1}
+      </div>
+      <div class="text-[11px] text-slate-400 truncate mb-2">
+        ${expert}
+      </div>
+      <div id="${safeId}" class="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-200">
+        ⏳ Thinking…
+      </div>
+    `;
+
+    grid.appendChild(card);
+    streams[expert] = card.querySelector(`#${safeId}`);
+  });
+
+  chat.appendChild(grid);
+  chat.scrollTop = chat.scrollHeight;
+  return streams;
+}
 
         async function sendMessage() {
   const input = document.getElementById('user-input');
@@ -453,49 +489,56 @@ const SAHU_MOE = {
         stream: true,
         messages
       };
-
-      const res = await fetch(
-        "https://router.huggingface.co/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-
-      let buffer = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-          if (line.includes("[DONE]")) break;
-
-          try {
-            const json = JSON.parse(line.replace("data:", ""));
-            const token = json.choices?.[0]?.delta?.content;
-            if (token) {
-              buffer += token;
-              expertStreams[expert].textContent = buffer;
-              expertOutputs[expert] = buffer;
-            }
-          } catch {}
-        }
-      }
-    })
+     try {
+  const res = await fetch(
+    "https://router.huggingface.co/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: expert,
+        messages,
+        stream: true
+      })
+    }
   );
 
+  if (!res.body) {
+    expertStreams[expert].textContent = "⚠️ Streaming not supported";
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    for (const line of chunk.split("\n")) {
+      if (!line.startsWith("data:")) continue;
+      if (line.includes("[DONE]")) break;
+
+      try {
+        const json = JSON.parse(line.replace("data:", ""));
+        const token = json.choices?.[0]?.delta?.content;
+        if (token) {
+          buffer += token;
+          expertStreams[expert].textContent = buffer;
+          expertOutputs[expert] = buffer;
+        }
+      } catch {}
+    }
+  }
+} catch (err) {
+  expertStreams[expert].textContent = "❌ Expert failed to respond";
+}
+      
   /* ---- AGGREGATOR FINAL ANSWER ---- */
   const finalPrompt = `
 You are the final synthesizer.
