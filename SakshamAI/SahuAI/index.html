@@ -405,7 +405,25 @@ const SAHU_MOE = {
             chat.appendChild(wrap);
             chat.scrollTop = chat.scrollHeight;
         }
-async function sendMessage() {
+        function renderTool(tool) {
+  const chat = document.getElementById('chat-container');
+
+  const el = document.createElement('div');
+  el.className =
+    "flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest " +
+    "text-indigo-500 bg-indigo-500/10 border border-indigo-500/20 " +
+    "rounded-xl px-4 py-3";
+
+  const icon =
+    tool === "searching" ? "fa-search" :
+    tool === "planning" ? "fa-diagram-project" :
+    "fa-brain";
+
+  el.innerHTML = `<i class="fas ${icon}"></i> ${tool} executing`;
+  chat.appendChild(el);
+}
+
+        async function sendMessage() {
   const input = document.getElementById('user-input');
   const text = input.value.trim();
   if (!text || !apiKey || !selectedModelId) return;
@@ -414,33 +432,81 @@ async function sendMessage() {
   appendMessage('user', text);
   messages.push({ role: 'user', content: text });
 
-  // Create streaming bubble
-  const chat = document.getElementById('chat-container');
-  const wrap = document.createElement('div');
-  wrap.className = 'flex justify-start';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble-ai rounded-bl-none p-4 text-sm max-w-[75%]';
-  bubble.innerHTML = `<div class="text-[9px] uppercase opacity-50 mb-1">assistant</div><div id="stream-text"></div>`;
-
-  wrap.appendChild(bubble);
-  chat.appendChild(wrap);
-  chat.scrollTop = chat.scrollHeight;
-
   const moe = SAHU_MOE[selectedModelId];
+  const chat = document.getElementById('chat-container');
 
-  const payload = {
-    model: moe.aggregator,
-    stream: true,
-    messages,
-    extra: {
-      moe: {
-        experts: moe.experts,
-        tools: moe.tools,
-        behavior: moe.behavior
+  /* ---- TOOLS ---- */
+  if (moe.tools?.length) {
+    moe.tools.forEach(renderTool);
+  }
+
+  /* ---- EXPERT GRID ---- */
+  const expertStreams = createExpertGrid(moe.experts);
+
+  const expertOutputs = {};
+
+  /* ---- PARALLEL EXPERT CALLS ---- */
+  await Promise.all(
+    moe.experts.map(async (expert) => {
+      const payload = {
+        model: expert,
+        stream: true,
+        messages
+      };
+
+      const res = await fetch(
+        "https://router.huggingface.co/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          if (line.includes("[DONE]")) break;
+
+          try {
+            const json = JSON.parse(line.replace("data:", ""));
+            const token = json.choices?.[0]?.delta?.content;
+            if (token) {
+              buffer += token;
+              expertStreams[expert].textContent = buffer;
+              expertOutputs[expert] = buffer;
+            }
+          } catch {}
+        }
       }
-    }
-  };
+    })
+  );
+
+  /* ---- AGGREGATOR FINAL ANSWER ---- */
+  const finalPrompt = `
+You are the final synthesizer.
+Merge, resolve conflicts, and produce the best answer.
+
+${Object.entries(expertOutputs)
+  .map(([k, v], i) => `Expert ${i + 1} (${k}):\n${v}`)
+  .join("\n\n")}
+`;
+
+  appendMessage("assistant", "🧠 Synthesizing final answer…");
 
   const res = await fetch(
     "https://router.huggingface.co/v1/chat/completions",
@@ -450,41 +516,19 @@ async function sendMessage() {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        model: moe.aggregator,
+        messages: [{ role: "user", content: finalPrompt }]
+      })
     }
   );
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let finalText = "";
-  const streamEl = bubble.querySelector('#stream-text');
+  const json = await res.json();
+  const finalText = json.choices?.[0]?.message?.content || "No response";
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split("\n");
-
-    for (const line of lines) {
-      if (!line.startsWith("data:")) continue;
-      if (line.includes("[DONE]")) break;
-
-      try {
-        const json = JSON.parse(line.replace("data:", ""));
-        const token = json.choices?.[0]?.delta?.content;
-        if (token) {
-          finalText += token;
-          streamEl.textContent = finalText;
-          chat.scrollTop = chat.scrollHeight;
-        }
-      } catch {}
-    }
-  }
-
+  appendMessage("assistant", finalText);
   messages.push({ role: "assistant", content: finalText });
 }
-      
             function updateHistory(text) {
             const items = document.getElementById('history-items');
             if (items.innerHTML.includes('Empty')) items.innerHTML = '';
