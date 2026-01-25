@@ -181,24 +181,7 @@
             <span class="text-xs font-bold uppercase text-slate-400 tracking-widest">Settings</span>
             <button onclick="toggleSidebar('config-sidebar')" class="lg:hidden p-2"><i class="fas fa-times"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-            <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">Active Mode</label>
-                <div class="grid grid-cols-1 gap-2">
-                    <button onclick="setMode('standard')" id="mode-standard" class="mode-btn active w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
-                        <i class="fas fa-comment-alt"></i> Standard
-                    </button>
-                    <button onclick="setMode('deepthink')" id="mode-deepthink" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
-                        <i class="fas fa-brain"></i> Deep Think
-                    </button>
-                    <button onclick="setMode('canva')" id="mode-canva" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
-                        <i class="fas fa-palette"></i> Canva
-                    </button>
-                    <button onclick="setMode('research')" id="mode-research" class="mode-btn w-full text-left p-3 rounded-xl text-xs font-bold border-theme border flex items-center gap-3">
-                        <i class="fas fa-search"></i> Deep Research
-                    </button>
-                </div>
-            </div>
+   
             <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">Model Switcher</label>
                 <div id="model-list" class="space-y-2">
@@ -351,12 +334,7 @@ const SAHU_MOE = {
             document.getElementById('config-sidebar').classList.add('translate-x-full');
             document.getElementById('overlay').classList.add('hidden');
         }
-
-        function setMode(mode) {
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`mode-${mode}`).classList.add('active');
-            document.getElementById('display-mode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1) + ' Mode';
-        }
+        // DO NOTHING – MoE selection controls behavior
         
        async function fetchModels() {
   const list = document.getElementById('model-list');
@@ -482,15 +460,10 @@ const SAHU_MOE = {
   const expertOutputs = {};
 
   /* ---- PARALLEL EXPERT CALLS ---- */
-  await Promise.all(
-    moe.experts.map(async (expert) => {
-      const payload = {
-        model: expert,
-        stream: true,
-        messages
-      };
-     try {
-  const res = await fetch(
+   await Promise.all(
+  moe.experts.map(async (expert) => {
+    try {
+      const res = await fetch(
     "https://router.huggingface.co/v1/chat/completions",
     {
       method: "POST",
@@ -528,10 +501,13 @@ const SAHU_MOE = {
         const json = JSON.parse(line.replace("data:", ""));
         const token = json.choices?.[0]?.delta?.content;
         if (token) {
-          buffer += token;
-          expertStreams[expert].textContent = buffer;
-          expertOutputs[expert] = buffer;
-        }
+  buffer += token;
+
+  const words = buffer.split(/\s+/);
+  expertStreams[expert].textContent = words.join(" ");
+
+  expertOutputs[expert] = buffer;
+}
       } catch {}
     }
   }
@@ -549,8 +525,7 @@ ${Object.entries(expertOutputs)
   .join("\n\n")}
 `;
 
-  appendMessage("assistant", "🧠 Synthesizing final answer…");
-
+  const finalStream = createExpertGrid([moe.aggregator])[moe.aggregator];
   const res = await fetch(
     "https://router.huggingface.co/v1/chat/completions",
     {
