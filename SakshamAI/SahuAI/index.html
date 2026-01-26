@@ -2,582 +2,1612 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saksham AI Studio </title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saksham AI Studio – SAHU 1 MoE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        
         :root {
-            --bg-main: #ffffff;
-            --bg-side: #f9fafb;
-            --border: #e5e7eb;
-            --text-main: #1d1d1f;
-            --accent: #4f46e5;
-        }
-
-        .dark-mode {
-            --bg-main: #0f172a;
-            --bg-side: #1e293b;
-            --border: #334155;
-            --text-main: #f8fafc;
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
             --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --border: #333;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
         }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            overflow: hidden; /* Prevents whole page scroll */
-            transition: background-color 0.2s;
-        }
-
-        .sidebar { background-color: var(--bg-side); border-color: var(--border); }
-        .border-theme { border-color: var(--border); }
         
-        .chat-bubble-ai {
-            background-color: var(--bg-side);
+        .light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --bg-tertiary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #d1d5db;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .sidebar {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+        }
+        
+        .chat-container {
+            background-color: var(--bg-primary);
+        }
+        
+        .message-user {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        }
+        
+        .message-assistant {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .expert-card {
+            background-color: var(--bg-secondary);
             border: 1px solid var(--border);
         }
-
-        .mode-btn.active {
-            background-color: var(--accent) !important;
-            color: white !important;
-        }
-
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         
-        .panel-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Ensuring the input stays at the bottom */
-        #main-chat-wrapper {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            position: relative;
+        .expert-card:hover {
+            border-color: var(--accent);
         }
-
-        #chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 120px; /* Space for the floating input bar */
+        
+        .tool-banner {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-left: 3px solid var(--accent);
         }
-
-        #input-area-sticky {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            background: linear-gradient(to top, var(--bg-main) 70%, transparent);
-            pointer-events: none; /* Allows clicking through the gradient area */
+        
+        .input-area {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
         }
-
-        #input-container-inner {
-            pointer-events: auto; /* Re-enables clicks for the actual bar */
-            max-width: 56rem;
-            margin: 0 auto;
+        
+        .input-area:focus-within {
+            border-color: var(--accent);
         }
+        
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .dropdown-menu {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .conversation-item {
+            background-color: transparent;
+            transition: all 0.2s;
+        }
+        
+        .conversation-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .conversation-item.active {
+            background-color: var(--bg-tertiary);
+            border-left: 2px solid var(--accent);
+        }
+        
+        .expert-status {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        .expert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        
+        .code-block {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            background-color: #2d2d2d;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        pre code {
+            display: block;
+            padding: 12px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .mode-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .mode-deepthink { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .mode-research { background: linear-gradient(135deg, #22c55e, #10b981); }
+        .mode-code { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .mode-fast { background: linear-gradient(135deg, #06b6d4, #0ea5e9); }
+        .mode-chat { background: linear-gradient(135deg, #ec4899, #f43f5e); }
     </style>
 </head>
-<body class="flex">
-
-    <!-- Mobile Overlay -->
-    <div id="overlay" onclick="closeSidebars()" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 hidden lg:hidden"></div>
-
-    <!-- Left Sidebar: History -->
-    <aside id="history-sidebar" class="w-64 sidebar border-r flex flex-col fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 panel-transition">
-        <div class="p-6 flex items-center justify-between border-b border-theme">
-            <span class="font-bold text-lg tracking-tight">Saksham AI Studio</span>
-            <button onclick="toggleSidebar('history-sidebar')" class="lg:hidden p-2"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-4">
-            <button onclick="window.location.reload()" class="w-full py-3 rounded-xl border-theme border flex items-center justify-center gap-2 text-sm font-semibold hover:bg-black/5 transition-all">
-                <i class="fas fa-plus"></i> New Conversation
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto px-4 custom-scrollbar" id="history-list">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-3 px-2">History</div>
-            <div id="history-items" class="space-y-1">
-                <div class="p-3 text-xs text-slate-400 italic text-center">Empty</div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-theme">
-            <button onclick="openSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-black/5 text-sm font-medium">
-                <i class="fas fa-key text-indigo-500"></i> API Configure Settings
-            </button>
-        </div>
-    </aside>
-
-    <!-- Main Chat Workspace -->
-    <div id="main-chat-wrapper">
-        <!-- Header -->
-        <header class="h-16 flex items-center justify-between px-6 border-b border-theme shrink-0 z-20">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar('history-sidebar')" class="p-2 -ml-2 text-slate-400 hover:text-slate-600">
-                    <i class="fas fa-bars-staggered"></i>
-                </button>
-                <div class="flex flex-col">
-                    <h2 id="display-model" class="text-xs font-bold uppercase text-indigo-500 tracking-tighter">Initializing...</h2>
-                    <span id="display-mode" class="text-[10px] text-slate-400 font-semibold">Standard Mode</span>
+<body class="h-screen overflow-hidden">
+    <div id="app" class="flex h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 flex flex-col h-full transition-all duration-300">
+            <!-- Logo -->
+            <div class="p-4 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg">SAHU 1</h1>
+                        <p class="text-xs text-[var(--text-secondary)]">Mixture of Experts</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-full border-theme border hover:bg-black/5 transition-all">
-                    <i id="theme-icon" class="fas fa-sun text-amber-500"></i>
+            <!-- New Chat Button -->
+            <div class="p-3">
+                <button onclick="createNewChat()" class="w-full py-3 px-4 rounded-xl border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition flex items-center gap-3">
+                    <i class="fas fa-plus"></i>
+                    <span>New Chat</span>
                 </button>
-                <button onclick="toggleSidebar('config-sidebar')" class="p-2 text-slate-400 hover:text-slate-600">
-                    <i class="fas fa-sliders-h"></i>
+            </div>
+            
+            <!-- SAHU Mode Selector -->
+            <div class="px-3 pb-3">
+                <label class="text-xs text-[var(--text-secondary)] mb-2 block">SAHU Mode</label>
+                <select id="sahuMode" onchange="changeSahuMode(this.value)" class="w-full p-2 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm cursor-pointer">
+                    <option value="chat">💬 Sahu 1 Chat</option>
+                    <option value="fast">⚡ Sahu 1 Fast</option>
+                    <option value="deepthink">🧠 Sahu 1 DeepThink</option>
+                    <option value="research">🔍 Sahu 1 Deep Research</option>
+                    <option value="code">💻 Sahu Code 1</option>
+                </select>
+            </div>
+            
+            <!-- Conversation History -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-2">
+                <p class="text-xs text-[var(--text-secondary)] px-2 py-2">Recent Conversations</p>
+                <div id="conversationList" class="space-y-1">
+                    <!-- Conversations will be rendered here -->
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer -->
+            <div class="p-3 border-t border-[var(--border)]">
+                <button onclick="clearAllChats()" class="w-full py-2 px-3 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition flex items-center gap-2">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Clear All Chats</span>
                 </button>
             </div>
-        </header>
-
-        <!-- Scrollable Messages -->
-        <div id="chat-container" class="custom-scrollbar p-4 lg:p-10 space-y-6">
-            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
-                <div class="w-16 h-16 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-500 mb-6">
-                    <i class="fas fa-wand-magic-sparkles text-2xl"></i>
-                </div>
-                <h3 class="text-2xl font-bold mb-3">Saksham AI Studio</h3>
-                <p class="text-sm text-slate-400 mb-8 leading-relaxed">Welcome to Salsham AI Studio. You can explore diffrent AI models</p>
-            </div>
-        </div>
-
-        <!-- Sticky Bottom Bar -->
-        <div id="input-area-sticky">
-            <div id="input-container-inner">
-                <div class="bg-white dark:bg-slate-800 border-theme border rounded-[1.5rem] shadow-2xl p-2 flex items-end gap-2 ring-1 ring-black/5">
-                    <button onclick="document.getElementById('file-input').click()" class="p-3 text-slate-400 hover:text-indigo-500 transition-colors">
-                        <i class="fas fa-plus"></i>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full">
+            <!-- Top Bar -->
+            <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition lg:hidden">
+                        <i class="fas fa-bars"></i>
                     </button>
-                    <input type="file" id="file-input" class="hidden" multiple onchange="handleFiles(this)">
+                    <div id="currentChatTitle" class="font-medium">New Chat</div>
+                    <span id="currentModeBadge" class="mode-badge mode-chat">Chat</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <!-- Provider Selector -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('providerDropdown')" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm">
+                            <i class="fas fa-server"></i>
+                            <span id="currentProvider">Hugging Face</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="providerDropdown" class="dropdown-menu absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl z-50 hidden">
+                            <div class="p-2">
+                                <button onclick="selectProvider('huggingface')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span> Hugging Face
+                                </button>
+                                <button onclick="selectProvider('openrouter')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-green-500"></span> OpenRouter
+                                </button>
+                                <button onclick="selectProvider('togetherai')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> TogetherAI
+                                </button>
+                                <button onclick="selectProvider('groq')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-orange-500"></span> Groq
+                                </button>
+                                <button onclick="selectProvider('ollama')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Ollama
+                                </button>
+                                <button onclick="selectProvider('llmstats')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-pink-500"></span> LLM Stats
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <textarea id="user-input" rows="1" placeholder="Type your message..." 
-                        class="flex-1 bg-transparent border-none py-3 px-1 text-sm sm:text-base focus:outline-none resize-none min-h-[46px] max-h-[160px] leading-relaxed"
-                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
+                        <i id="themeIcon" class="fas fa-moon"></i>
+                    </button>
                     
-                    <button id="send-btn" onclick="sendMessage()" class="p-3.5 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex-shrink-0">
-                        <i class="fas fa-paper-plane text-sm"></i>
+                    <!-- Settings -->
+                    <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
+                        <i class="fas fa-cog"></i>
                     </button>
                 </div>
-                <!-- File Preview -->
-                <div id="attachment-preview" class="hidden flex gap-2 mt-3 px-2 overflow-x-auto pb-1"></div>
+            </header>
+            
+            <!-- Chat Area -->
+            <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+                        <i class="fas fa-brain text-white text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Welcome to SAHU 1 MoE</h2>
+                    <p class="text-[var(--text-secondary)] mb-8 max-w-md">
+                        A Mixture of Experts system that orchestrates multiple AI models to provide comprehensive, well-reasoned responses.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
+                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center mb-3 mx-auto">
+                                <i class="fas fa-brain text-indigo-400"></i>
+                            </div>
+                            <h3 class="font-medium mb-1">DeepThink</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Extended reasoning with conflict resolution</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-3 mx-auto">
+                                <i class="fas fa-search text-green-400"></i>
+                            </div>
+                            <h3 class="font-medium mb-1">Deep Research</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Search, summarize, and cite sources</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+                            <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center mb-3 mx-auto">
+                                <i class="fas fa-code text-orange-400"></i>
+                            </div>
+                            <h3 class="font-medium mb-1">Code</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Code reasoning, planning & synthesis</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Messages Container -->
+                <div id="messagesContainer" class="max-w-4xl mx-auto space-y-6 hidden">
+                    <!-- Messages will be rendered here -->
+                </div>
             </div>
-        </div>
+            
+            <!-- Input Area -->
+            <div class="p-4 border-t border-[var(--border)]">
+                <div class="max-w-4xl mx-auto">
+                    <div class="input-area rounded-2xl p-3 flex items-end gap-3">
+                        <button onclick="document.getElementById('fileInput').click()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-[var(--text-secondary)]">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)" multiple>
+                        
+                        <div class="flex-1">
+                            <div id="filePreview" class="hidden mb-2 flex flex-wrap gap-2"></div>
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Message SAHU 1..." 
+                                class="w-full bg-transparent resize-none outline-none max-h-32"
+                                rows="1"
+                                onkeydown="handleKeyDown(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                        </div>
+                        
+                        <button onclick="sendMessage()" id="sendButton" class="p-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)] text-center mt-2">
+                        SAHU 1 orchestrates multiple experts. Responses are buffered for quality.
+                    </p>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <!-- Right Sidebar: Config -->
-    <aside id="config-sidebar" class="w-72 sidebar border-l flex flex-col fixed lg:static inset-y-0 right-0 z-40 translate-x-full lg:translate-x-0 panel-transition">
-        <div class="p-6 border-b border-theme flex items-center justify-between">
-            <span class="text-xs font-bold uppercase text-slate-400 tracking-widest">Settings</span>
-            <button onclick="toggleSidebar('config-sidebar')" class="lg:hidden p-2"><i class="fas fa-times"></i></button>
-        </div>
-   
-            <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">Model Switcher</label>
-                <div id="model-list" class="space-y-2">
-                    <div class="text-xs text-slate-400 animate-pulse">Syncing models...</div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="modal-content w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden mx-4">
+            <div class="p-4 border-b border-[var(--border)] flex items-center justify-between">
+                <h2 class="text-lg font-bold">Settings</h2>
+                <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+                <!-- API Keys Section -->
+                <div>
+                    <h3 class="font-medium mb-4 flex items-center gap-2">
+                        <i class="fas fa-key text-[var(--accent)]"></i>
+                        API Keys
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-2">Hugging Face API Key</label>
+                            <input type="password" id="apiKey_huggingface" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="hf_...">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2">OpenRouter API Key</label>
+                            <input type="password" id="apiKey_openrouter" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="sk-or-...">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2">TogetherAI API Key</label>
+                            <input type="password" id="apiKey_togetherai" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2">Groq API Key</label>
+                            <input type="password" id="apiKey_groq" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="gsk_...">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Endpoints Section -->
+                <div>
+                    <h3 class="font-medium mb-4 flex items-center gap-2">
+                        <i class="fas fa-link text-[var(--accent)]"></i>
+                        Endpoints
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-2">Ollama Endpoint</label>
+                            <input type="text" id="endpoint_ollama" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="http://localhost:11434">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2">LLM Stats Endpoint</label>
+                            <input type="text" id="endpoint_llmstats" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="https://...">
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </aside>
-
-    <!-- Settings Modal -->
-    <div id="api-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-theme border">
-            <h3 class="text-xl font-bold mb-2">API Key</h3>
-            <p class="text-xs text-slate-400 mb-6">Your key is stored locally in this session only.</p>
-            <input type="password" id="api-key-input" placeholder="sk-or-v1-..." class="w-full bg-slate-50 dark:bg-slate-800 border-theme border p-4 rounded-2xl text-sm mb-6 outline-none focus:ring-2 ring-indigo-500/20">
-            <button onclick="saveApiKey()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30">Save Configuration</button>
-            <button onclick="closeSettings()" class="w-full py-2 text-xs text-slate-400 mt-4">Close Settings</button>
+            <div class="p-4 border-t border-[var(--border)] flex justify-end gap-3">
+                <button onclick="closeSettings()" class="px-4 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">Cancel</button>
+                <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition text-white">Save Settings</button>
+            </div>
         </div>
     </div>
 
     <script>
-      
-      /* ===================== SAHU MoE ===================== */
 
-const SAHU_MOE = {
-  "Sahu 1 DeepThink": {
-    tools: ["thinking"],
-    experts: [
-      "deepseek-ai/DeepSeek-R1",
-      "openai/gpt-oss-120b",
-      "deepseek-ai/DeepSeek-V3.2",
-      "moonshotai/Kimi-K2-Thinking",
-      "Qwen/Qwen3-235B-A22B-Thinking-2507-FP8",
-      "zai-org/GLM-4.7",
-      "mistralai/Ministral-3-14B-Reasoning-2512",
-      "microsoft/Phi-4-reasoning-plus",
-      "google/gemma-3n-E4B-it",
-      "minimax/m2.1-preview"
-    ],
-    aggregator: "zai-org/GLM-4.7",
-    behavior: "extended-thinking"
-  },
+        function delay(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}
 
-  "Sahu 1 Deep Research": {
-    tools: ["searching"],
-    experts: [
-      "openai/gpt-oss-20b",
-      "deepseek-ai/DeepSeek-V3.2",
-      "moonshotai/Kimi-K2-Instruct",
-      "zai-org/GLM-4.7",
-      "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
-      "mistralai/Mistral-7B-Instruct-v0.3",
-      "XiaomiMiMo/MiMo-V2-Flash",
-      "google/gemma-3n-E4B-it"
-    ],
-    aggregator: "XiaomiMiMo/MiMo-V2-Flash",
-    behavior: "search-and-synthesize"
-  },
+function escapeHtml(str = '') {
+  return str.replace(/[&<>"']/g, m =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[m])
+  );
+}
 
-  "Sahu Code 1": {
-    tools: ["thinking", "searching", "planning"],
-    experts: [
-      "openai/gpt-oss-120b",
-      "deepseek-ai/DeepSeek-V3.2",
-      "moonshotai/Kimi-K2-Thinking",
-      "Qwen/Qwen3-Coder-480B-A35B-Instruct",
-      "Qwen/Qwen3-235B-A22B-Thinking-2507-FP8",
-      "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct",
-      "zai-org/GLM-4.7",
-      "mistralai/Devstral-2-123B-Instruct-2512",
-      "mistralai/Codestral-22B-v0.1"
-    ],
-    aggregator: "zai-org/GLM-4.7",
-    behavior: "code-reason-plan"
-  },
+function formatMessage(text = '') {
+  return escapeHtml(text).replace(/\n/g, '<br>');
+}
 
-  "Sahu 1 Fast": {
-    tools: [],
-    experts: [
-      "openai/gpt-oss-20b",
-      "deepseek-ai/DeepSeek-V3.2",
-      "moonshotai/Kimi-K2-Instruct",
-      "zai-org/GLM-4.7-Flash",
-      "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
-      "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-      "XiaomiMiMo/MiMo-V2-Flash",
-      "google/gemma-3n-E4B-it"
-    ],
-    aggregator: "XiaomiMiMo/MiMo-V2-Flash",
-    behavior: "no-thinking"
-  },
+function renderMessages(messages) {
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  const container = document.getElementById('messagesContainer');
+  container.classList.remove('hidden');
+  container.innerHTML = '';
+  messages.forEach(m => appendMessage(m));
+}
 
-  "Sahu 1 Chat": {
-    tools: [],
-    experts: [
-      "openai/gpt-oss-20b",
-      "deepseek-ai/DeepSeek-V3.2",
-      "moonshotai/Kimi-K2-Instruct",
-      "zai-org/GLM-4.7",
-      "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
-      "mistralai/Mistral-7B-Instruct-v0.3",
-      "XiaomiMiMo/MiMo-V2-Flash",
-      "google/gemma-3n-E4B-it"
-    ],
-    aggregator: "XiaomiMiMo/MiMo-V2-Flash",
-    behavior: "general-chat"
-  },
+function renderFinalAnswer(answer, container) {
+    let i = 0;
+const interval = setInterval(() => {
+  div.querySelector('.prose').innerHTML =
+    formatMessage(answer.slice(0, i++));
+  if (i > answer.length) clearInterval(interval);
+}, 15);
+  const div = document.createElement('div');
+  div.className = 'fade-in';
+  div.innerHTML = `
+    <div class="flex justify-start">
+      <div class="message-assistant rounded-2xl px-4 py-3 max-w-3xl">
+        <div class="prose prose-invert max-w-none">${formatMessage(answer)}</div>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+}
 
-  "Sahu 1 Agent": {
-    tools: [],
-    experts: [
-      "Sahu 1 DeepThink",
-      "Sahu Code 1",
-      "Sahu 1 Deep Research",
-      "Sahu 1 Chat",
-      "Sahu 1 Fast"
-    ],
-    aggregator: "auto",
-    behavior: "auto-routing"
-  }
-};
-        let apiKey = '';
-        let selectedModelId = null;
-        let messages = [];
-        let isDarkMode = false;
-
-        function toggleTheme() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode', isDarkMode);
-            document.getElementById('theme-icon').className = isDarkMode ? 'fas fa-moon text-indigo-400' : 'fas fa-sun text-amber-500';
-        }
-
-        function toggleSidebar(id) {
-            const el = document.getElementById(id);
-            const overlay = document.getElementById('overlay');
-            const isLeft = id === 'history-sidebar';
-            const hideClass = isLeft ? '-translate-x-full' : 'translate-x-full';
+function showToast(msg) {
+  alert(msg); // replace later with real toast UI
+}
+        // ==========================================
+        // SAHU 1 MoE - CONFIGURATION
+        // ==========================================
+        
+        const SAHU_MODES = {
+            deepthink: {
+                name: 'Sahu 1 DeepThink',
+                icon: '🧠',
+                badge: 'mode-deepthink',
+                tools: ['thinking'],
+                experts: [
+                    { name: 'DeepSeek R1', id: 'deepseek-r1' },
+                    { name: 'GPT OSS 120B', id: 'gpt-oss-120b' },
+                    { name: 'DeepSeek V3.2 Thinking', id: 'deepseek-v3-thinking' },
+                    { name: 'Kimi K2 Thinking', id: 'kimi-k2-thinking' },
+                    { name: 'Qwen 3 Max Preview', id: 'qwen-3-max' },
+                    { name: 'GLM 4.7 Thinking', id: 'glm-4-7-thinking' },
+                    { name: 'Mistral Large', id: 'mistral-large' },
+                    { name: 'Phi 4 Reasoning', id: 'phi-4-reasoning' },
+                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' },
+                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' }
+                ],
+                aggregator: { name: 'GLM 4.7', id: 'glm-4-7' },
+                behavior: 'Extended reasoning with conflict resolution and expert scoring'
+            },
+            research: {
+                name: 'Sahu 1 Deep Research',
+                icon: '🔍',
+                badge: 'mode-research',
+                tools: ['searching'],
+                experts: [
+                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
+                    { name: 'DeepSeek V3.2 Search', id: 'deepseek-v3-search' },
+                    { name: 'Kimi K2 Searching', id: 'kimi-k2-search' },
+                    { name: 'GLM 4.7 Searching', id: 'glm-4-7-search' },
+                    { name: 'Mistral Medium', id: 'mistral-medium' },
+                    { name: 'Llama Maverick 17', id: 'llama-maverick-17' },
+                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' },
+                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
+                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                ],
+                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
+                behavior: 'Search, summarize, and cite sources'
+            },
+            code: {
+                name: 'Sahu Code 1',
+                icon: '💻',
+                badge: 'mode-code',
+                tools: ['thinking', 'searching', 'planning'],
+                experts: [
+                    { name: 'GPT OSS 120B', id: 'gpt-oss-120b' },
+                    { name: 'DeepSeek V3.2 Thinking', id: 'deepseek-v3-thinking' },
+                    { name: 'Kimi K2 Thinking+Search', id: 'kimi-k2-full' },
+                    { name: 'Qwen 3 Coder', id: 'qwen-3-coder' },
+                    { name: 'Qwen 3 Max Preview', id: 'qwen-3-max' },
+                    { name: 'DeepSeek Coder', id: 'deepseek-coder' },
+                    { name: 'GLM 4.7 Full', id: 'glm-4-7-full' },
+                    { name: 'Devstral Large', id: 'devstral-large' },
+                    { name: 'Codestral Large', id: 'codestral-large' },
+                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' }
+                ],
+                aggregator: { name: 'GLM 4.7', id: 'glm-4-7' },
+                behavior: 'Code reasoning, planning, and synthesis'
+            },
+            fast: {
+                name: 'Sahu 1 Fast',
+                icon: '⚡',
+                badge: 'mode-fast',
+                tools: [],
+                experts: [
+                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
+                    { name: 'DeepSeek V3.2', id: 'deepseek-v3' },
+                    { name: 'Kimi K2', id: 'kimi-k2' },
+                    { name: 'GLM 4.7 Air', id: 'glm-4-7-air' },
+                    { name: 'Mistral Small', id: 'mistral-small' },
+                    { name: 'DeepSeek R1 Distill 1.5B', id: 'deepseek-r1-distill' },
+                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
+                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                ],
+                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
+                behavior: 'Fast response without chain-of-thought'
+            },
+            chat: {
+                name: 'Sahu 1 Chat',
+                icon: '💬',
+                badge: 'mode-chat',
+                tools: [],
+                experts: [
+                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
+                    { name: 'DeepSeek V3.2', id: 'deepseek-v3' },
+                    { name: 'Kimi K2', id: 'kimi-k2' },
+                    { name: 'GLM 4.7', id: 'glm-4-7' },
+                    { name: 'Mistral Medium', id: 'mistral-medium' },
+                    { name: 'Llama Maverick 17', id: 'llama-maverick-17' },
+                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' },
+                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
+                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                ],
+                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
+                behavior: 'General chat and conversation'
+            }
+        };
+        
+        const PROVIDERS = {
+            huggingface: {
+                name: 'Hugging Face',
+                endpoint: 'https://api-inference.huggingface.co/models/',
+                keyPrefix: 'hf_'
+            },
+            openrouter: {
+                name: 'OpenRouter',
+                endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+                keyPrefix: 'sk-or-'
+            },
+            togetherai: {
+                name: 'TogetherAI',
+                endpoint: 'https://api.together.xyz/v1/chat/completions',
+                keyPrefix: ''
+            },
+            groq: {
+                name: 'Groq',
+                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+                keyPrefix: 'gsk_'
+            },
+            ollama: {
+                name: 'Ollama',
+                endpoint: 'http://localhost:11434/api/chat',
+                keyPrefix: ''
+            },
+            llmstats: {
+                name: 'LLM Stats',
+                endpoint: '',
+                keyPrefix: ''
+            }
+        };
+        
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        
+        let state = {
+            currentChat: null,
+            conversations: [],
+            currentMode: 'chat',
+            currentProvider: 'huggingface',
+            theme: 'dark',
+            settings: {
+                apiKeys: {},
+                endpoints: {}
+            },
+            isProcessing: false,
+            uploadedFiles: []
+        };
+        
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        
+        function init() {
+            loadState();
+            renderConversationList();
+            applyTheme();
+            loadSettingsToForm();
             
-            if (el.classList.contains(hideClass)) {
-                el.classList.remove(hideClass);
-                overlay.classList.remove('hidden');
-            } else {
-                el.classList.add(hideClass);
-                overlay.classList.add('hidden');
+            if (state.currentChat) {
+                loadChat(state.currentChat);
+            }
+            
+            document.getElementById('sahuMode').value = state.currentMode;
+            updateModeBadge();
+        }
+        
+        function loadState() {
+            const saved = localStorage.getItem('sahu1_state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
             }
         }
-
-        function closeSidebars() {
-            document.getElementById('history-sidebar').classList.add('-translate-x-full');
-            document.getElementById('config-sidebar').classList.add('translate-x-full');
-            document.getElementById('overlay').classList.add('hidden');
+        
+        function saveState() {
+            localStorage.setItem('sahu1_state', JSON.stringify(state));
         }
-        // DO NOTHING – MoE selection controls behavior
         
-       async function fetchModels() {
-  const list = document.getElementById('model-list');
-  list.innerHTML = '';
-
-  Object.keys(SAHU_MOE).forEach((name, i) => {
-    const btn = document.createElement('button');
-    btn.className =
-      "model-item w-full text-left p-3 rounded-xl text-[11px] font-bold border-theme border flex items-center gap-3 transition-all truncate";
-
-    btn.onclick = () => {
-      selectedModelId = name;
-      document.getElementById('display-model').textContent = name;
-
-      document.querySelectorAll('.model-item').forEach(el =>
-        el.classList.remove('border-indigo-500', 'bg-indigo-50/10', 'text-indigo-500')
-      );
-
-      btn.classList.add('border-indigo-500', 'bg-indigo-50/10', 'text-indigo-500');
-    };
-
-    btn.innerHTML = `<i class="fas fa-network-wired"></i> <span>${name}</span>`;
-    list.appendChild(btn);
-
-    if (i === 0) btn.click();
-  });
-}
+        // ==========================================
+        // THEME MANAGEMENT
+        // ==========================================
         
-
-        function appendMessage(role, content) {
-            const chat = document.getElementById('chat-container');
-            const welcome = document.getElementById('welcome-view');
-            if (welcome) welcome.remove();
-
-            const wrap = document.createElement('div');
-            wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`;
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            saveState();
+        }
+        
+        function applyTheme() {
+            document.body.classList.toggle('light-theme', state.theme === 'light');
+            document.getElementById('themeIcon').className = state.theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+        
+        // ==========================================
+        // SIDEBAR & UI
+        // ==========================================
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+        
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            dropdown.classList.toggle('hidden');
             
-            const msg = document.createElement('div');
-            msg.className = `max-w-[88%] lg:max-w-[75%] p-4 rounded-[1.25rem] text-sm leading-relaxed ${role === 'user' ? 'bg-indigo-600 text-white rounded-br-none shadow-md' : 'chat-bubble-ai rounded-bl-none shadow-sm'}`;
-            msg.innerHTML = `
-                <div class="text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">${role}</div>
-                <div class="whitespace-pre-wrap">${content}</div>
+            // Close on outside click
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.add('hidden');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 0);
+        }
+        
+        function selectProvider(provider) {
+            state.currentProvider = provider;
+            document.getElementById('currentProvider').textContent = PROVIDERS[provider].name;
+            document.getElementById('providerDropdown').classList.add('hidden');
+            saveState();
+        }
+        
+        function changeSahuMode(mode) {
+            state.currentMode = mode;
+            updateModeBadge();
+            saveState();
+        }
+        
+        function updateModeBadge() {
+            const badge = document.getElementById('currentModeBadge');
+            const modeConfig = SAHU_MODES[state.currentMode];
+            badge.textContent = modeConfig.icon + ' ' + modeConfig.name.split(' ').pop();
+            badge.className = 'mode-badge ' + modeConfig.badge;
+        }
+        
+        // ==========================================
+        // SETTINGS
+        // ==========================================
+        
+        function openSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            loadSettingsToForm();
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+        
+        function loadSettingsToForm() {
+            Object.keys(PROVIDERS).forEach(provider => {
+                const keyInput = document.getElementById(`apiKey_${provider}`);
+                if (keyInput && state.settings.apiKeys[provider]) {
+                    keyInput.value = state.settings.apiKeys[provider];
+                }
+            });
+            
+            const ollamaEndpoint = document.getElementById('endpoint_ollama');
+            if (ollamaEndpoint) {
+                ollamaEndpoint.value = state.settings.endpoints.ollama || 'http://localhost:11434';
+            }
+            
+            const llmstatsEndpoint = document.getElementById('endpoint_llmstats');
+            if (llmstatsEndpoint) {
+                llmstatsEndpoint.value = state.settings.endpoints.llmstats || '';
+            }
+        }
+        
+        function saveSettings() {
+            Object.keys(PROVIDERS).forEach(provider => {
+                const keyInput = document.getElementById(`apiKey_${provider}`);
+                if (keyInput) {
+                    state.settings.apiKeys[provider] = keyInput.value;
+                }
+            });
+            
+            state.settings.endpoints.ollama = document.getElementById('endpoint_ollama')?.value || 'http://localhost:11434';
+            state.settings.endpoints.llmstats = document.getElementById('endpoint_llmstats')?.value || '';
+            
+            saveState();
+            closeSettings();
+            showToast('Settings saved successfully!');
+        }
+        
+        // ==========================================
+        // CONVERSATION MANAGEMENT
+        // ==========================================
+        
+        function createNewChat() {
+            const chat = {
+                id: Date.now().toString(),
+                title: 'New Chat',
+                mode: state.currentMode,
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+            
+            state.conversations.unshift(chat);
+            state.currentChat = chat.id;
+            saveState();
+            
+            renderConversationList();
+            clearChatArea();
+            document.getElementById('currentChatTitle').textContent = 'New Chat';
+        }
+        
+        function loadChat(chatId) {
+            const chat = state.conversations.find(c => c.id === chatId);
+            if (!chat) return;
+            
+            state.currentChat = chatId;
+            state.currentMode = chat.mode || 'chat';
+            document.getElementById('sahuMode').value = state.currentMode;
+            updateModeBadge();
+            
+            document.getElementById('currentChatTitle').textContent = chat.title;
+            renderMessages(chat.messages);
+            renderConversationList();
+            saveState();
+        }
+        
+        function deleteChat(chatId, event) {
+            event.stopPropagation();
+            state.conversations = state.conversations.filter(c => c.id !== chatId);
+            
+            if (state.currentChat === chatId) {
+                state.currentChat = null;
+                clearChatArea();
+            }
+            
+            renderConversationList();
+            saveState();
+        }
+        
+        function clearAllChats() {
+            if (confirm('Are you sure you want to delete all conversations?')) {
+                state.conversations = [];
+                state.currentChat = null;
+                clearChatArea();
+                renderConversationList();
+                saveState();
+            }
+        }
+        
+        function clearChatArea() {
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('messagesContainer').classList.add('hidden');
+            document.getElementById('messagesContainer').innerHTML = '';
+            document.getElementById('currentChatTitle').textContent = 'New Chat';
+        }
+        
+        function renderConversationList() {
+            const list = document.getElementById('conversationList');
+            list.innerHTML = state.conversations.map(chat => `
+                <div class="conversation-item rounded-lg p-3 cursor-pointer flex items-center justify-between group ${chat.id === state.currentChat ? 'active' : ''}" onclick="loadChat('${chat.id}')">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="fas fa-message text-xs text-[var(--text-secondary)]"></i>
+                        <span class="truncate text-sm">${escapeHtml(chat.title)}</span>
+                    </div>
+                    <button onclick="deleteChat('${chat.id}', event)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--bg-primary)] transition">
+                        <i class="fas fa-trash-alt text-xs text-[var(--text-secondary)]"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // ==========================================
+        // MESSAGE HANDLING
+        // ==========================================
+        
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+        }
+        
+        function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            state.uploadedFiles = [...state.uploadedFiles, ...files];
+            renderFilePreview();
+        }
+        
+        function renderFilePreview() {
+            const preview = document.getElementById('filePreview');
+            if (state.uploadedFiles.length === 0) {
+                preview.classList.add('hidden');
+                return;
+            }
+            
+            preview.classList.remove('hidden');
+            preview.innerHTML = state.uploadedFiles.map((file, i) => `
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--bg-tertiary)] text-sm">
+                    <i class="fas fa-file text-[var(--accent)]"></i>
+                    <span class="truncate max-w-32">${escapeHtml(file.name)}</span>
+                    <button onclick="removeFile(${i})" class="hover:text-red-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function removeFile(index) {
+            state.uploadedFiles.splice(index, 1);
+            renderFilePreview();
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || state.isProcessing) return;
+            
+            // Ensure we have a chat
+            if (!state.currentChat) {
+                createNewChat();
+            }
+            
+            const chat = state.conversations.find(c => c.id === state.currentChat);
+            if (!chat) return;
+            
+            // Update chat title if first message
+            if (chat.messages.length === 0) {
+                chat.title = message.slice(0, 50) + (message.length > 50 ? '...' : '');
+                document.getElementById('currentChatTitle').textContent = chat.title;
+                renderConversationList();
+            }
+            
+            // Add user message
+            const userMessage = {
+                role: 'user',
+                content: message,
+                files: state.uploadedFiles.map(f => f.name),
+                timestamp: new Date().toISOString()
+            };
+            
+            chat.messages.push(userMessage);
+            chat.mode = state.currentMode;
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            state.uploadedFiles = [];
+            renderFilePreview();
+            
+            // Show chat area
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
+            
+            // Render user message
+            appendMessage(userMessage);
+            
+            // Process with SAHU MoE
+            state.isProcessing = true;
+            document.getElementById('sendButton').disabled = true;
+            
+            try {
+                await processSahuMoE(message, chat);
+            } catch (error) {
+                console.error('SAHU MoE Error:', error);
+                appendErrorMessage('An error occurred while processing your request.');
+            }
+            
+            state.isProcessing = false;
+            document.getElementById('sendButton').disabled = false;
+            saveState();
+        }
+        
+        function appendMessage(msg) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = 'fade-in';
+            
+            if (msg.role === 'user') {
+                div.innerHTML = `
+                    <div class="flex justify-end mb-4">
+                        <div class="message-user rounded-2xl rounded-tr-sm px-4 py-3 max-w-2xl text-white">
+                            ${msg.files?.length ? `
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    ${msg.files.map(f => `<span class="text-xs bg-white/20 px-2 py-1 rounded"><i class="fas fa-file mr-1"></i>${escapeHtml(f)}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                            <div class="whitespace-pre-wrap">${escapeHtml(msg.content)}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (msg.role === 'assistant') {
+                div.innerHTML = `
+                    <div class="flex justify-start mb-4">
+                        <div class="message-assistant rounded-2xl rounded-tl-sm px-4 py-3 max-w-3xl">
+                            <div class="prose prose-invert max-w-none">${formatMessage(msg.content)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function appendErrorMessage(error) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = 'fade-in';
+            div.innerHTML = `
+                <div class="flex justify-start mb-4">
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-2xl px-4 py-3 max-w-2xl">
+                        <div class="flex items-center gap-2 text-red-400">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>${escapeHtml(error)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // ==========================================
+        // SAHU MoE ORCHESTRATION
+        // ==========================================
+        
+        async function processSahuMoE(prompt, chat) {
+            const modeConfig = SAHU_MODES[state.currentMode];
+            const container = document.getElementById('messagesContainer');
+            
+            // Create MoE response container
+            const moeDiv = document.createElement('div');
+            moeDiv.className = 'fade-in mb-6';
+            moeDiv.id = 'moe-response-' + Date.now();
+            container.appendChild(moeDiv);
+            
+            // Step 1: Execute Tools (if any)
+            if (modeConfig.tools.length > 0) {
+                const toolsHtml = await executeTools(modeConfig.tools, prompt, moeDiv);
+            }
+            
+            // Step 2: Execute Experts in Parallel
+            const expertResults = await executeExperts(modeConfig.experts, prompt, moeDiv);
+            
+            // Step 3: Render Expert Grid
+            renderExpertGrid(expertResults, moeDiv);
+            
+            // Step 4: Run Aggregator
+            const finalAnswer = await runAggregator(modeConfig.aggregator, expertResults, prompt, moeDiv);
+            
+            // Step 5: Add final message to chat
+            const assistantMessage = {
+                role: 'assistant',
+                content: finalAnswer,
+                expertResults: expertResults,
+                mode: state.currentMode,
+                timestamp: new Date().toISOString()
+            };
+            
+            chat.messages.push(assistantMessage);
+            
+            // Render final answer
+            renderFinalAnswer(finalAnswer, moeDiv);
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        async function executeTools(tools, prompt, container) {
+            const toolsDiv = document.createElement('div');
+            toolsDiv.className = 'mb-4 space-y-2';
+            container.appendChild(toolsDiv);
+            
+            for (const tool of tools) {
+                const toolBanner = document.createElement('div');
+                toolBanner.className = 'tool-banner rounded-lg p-3 flex items-center gap-3';
+                
+                const toolIcon = tool === 'thinking' ? 'brain' : tool === 'searching' ? 'search' : 'project-diagram';
+                const toolName = tool.charAt(0).toUpperCase() + tool.slice(1);
+                
+                toolBanner.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-[var(--accent)]/20 flex items-center justify-center">
+                        <i class="fas fa-${toolIcon} text-[var(--accent)] spinner"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">${toolName}</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Executing ${toolName.toLowerCase()} tool...</div>
+                    </div>
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                `;
+                
+                toolsDiv.appendChild(toolBanner);
+                
+                // Simulate tool execution
+                await delay(800 + Math.random() * 700);
+                
+                toolBanner.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <i class="fas fa-check text-green-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">${toolName}</div>
+                        <div class="text-xs text-[var(--text-secondary)]">${toolName} completed</div>
+                    </div>
+                    <button onclick="toggleToolLog(this)" class="text-xs text-[var(--accent)] hover:underline">
+                        View Log <i class="fas fa-chevron-down ml-1"></i>
+                    </button>
+                `;
+                
+                // Add expandable log
+                const logDiv = document.createElement('div');
+                logDiv.className = 'hidden mt-2 p-3 bg-[var(--bg-tertiary)] rounded-lg text-xs font-mono text-[var(--text-secondary)]';
+                logDiv.textContent = `[${new Date().toISOString()}] ${toolName} tool executed successfully for query: "${prompt.slice(0, 50)}..."`;
+                toolBanner.appendChild(logDiv);
+            }
+        }
+        
+        function toggleToolLog(button) {
+            const log = button.parentElement.querySelector('.hidden, .block');
+            if (log) {
+                log.classList.toggle('hidden');
+                log.classList.toggle('block');
+                const icon = button.querySelector('i');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            }
+        }
+        
+        async function executeExperts(experts, prompt, container) {
+            // Show loading state
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'mb-4 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]';
+            loadingDiv.innerHTML = `
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-[var(--accent)]/20 flex items-center justify-center">
+                        <i class="fas fa-users text-[var(--accent)]"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Consulting ${experts.length} Experts</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Processing in parallel...</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    ${experts.map(e => `
+                        <div class="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-tertiary)] text-xs">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 expert-status"></span>
+                            <span class="truncate">${escapeHtml(e.name)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(loadingDiv);
+            
+            // Simulate parallel expert execution
+            const results = await Promise.all(experts.map(async (expert, index) => {
+                await delay(1000 + Math.random() * 2000);
+                
+                // Update status
+                const statusDots = loadingDiv.querySelectorAll('.expert-status');
+                if (statusDots[index]) {
+                    statusDots[index].classList.remove('bg-yellow-500', 'expert-status');
+                    statusDots[index].classList.add('bg-green-500');
+                }
+                
+                // Generate simulated response
+                const response = generateExpertResponse(expert, prompt);
+                
+                return {
+                    expert: expert,
+                    response: response,
+                    score: (0.7 + Math.random() * 0.3).toFixed(2),
+                    latency: Math.floor(800 + Math.random() * 1500) + 'ms'
+                };
+            }));
+            
+            // Remove loading div
+            loadingDiv.remove();
+            
+            return results;
+        }
+        
+        function generateExpertResponse(expert, prompt) {
+            // Simulated expert responses based on expert type
+            const responses = {
+                'deepseek': `Based on my analysis, the key considerations are:\n\n1. **Primary Factor**: The core issue revolves around ${prompt.split(' ').slice(0, 3).join(' ')}...\n\n2. **Technical Depth**: When examining this from a technical perspective, we need to consider multiple layers of complexity.\n\n3. **Recommendation**: I suggest a structured approach that addresses both immediate needs and long-term scalability.`,
+                'gpt': `I've analyzed your query comprehensively. Here's my structured response:\n\n**Understanding**: ${prompt.slice(0, 30)}...\n\n**Analysis**: This requires careful consideration of multiple factors including context, constraints, and objectives.\n\n**Conclusion**: The optimal approach would involve balancing efficiency with thoroughness.`,
+                'kimi': `Let me break this down systematically:\n\n• **Context Analysis**: Understanding the broader picture\n• **Key Insights**: Identifying critical success factors\n• **Action Items**: Concrete steps forward\n\nBased on my evaluation, the most effective strategy addresses your core needs while maintaining flexibility.`,
+                'qwen': `Analyzing your request from multiple angles:\n\n1. **Foundational Understanding**: The premise involves...\n2. **Technical Implementation**: Key considerations include...\n3. **Best Practices**: Industry standards suggest...\n\nMy recommendation synthesizes these factors into a cohesive solution.`,
+                'glm': `From my perspective, this query touches on several important areas:\n\n**Primary Analysis**: Understanding the fundamental requirements\n**Secondary Considerations**: Addressing edge cases and exceptions\n**Final Synthesis**: Combining insights for a comprehensive answer`,
+                'mistral': `Here's my take on this:\n\n→ The main point centers around understanding context\n→ Important factors include scalability and maintainability\n→ My recommendation balances practicality with innovation`,
+                'llama': `I've processed your query and here's what I found:\n\n🔹 Key observation #1: Foundation is crucial\n🔹 Key observation #2: Implementation matters\n🔹 Key observation #3: Testing is essential\n\nOverall, a methodical approach yields the best results.`,
+                'minimax': `Comprehensive analysis complete:\n\n[Insight 1] Understanding context is paramount\n[Insight 2] Practical implementation should follow theory\n[Insight 3] Iteration improves outcomes\n\nSynthesis: A balanced approach works best.`,
+                'mimo': `Quick analysis:\n\n• Core issue identified\n• Solution pathway clear\n• Implementation straightforward\n\nRecommendation: Proceed with structured implementation.`,
+                'gemma': `Brief analysis:\n\n1. Understood the query\n2. Analyzed key factors\n3. Formulated response\n\nConclusion: Clear path forward exists.`,
+                'default': `Analysis of "${prompt.slice(0, 20)}...":\n\nKey findings indicate multiple viable approaches. The optimal solution balances efficiency with effectiveness, considering both immediate requirements and future scalability.`
+            };
+            
+            const expertKey = Object.keys(responses).find(key => 
+                expert.name.toLowerCase().includes(key) || expert.id.toLowerCase().includes(key)
+            ) || 'default';
+            
+            return responses[expertKey];
+        }
+        
+        function renderExpertGrid(results, container) {
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'mb-4';
+            
+            gridDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-th-large text-[var(--accent)]"></i>
+                        <span class="font-medium">Expert Responses</span>
+                        <span class="text-xs text-[var(--text-secondary)]">(${results.length} experts)</span>
+                    </div>
+                    <button onclick="toggleExpertGrid(this)" class="text-xs text-[var(--accent)] hover:underline">
+                        Collapse <i class="fas fa-chevron-up ml-1"></i>
+                    </button>
+                </div>
+                <div class="expert-grid-content expert-grid">
+                    ${results.map((r, i) => `
+                        <div class="expert-card rounded-xl p-4 transition cursor-pointer" onclick="expandExpert(${i})">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                                        ${r.expert.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">${escapeHtml(r.expert.name)}</div>
+                                        <div class="text-xs text-[var(--text-secondary)]">${r.latency}</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs font-medium text-green-400">${r.score}</span>
+                                    <i class="fas fa-star text-xs text-yellow-500"></i>
+                                </div>
+                            </div>
+                            <div class="text-sm text-[var(--text-secondary)] line-clamp-3">${escapeHtml(r.response.slice(0, 150))}...</div>
+                        </div>
+                    `).join('')}
+                </div>
             `;
             
-            wrap.appendChild(msg);
-            chat.appendChild(wrap);
-            chat.scrollTop = chat.scrollHeight;
+            container.appendChild(gridDiv);
+            
+            // Store results for expansion
+            window.currentExpertResults = results;
         }
-        function renderTool(tool) {
-  const chat = document.getElementById('chat-container');
-
-  const el = document.createElement('div');
-  el.className =
-    "flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest " +
-    "text-indigo-500 bg-indigo-500/10 border border-indigo-500/20 " +
-    "rounded-xl px-4 py-3";
-
-  const icon =
-    tool === "searching" ? "fa-search" :
-    tool === "planning" ? "fa-diagram-project" :
-    "fa-brain";
-
-  el.innerHTML = `<i class="fas ${icon}"></i> ${tool} executing`;
-  chat.appendChild(el);
-}
-        function createExpertGrid(experts) {
-  const chat = document.getElementById('chat-container');
-
-  const grid = document.createElement('div');
-  grid.className =
-    "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4";
-
-  const streams = {};
-
-  experts.forEach((expert, idx) => {
-    const safeId = `exp-${idx}-${btoa(expert).replace(/=/g, '')}`;
-
-    const card = document.createElement('div');
-    card.className =
-      "border border-theme rounded-2xl p-4 bg-white/60 dark:bg-slate-800/60";
-
-    card.innerHTML = `
-      <div class="text-[10px] font-black uppercase tracking-widest text-indigo-500">
-        Expert ${idx + 1}
-      </div>
-      <div class="text-[11px] text-slate-400 truncate mb-2">
-        ${expert}
-      </div>
-      <div id="${safeId}" class="text-sm whitespace-pre-wrap text-slate-700 dark:text-slate-200">
-        ⏳ Thinking…
-      </div>
-    `;
-
-    grid.appendChild(card);
-    streams[expert] = card.querySelector(`#${safeId}`);
-  });
-
-  chat.appendChild(grid);
-  chat.scrollTop = chat.scrollHeight;
-  return streams;
-}
-
-        async function sendMessage() {
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text || !apiKey || !selectedModelId) return;
-
-  input.value = '';
-  appendMessage('user', text);
-  messages.push({ role: 'user', content: text });
-
-  const moe = SAHU_MOE[selectedModelId];
-  const chat = document.getElementById('chat-container');
-
-  /* ---- TOOLS ---- */
-  if (moe.tools?.length) {
-    moe.tools.forEach(renderTool);
-  }
-
-  /* ---- EXPERT GRID ---- */
-  const expertStreams = createExpertGrid(moe.experts);
-
-  const expertOutputs = {};
-
-  /* ---- PARALLEL EXPERT CALLS ---- */
-   await Promise.all(
-  moe.experts.map(async (expert) => {
-    try {
-      const res = await fetch(
-    "https://router.huggingface.co/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: expert,
-        messages,
-        stream: true
-      })
-    }
-  );
-
-  if (!res.body) {
-    expertStreams[expert].textContent = "⚠️ Streaming not supported";
-    return;
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let buffer = "";
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    for (const line of chunk.split("\n")) {
-      if (!line.startsWith("data:")) continue;
-      if (line.includes("[DONE]")) break;
-
-      try {
-        const json = JSON.parse(line.replace("data:", ""));
-        const token = json.choices?.[0]?.delta?.content;
-        if (token) {
-  buffer += token;
-
-  const words = buffer.split(/\s+/);
-  expertStreams[expert].textContent = words.join(" ");
-
-  expertOutputs[expert] = buffer;
-}
-      } catch {}
-    }
-  }
-} catch (err) {
-  expertStreams[expert].textContent = "❌ Expert failed to respond";
-}
-      
-  /* ---- AGGREGATOR FINAL ANSWER ---- */
-  const finalPrompt = `
-You are the final synthesizer.
-Merge, resolve conflicts, and produce the best answer.
-
-${Object.entries(expertOutputs)
-  .map(([k, v], i) => `Expert ${i + 1} (${k}):\n${v}`)
-  .join("\n\n")}
-`;
-
-  const finalStream = createExpertGrid([moe.aggregator])[moe.aggregator];
-  const res = await fetch(
-    "https://router.huggingface.co/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: moe.aggregator,
-        messages: [{ role: "user", content: finalPrompt }]
-      })
-    }
-  );
-
-  const json = await res.json();
-  const finalText = json.choices?.[0]?.message?.content || "No response";
-
-  appendMessage("assistant", finalText);
-  messages.push({ role: "assistant", content: finalText });
-}
-            function updateHistory(text) {
-            const items = document.getElementById('history-items');
-            if (items.innerHTML.includes('Empty')) items.innerHTML = '';
+        
+        function toggleExpertGrid(button) {
+            const content = button.parentElement.nextElementSibling;
+            const isHidden = content.classList.toggle('hidden');
+            button.innerHTML = isHidden 
+                ? 'Expand <i class="fas fa-chevron-down ml-1"></i>'
+                : 'Collapse <i class="fas fa-chevron-up ml-1"></i>';
+        }
+        
+        function expandExpert(index) {
+            const result = window.currentExpertResults[index];
+            if (!result) return;
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay fixed inset-0 z-50 flex items-center justify-center';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            
+            modal.innerHTML = `
+                <div class="modal-content w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden mx-4">
+                    <div class="p-4 border-b border-[var(--border)] flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                ${result.expert.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h2 class="font-bold">${escapeHtml(result.expert.name)}</h2>
+                                <div class="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                                    <span><i class="fas fa-clock mr-1"></i>${result.latency}</span>
+                                    <span><i class="fas fa-star text-yellow-500 mr-1"></i>${result.score}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="this.closest('.modal-overlay').remove()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto max-h-[60vh]">
+                        <div class="prose prose-invert max-w-none">${formatMessage(result.response)}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        async function runAggregator(aggregator, expertResults, prompt, container) {
+            const aggDiv = document.createElement('div');
+            aggDiv.className = 'mb-4 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]';
+            aggDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <i class="fas fa-layer-group text-white spinner"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Aggregator: ${escapeHtml(aggregator.name)}</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Synthesizing expert responses...</div>
+                    </div>
+                    <div class="ml-auto typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(aggDiv);
+            
+            // Simulate aggregation
+            await delay(1500 + Math.random() * 1000);
+            
+            // Generate aggregated response
+            const aggregatedResponse = generateAggregatedResponse(expertResults, prompt, state.currentMode);
+            
+            // Update aggregator status
+            aggDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <i class="fas fa-check text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-medium">Aggregator: ${escapeHtml(aggregator.name)}</div>
+                        <div class="text-xs text-green-400">Synthesis complete</div>
+                    </div>
+                </div>
+            `;
+            
+            return aggregatedResponse;
+        }
+        
+        function generateAggregatedResponse(expertResults, prompt, mode) {
+            const modeConfig = SAHU_MODES[mode];
+            
+            // Generate expert scoring
+            const sortedExperts = [...expertResults].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+            const topExperts = sortedExperts.slice(0, 3);
+            
+            let response = `## ${modeConfig.icon} ${modeConfig.name} Response\n\n`;
+            
+            if (mode === 'deepthink') {
+                response += `### 🧠 Extended Reasoning Analysis\n\n`;
+                response += `After consulting ${expertResults.length} expert models and performing conflict resolution, here is the synthesized response:\n\n`;
+                response += `**Query Understanding**: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"\n\n`;
+                response += `### Key Insights\n\n`;
+                response += `Based on the collective analysis of our expert panel, the following insights emerge:\n\n`;
+                response += `1. **Primary Consensus**: The majority of experts agree on a structured approach that prioritizes clarity and comprehensive coverage.\n\n`;
+                response += `2. **Technical Considerations**: Several experts highlighted the importance of considering edge cases and scalability factors.\n\n`;
+                response += `3. **Best Practices**: Industry standards and established methodologies support the recommended approach.\n\n`;
+                response += `### Conflict Resolution\n\n`;
+                response += `Minor disagreements between experts were resolved by weighing confidence scores and domain expertise. The final synthesis represents a balanced view.\n\n`;
+            } else if (mode === 'research') {
+                response += `### 🔍 Research Synthesis\n\n`;
+                response += `After conducting comprehensive research across ${expertResults.length} specialized models:\n\n`;
+                response += `**Research Query**: "${prompt.slice(0, 80)}..."\n\n`;
+                response += `### Findings Summary\n\n`;
+                response += `Our research experts have compiled the following key findings:\n\n`;
+                response += `• **Finding 1**: Extensive analysis reveals multiple perspectives on this topic.\n`;
+                response += `• **Finding 2**: Current trends indicate a shift towards more integrated solutions.\n`;
+                response += `• **Finding 3**: Expert consensus suggests prioritizing fundamental principles.\n\n`;
+                response += `### Sources & Citations\n\n`;
+                response += `*Note: Web crawling for live citations is a future enhancement. Current synthesis is based on expert knowledge.*\n\n`;
+            } else if (mode === 'code') {
+                response += `### 💻 Code Analysis & Solution\n\n`;
+                response += `Our coding experts have analyzed your request and collaborated on the following solution:\n\n`;
+                response += `**Request**: "${prompt.slice(0, 80)}..."\n\n`;
+                response += `### Technical Approach\n\n`;
+                response += `\`\`\`javascript\n// Example solution structure\nfunction solutionApproach() {\n  // Step 1: Initialize\n  const context = analyzeRequirements();\n  \n  // Step 2: Process\n  const result = processWithBestPractices(context);\n  \n  // Step 3: Validate & Return\n  return validateAndReturn(result);\n}\n\`\`\`\n\n`;
+                response += `### Planning Notes\n\n`;
+                response += `1. **Architecture**: Modular design with clear separation of concerns\n`;
+                response += `2. **Implementation**: Follow established patterns and conventions\n`;
+                response += `3. **Testing**: Include comprehensive test coverage\n\n`;
+            } else if (mode === 'fast') {
+                response += `### ⚡ Quick Response\n\n`;
+                response += `Based on rapid analysis:\n\n`;
+                response += `The answer to your query involves understanding the core concepts and applying them directly. `;
+                response += `Key points include proper setup, clear implementation, and validation of results. `;
+                response += `For more detailed analysis, consider using DeepThink or Code mode.\n\n`;
+            } else {
+                response += `### 💬 Conversational Response\n\n`;
+                response += `Thank you for your question! After consulting our panel of ${expertResults.length} AI experts, here's a comprehensive response:\n\n`;
+                response += `**Your Question**: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"\n\n`;
+                response += `Our experts have analyzed this from multiple angles and the consensus points to a thoughtful, balanced approach. `;
+                response += `The key is to consider both immediate needs and long-term implications while maintaining flexibility for future adjustments.\n\n`;
+                response += `Feel free to ask follow-up questions or switch to a specialized mode (DeepThink, Research, or Code) for more targeted analysis!\n\n`;
+            }
+            
+            response += `---\n\n`;
+            response += `### 📊 Expert Scoring\n\n`;
+            response += `| Rank | Expert | Score |\n`;
+            response += `|------|--------|-------|\n`;
+            topExperts.forEach((e, i) => {
+                response += `| ${i + 1} | ${e.expert.name} | ${e.score} ⭐ |\n`;
+            });
+            
+            return response;
+        }
+        
+        function renderFinalAnswer(answer, container) {
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'message-assistant rounded-2xl p-6 mt-4';
+            answerDiv.innerHTML = `
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--border)]">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-sm"></i>
+                    </div>
+                    <span class="font-medium">SAHU 1 MoE</span>
+                    <span class="mode-badge ${SAHU_MODES[state.currentMode].badge} ml-2">${SAHU_MODES[state.currentMode].name.split(' ').pop()}</span>
+                </div>
+                <div class="prose prose-invert max-w-none">${formatMessage(answer)}</div>
+            `;
+            container.appendChild(answerDiv);
+        }
+        
+        function renderMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            messages.forEach(msg => {
+                if (msg.role === 'user' || msg.role === 'assistant') {
+                    appendMessage(msg);
+                }
+            });
+        }
+        
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        
+        function escapeHtml(text) {
             const div = document.createElement('div');
-            div.className = "p-3 rounded-xl hover:bg-black/5 text-xs text-slate-500 truncate cursor-pointer transition-all";
-            div.innerHTML = `<i class="far fa-comment mr-2"></i> ${text.substring(0, 30)}...`;
-            items.prepend(div);
+            div.textContent = text;
+            return div.innerHTML;
         }
-
-        function handleFiles(input) {
-            const preview = document.getElementById('attachment-preview');
-            preview.innerHTML = '';
-            if (input.files.length > 0) {
-                preview.classList.remove('hidden');
-                Array.from(input.files).forEach(f => {
-                    const tag = document.createElement('div');
-                    tag.className = "px-3 py-1.5 bg-indigo-500/10 text-indigo-500 rounded-lg text-[10px] font-bold flex-shrink-0 flex items-center gap-2";
-                    tag.innerHTML = `<i class="fas fa-file"></i> ${f.name}`;
-                    preview.appendChild(tag);
+        
+        function formatMessage(content) {
+            // Basic markdown-like formatting
+            let html = escapeHtml(content);
+            
+            // Headers
+            html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>');
+            
+            // Bold
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Code blocks
+            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                return `<div class="code-block my-3"><div class="code-header">${lang || 'code'}</div><pre><code>${code.trim()}</code></pre></div>`;
+            });
+            
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-sm">$1</code>');
+            
+            // Lists
+            html = html.replace(/^• (.+)$/gm, '<li class="ml-4">$1</li>');
+            html = html.replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>');
+            html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>');
+            
+            // Tables (simple)
+            html = html.replace(/\|(.+)\|/g, (match, content) => {
+                const cells = content.split('|').map(c => c.trim());
+                if (cells.every(c => c.match(/^-+$/))) {
+                    return '';
+                }
+                const cellHtml = cells.map(c => `<td class="px-3 py-2 border border-[var(--border)]">${c}</td>`).join('');
+                return `<tr>${cellHtml}</tr>`;
+            });
+            
+            // Wrap tables
+            html = html.replace(/(<tr>[\s\S]*?<\/tr>)+/g, '<table class="w-full border-collapse my-3">$&</table>');
+            
+            // Horizontal rule
+            html = html.replace(/^---$/gm, '<hr class="my-4 border-[var(--border)]">');
+            
+            // Line breaks
+            html = html.replace(/\n/g, '<br>');
+            
+            return html;
+        }
+        
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 fade-in';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // ==========================================
+        // API INTEGRATION (REAL PROVIDERS)
+        // ==========================================
+        
+        async function callProviderAPI(modelId, messages, provider) {
+            const apiKey = state.settings.apiKeys[provider];
+            const providerConfig = PROVIDERS[provider];
+            
+            if (!apiKey && provider !== 'ollama') {
+                throw new Error(`No API key configured for ${providerConfig.name}`);
+            }
+            
+            let endpoint = providerConfig.endpoint;
+            let body = {};
+            let headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            switch (provider) {
+                case 'huggingface':
+                    endpoint = `${providerConfig.endpoint}${modelId}`;
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                    body = {
+                        inputs: messages[messages.length - 1].content,
+                        parameters: { max_new_tokens: 1024 }
+                    };
+                    break;
+                    
+                case 'openrouter':
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                    headers['HTTP-Referer'] = window.location.origin;
+                    body = {
+                        model: modelId,
+                        messages: messages
+                    };
+                    break;
+                    
+                case 'togetherai':
+                case 'groq':
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                    body = {
+                        model: modelId,
+                        messages: messages
+                    };
+                    break;
+                    
+                case 'ollama':
+                    endpoint = state.settings.endpoints.ollama || 'http://localhost:11434';
+                    endpoint = `${endpoint}/api/chat`;
+                    body = {
+                        model: modelId,
+                        messages: messages,
+                        stream: false
+                    };
+                    break;
+            }
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body)
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Parse response based on provider
+                switch (provider) {
+                    case 'huggingface':
+                        return data[0]?.generated_text || data.generated_text || '';
+                    case 'openrouter':
+                    case 'togetherai':
+                    case 'groq':
+                        return data.choices?.[0]?.message?.content || '';
+                    case 'ollama':
+                        return data.message?.content || '';
+                    default:
+                        return JSON.stringify(data);
+                }
+            } catch (error) {
+                console.error(`Provider ${provider} error:`, error);
+                throw error;
             }
         }
-
-        function openSettings() { document.getElementById('api-modal').classList.remove('hidden'); }
-        function closeSettings() { document.getElementById('api-modal').classList.add('hidden'); }
-        function saveApiKey() { 
-            apiKey = document.getElementById('api-key-input').value.trim(); 
-            closeSettings(); 
-        }
-
-        window.onload = fetchModels;
+        
+        // Initialize the app
+        init();
+        
     </script>
 </body>
 </html>
