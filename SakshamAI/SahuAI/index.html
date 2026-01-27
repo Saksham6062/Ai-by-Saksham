@@ -460,14 +460,14 @@
                 tools: ['searching'],
                 behavior: 'Research-heavy with web searching capabilities',
                 experts: [
-                    { id: 'gpt-oss-20b', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' tools: ['searching'] },
                     { id: 'deepseek-v3.2-search', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2', tools: ['searching'] },
-                    { id: 'kimi-k2-search', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct', tools: ['searching'] },
+                    { id: 'kimi-k2-search', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking', tools: ['searching'] },
                     { id: 'glm-4.7-search', name: 'GLM-4.7', model: 'zai-org/GLM-4.7', tools: ['searching'] },
                     { id: 'mistral-small', name: 'Mistral-Small-3.2', model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506' },
                     { id: 'mistral-7b', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
-                    { id: 'minimax-m2.1-r', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' },
-                    { id: 'mimo-v2-flash', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
+                    { id: 'minimax-m2.1-r', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' tools: ['searching'] },
+                    { id: 'mimo-v2-flash', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' tools: ['searching'] },
                     { id: 'gemma-3n-r', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
                 ],
                 aggregator: { name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' }
@@ -584,7 +584,7 @@
             huggingface: {
                 // HuggingFace Router - Use REAL model IDs directly
                 'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3',
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
                 'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3',
                 'openai/gpt-oss-120b': 'openai/gpt-oss-120b',
                 'openai/gpt-oss-20b': 'openai/gpt-oss-20b',
@@ -601,7 +601,7 @@
                 'mistralai/Codestral-22B-v0.1': 'mistralai/Codestral-22B-v0.1',
                 'microsoft/Phi-4-reasoning-plus': 'microsoft/Phi-4-reasoning-plus',
                 'google/gemma-3n-E4B-it': 'google/gemma-3n-E4B-it',
-                'minimax/m2.1-preview': 'minimax/MiniMax-M1-80k',
+                'minimax/m2.1-preview': 'MiniMaxAI/MiniMax-M2.1',
                 'XiaomiMiMo/MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
                 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct',
                 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
