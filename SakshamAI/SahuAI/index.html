@@ -3,696 +3,788 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saksham AI Studio – SAHU 1 MoE</title>
+    <title>SAHU 1 MoE - Mixture of Experts</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Dark theme variables */
         :root {
             --bg-primary: #0f0f0f;
             --bg-secondary: #1a1a1a;
             --bg-tertiary: #2a2a2a;
             --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent: #6366f1;
-            --accent-hover: #818cf8;
-            --border: #333;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --error: #ef4444;
+            --text-secondary: #a1a1a1;
+            --accent: #7c3aed;
+            --accent-hover: #8b5cf6;
+            --border: #333333;
         }
         
         .light-theme {
             --bg-primary: #ffffff;
-            --bg-secondary: #f3f4f6;
-            --bg-tertiary: #e5e7eb;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e5e5e5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
             --border: #d1d5db;
         }
         
         body {
-            background-color: var(--bg-primary);
+            background: var(--bg-primary);
             color: var(--text-primary);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: all 0.3s ease;
         }
         
-        .sidebar {
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-        }
+        .sidebar { background: var(--bg-secondary); border-color: var(--border); }
+        .chat-area { background: var(--bg-primary); }
+        .input-area { background: var(--bg-secondary); border-color: var(--border); }
+        .expert-card { background: var(--bg-tertiary); border-color: var(--border); }
+        .message-user { background: var(--accent); }
+        .message-assistant { background: var(--bg-tertiary); }
         
-        .chat-container {
-            background-color: var(--bg-primary);
-        }
+        /* Typing animation */
+        @keyframes blink { 50% { opacity: 0; } }
+        .typing-cursor { animation: blink 1s infinite; }
         
-        .message-user {
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-        }
-        
-        .message-assistant {
-            background-color: var(--bg-tertiary);
-        }
-        
-        .expert-card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-        
-        .expert-card:hover {
-            border-color: var(--accent);
-        }
-        
-        .tool-banner {
-            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-            border-left: 3px solid var(--accent);
-        }
-        
-        .input-area {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-        
-        .input-area:focus-within {
-            border-color: var(--accent);
-        }
-        
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-        }
-        
-        .modal-content {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-        
-        .dropdown-menu {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border);
-        }
-        
-        .conversation-item {
-            background-color: transparent;
-            transition: all 0.2s;
-        }
-        
-        .conversation-item:hover {
-            background-color: var(--bg-tertiary);
-        }
-        
-        .conversation-item.active {
-            background-color: var(--bg-tertiary);
-            border-left: 2px solid var(--accent);
-        }
-        
-        .expert-status {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .spinner {
-            animation: spin 1s linear infinite;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
-        
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent);
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-        
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-        
+        /* Expert card grid */
         .expert-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 12px;
         }
         
-        .code-block {
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            overflow: hidden;
-        }
+        /* Streaming text effect */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .stream-token { animation: fadeIn 0.1s ease-in; }
         
-        .code-header {
-            background-color: #2d2d2d;
-            padding: 8px 12px;
-            font-size: 12px;
-            color: #888;
-        }
+        /* Tool badge animations */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .tool-active { animation: pulse 1.5s infinite; }
         
-        pre code {
-            display: block;
-            padding: 12px;
-            overflow-x: auto;
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            line-height: 1.5;
+        /* Bounce animation for loading dots */
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
         }
+        .animate-bounce { animation: bounce 1s infinite; }
         
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
+        /* Thinking animation */
+        @keyframes thinking-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
+        .thinking-active { animation: thinking-pulse 2s infinite ease-in-out; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        /* Word appear animation */
+        @keyframes wordAppear {
+            from { opacity: 0; transform: translateY(2px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .word-animate { animation: wordAppear 0.1s ease-out; }
         
-        .mode-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+        /* Modal backdrop */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
         }
         
-        .mode-deepthink { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-        .mode-research { background: linear-gradient(135deg, #22c55e, #10b981); }
-        .mode-code { background: linear-gradient(135deg, #f59e0b, #f97316); }
-        .mode-fast { background: linear-gradient(135deg, #06b6d4, #0ea5e9); }
-        .mode-chat { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+        /* Code blocks */
+        pre { background: #1e1e1e !important; border-radius: 8px; padding: 12px; overflow-x: auto; }
+        code { font-family: 'Fira Code', monospace; font-size: 13px; }
+        
+        /* Hide scrollbar for sidebar */
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Gradient text for logo */
+        .gradient-text {
+            background: linear-gradient(135deg, #7c3aed, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Provider badges */
+        .badge-hf { background: #ff9d00; color: #000; }
+        .badge-openrouter { background: #6366f1; }
+        .badge-groq { background: #f97316; }
+        .badge-together { background: #3b82f6; }
+        .badge-ollama { background: #22c55e; }
+        
+        /* Smooth transitions */
+        * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+        
+        /* Final answer highlight */
+        .final-answer {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+        }
+        
+        /* Markdown rendering */
+        .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+        .markdown-content h2 { font-size: 1.25rem; font-weight: 600; margin: 0.875rem 0 0.5rem; }
+        .markdown-content h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
+        .markdown-content p { margin: 0.5rem 0; line-height: 1.6; }
+        .markdown-content ul, .markdown-content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+        .markdown-content li { margin: 0.25rem 0; }
+        .markdown-content code:not(pre code) { 
+            background: rgba(124, 58, 237, 0.2); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 0.9em;
+        }
+        .markdown-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 1rem;
+            margin: 0.5rem 0;
+            opacity: 0.8;
+        }
     </style>
 </head>
-<body class="h-screen overflow-hidden">
-    <div id="app" class="flex h-full">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar w-64 flex flex-col h-full transition-all duration-300">
-            <!-- Logo -->
-            <div class="p-4 border-b border-[var(--border)]">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                        <i class="fas fa-brain text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg">SAHU 1</h1>
-                        <p class="text-xs text-[var(--text-secondary)]">Mixture of Experts</p>
-                    </div>
+<body class="min-h-screen flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 h-screen flex flex-col border-r fixed lg:relative z-40 transform -translate-x-full lg:translate-x-0 transition-transform">
+        <!-- Logo -->
+        <div class="p-4 border-b border-[var(--border)]">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                    <i class="fas fa-brain text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg gradient-text">SAHU 1</h1>
+                    <p class="text-xs text-[var(--text-secondary)]">Mixture of Experts</p>
                 </div>
             </div>
-            
-            <!-- New Chat Button -->
-            <div class="p-3">
-                <button onclick="createNewChat()" class="w-full py-3 px-4 rounded-xl border border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition flex items-center gap-3">
-                    <i class="fas fa-plus"></i>
-                    <span>New Chat</span>
-                </button>
-            </div>
-            
-            <!-- SAHU Mode Selector -->
-            <div class="px-3 pb-3">
-                <label class="text-xs text-[var(--text-secondary)] mb-2 block">SAHU Mode</label>
-                <select id="sahuMode" onchange="changeSahuMode(this.value)" class="w-full p-2 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm cursor-pointer">
-                    <option value="chat">💬 Sahu 1 Chat</option>
-                    <option value="fast">⚡ Sahu 1 Fast</option>
-                    <option value="deepthink">🧠 Sahu 1 DeepThink</option>
-                    <option value="research">🔍 Sahu 1 Deep Research</option>
-                    <option value="code">💻 Sahu Code 1</option>
-                </select>
-            </div>
-            
-            <!-- Conversation History -->
-            <div class="flex-1 overflow-y-auto scrollbar-thin px-2">
-                <p class="text-xs text-[var(--text-secondary)] px-2 py-2">Recent Conversations</p>
-                <div id="conversationList" class="space-y-1">
-                    <!-- Conversations will be rendered here -->
-                </div>
-            </div>
-            
-            <!-- Sidebar Footer -->
-            <div class="p-3 border-t border-[var(--border)]">
-                <button onclick="clearAllChats()" class="w-full py-2 px-3 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition flex items-center gap-2">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Clear All Chats</span>
-                </button>
-            </div>
-        </aside>
+        </div>
         
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-full">
-            <!-- Top Bar -->
-            <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4">
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition lg:hidden">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div id="currentChatTitle" class="font-medium">New Chat</div>
-                    <span id="currentModeBadge" class="mode-badge mode-chat">Chat</span>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <!-- Provider Selector -->
-                    <div class="relative">
-                        <button onclick="toggleDropdown('providerDropdown')" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm">
-                            <i class="fas fa-server"></i>
-                            <span id="currentProvider">Hugging Face</span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
-                        <div id="providerDropdown" class="dropdown-menu absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl z-50 hidden">
-                            <div class="p-2">
-                                <button onclick="selectProvider('huggingface')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span> Hugging Face
-                                </button>
-                                <button onclick="selectProvider('openrouter')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span> OpenRouter
-                                </button>
-                                <button onclick="selectProvider('togetherai')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> TogetherAI
-                                </button>
-                                <button onclick="selectProvider('groq')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-orange-500"></span> Groq
-                                </button>
-                                <button onclick="selectProvider('ollama')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Ollama
-                                </button>
-                                <button onclick="selectProvider('llmstats')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-sm flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-pink-500"></span> LLM Stats
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Theme Toggle -->
-                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
-                        <i id="themeIcon" class="fas fa-moon"></i>
-                    </button>
-                    
-                    <!-- Settings -->
-                    <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                </div>
-            </header>
-            
-            <!-- Chat Area -->
-            <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4">
-                <!-- Welcome Screen -->
-                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4">
-                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
-                        <i class="fas fa-brain text-white text-3xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold mb-2">Welcome to SAHU 1 MoE</h2>
-                    <p class="text-[var(--text-secondary)] mb-8 max-w-md">
-                        A Mixture of Experts system that orchestrates multiple AI models to provide comprehensive, well-reasoned responses.
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
-                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center mb-3 mx-auto">
-                                <i class="fas fa-brain text-indigo-400"></i>
-                            </div>
-                            <h3 class="font-medium mb-1">DeepThink</h3>
-                            <p class="text-xs text-[var(--text-secondary)]">Extended reasoning with conflict resolution</p>
-                        </div>
-                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
-                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-3 mx-auto">
-                                <i class="fas fa-search text-green-400"></i>
-                            </div>
-                            <h3 class="font-medium mb-1">Deep Research</h3>
-                            <p class="text-xs text-[var(--text-secondary)]">Search, summarize, and cite sources</p>
-                        </div>
-                        <div class="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
-                            <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center mb-3 mx-auto">
-                                <i class="fas fa-code text-orange-400"></i>
-                            </div>
-                            <h3 class="font-medium mb-1">Code</h3>
-                            <p class="text-xs text-[var(--text-secondary)]">Code reasoning, planning & synthesis</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Messages Container -->
-                <div id="messagesContainer" class="max-w-4xl mx-auto space-y-6 hidden">
-                    <!-- Messages will be rendered here -->
+        <!-- New Chat Button -->
+        <div class="p-3">
+            <button onclick="startNewChat()" class="w-full py-2.5 px-4 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-tertiary)] flex items-center gap-2 transition-colors">
+                <i class="fas fa-plus"></i>
+                <span>New Chat</span>
+            </button>
+        </div>
+        
+        <!-- Model Selector -->
+        <div class="px-3 pb-3">
+            <label class="text-xs text-[var(--text-secondary)] mb-1 block">MoE Mode</label>
+            <select id="moeSelector" onchange="changeMoEMode()" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="deepthink">🧠 Sahu 1 DeepThink</option>
+                <option value="research">🔬 Sahu 1 Deep Research</option>
+                <option value="code">💻 Sahu 1 Code</option>
+                <option value="fast">⚡ Sahu 1 Fast</option>
+                <option value="chat" selected>💬 Sahu 1 Chat</option>
+                <option value="agent">🤖 Sahu 1 Agent</option>
+            </select>
+        </div>
+        
+        <!-- Chat History -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar px-3">
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Recent Chats</p>
+            <div id="chatHistory" class="space-y-1">
+                <!-- Chat history items will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Settings Button -->
+        <div class="p-3 border-t border-[var(--border)]">
+            <button onclick="openSettings()" class="w-full py-2.5 px-4 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-2 transition-colors">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen lg:ml-0">
+        <!-- Top Bar -->
+        <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4 bg-[var(--bg-secondary)]">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div id="currentModeDisplay" class="flex items-center gap-2">
+                    <span class="text-lg">💬</span>
+                    <span class="font-medium">Sahu 1 Chat</span>
                 </div>
             </div>
             
-            <!-- Input Area -->
-            <div class="p-4 border-t border-[var(--border)]">
-                <div class="max-w-4xl mx-auto">
-                    <div class="input-area rounded-2xl p-3 flex items-end gap-3">
-                        <button onclick="document.getElementById('fileInput').click()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition text-[var(--text-secondary)]">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)" multiple>
-                        
-                        <div class="flex-1">
-                            <div id="filePreview" class="hidden mb-2 flex flex-wrap gap-2"></div>
-                            <textarea 
-                                id="messageInput" 
-                                placeholder="Message SAHU 1..." 
-                                class="w-full bg-transparent resize-none outline-none max-h-32"
-                                rows="1"
-                                onkeydown="handleKeyDown(event)"
-                                oninput="autoResize(this)"
-                            ></textarea>
-                        </div>
-                        
-                        <button onclick="sendMessage()" id="sendButton" class="p-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <p class="text-xs text-[var(--text-secondary)] text-center mt-2">
-                        SAHU 1 orchestrates multiple experts. Responses are buffered for quality.
-                    </p>
+            <div class="flex items-center gap-2">
+                <!-- Provider Selector -->
+                <select id="providerSelector" onchange="changeProvider()" class="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none">
+                    <option value="huggingface">HuggingFace</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="groq">Groq</option>
+                    <option value="together">TogetherAI</option>
+                    <option value="ollama">Ollama</option>
+                </select>
+                
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
+                    <i id="themeIcon" class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Chat Area -->
+        <div id="chatArea" class="flex-1 overflow-y-auto p-4 chat-area">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mb-6">
+                    <i class="fas fa-brain text-white text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Welcome to SAHU 1 MoE</h2>
+                <p class="text-[var(--text-secondary)] max-w-md mb-8">
+                    A powerful Mixture-of-Experts system that combines multiple AI models for superior responses.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl">
+                    <button onclick="selectMode('deepthink')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">🧠</span>
+                        <span class="font-medium block">DeepThink</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Extended reasoning</span>
+                    </button>
+                    <button onclick="selectMode('research')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">🔬</span>
+                        <span class="font-medium block">Deep Research</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Research-heavy</span>
+                    </button>
+                    <button onclick="selectMode('code')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">💻</span>
+                        <span class="font-medium block">Code</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Plan → Code</span>
+                    </button>
+                    <button onclick="selectMode('fast')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">⚡</span>
+                        <span class="font-medium block">Fast</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Quick responses</span>
+                    </button>
+                    <button onclick="selectMode('chat')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">💬</span>
+                        <span class="font-medium block">Chat</span>
+                        <span class="text-xs text-[var(--text-secondary)]">General chat</span>
+                    </button>
+                    <button onclick="selectMode('agent')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
+                        <span class="text-2xl mb-2 block">🤖</span>
+                        <span class="font-medium block">Agent</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Auto-routing</span>
+                    </button>
                 </div>
             </div>
-        </main>
-    </div>
+            
+            <!-- Messages Container -->
+            <div id="messagesContainer" class="max-w-5xl mx-auto space-y-6 hidden">
+                <!-- Messages will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+            <div class="max-w-4xl mx-auto">
+                <!-- Tools Indicator -->
+                <div id="toolsIndicator" class="mb-2 flex gap-2 hidden">
+                    <!-- Active tools will show here -->
+                </div>
+                
+                <div class="flex items-end gap-2">
+                    <!-- File Upload Button -->
+                    <button onclick="document.getElementById('fileInput').click()" class="p-3 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)" accept="image/*,.pdf,.txt,.md,.json,.csv">
+                    
+                    <!-- Text Input -->
+                    <div class="flex-1 relative">
+                        <textarea 
+                            id="userInput" 
+                            placeholder="Message SAHU 1..." 
+                            class="w-full p-3 pr-12 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[48px] max-h-[200px]"
+                            rows="1"
+                            onkeydown="handleKeyDown(event)"
+                            oninput="autoResize(this)"
+                        ></textarea>
+                        
+                        <!-- Send Button -->
+                        <button 
+                            id="sendButton"
+                            onclick="sendMessage()" 
+                            class="absolute right-2 bottom-2 p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Stop Button (hidden by default) -->
+                    <button id="stopButton" onclick="stopGeneration()" class="p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors hidden">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                </div>
+                
+                <p class="text-xs text-[var(--text-secondary)] text-center mt-2">
+                    SAHU 1 MoE by Saksham Intelligence · All responses from open-source models
+                </p>
+            </div>
+        </div>
+    </main>
     
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="modal-content w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden mx-4">
-            <div class="p-4 border-b border-[var(--border)] flex items-center justify-between">
-                <h2 class="text-lg font-bold">Settings</h2>
-                <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeSettings()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[var(--bg-secondary)] rounded-2xl shadow-2xl border border-[var(--border)] max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold">Settings</h2>
+                    <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
                 <!-- API Keys Section -->
-                <div>
-                    <h3 class="font-medium mb-4 flex items-center gap-2">
-                        <i class="fas fa-key text-[var(--accent)]"></i>
-                        API Keys
-                    </h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm mb-2">Hugging Face API Key</label>
-                            <input type="password" id="apiKey_huggingface" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="hf_...">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-2">OpenRouter API Key</label>
-                            <input type="password" id="apiKey_openrouter" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="sk-or-...">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-2">TogetherAI API Key</label>
-                            <input type="password" id="apiKey_togetherai" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="...">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-2">Groq API Key</label>
-                            <input type="password" id="apiKey_groq" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="gsk_...">
-                        </div>
+                <div class="space-y-4">
+                    <h3 class="font-semibold text-sm text-[var(--text-secondary)] uppercase tracking-wider">API Keys</h3>
+                    
+                    <!-- HuggingFace -->
+                    <div>
+                        <label class="block text-sm mb-1">HuggingFace API Key</label>
+                        <input type="password" id="hfApiKey" placeholder="hf_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <!-- OpenRouter -->
+                    <div>
+                        <label class="block text-sm mb-1">OpenRouter API Key</label>
+                        <input type="password" id="orApiKey" placeholder="sk-or-..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <!-- Groq -->
+                    <div>
+                        <label class="block text-sm mb-1">Groq API Key</label>
+                        <input type="password" id="groqApiKey" placeholder="gsk_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <!-- TogetherAI -->
+                    <div>
+                        <label class="block text-sm mb-1">TogetherAI API Key</label>
+                        <input type="password" id="togetherApiKey" placeholder="..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <!-- Ollama -->
+                    <div>
+                        <label class="block text-sm mb-1">Ollama Endpoint</label>
+                        <input type="text" id="ollamaEndpoint" placeholder="http://localhost:11434" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                 </div>
                 
-                <!-- Endpoints Section -->
-                <div>
-                    <h3 class="font-medium mb-4 flex items-center gap-2">
-                        <i class="fas fa-link text-[var(--accent)]"></i>
-                        Endpoints
-                    </h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm mb-2">Ollama Endpoint</label>
-                            <input type="text" id="endpoint_ollama" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="http://localhost:11434">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-2">LLM Stats Endpoint</label>
-                            <input type="text" id="endpoint_llmstats" class="w-full p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:border-[var(--accent)] outline-none" placeholder="https://...">
-                        </div>
+                <!-- Advanced Settings -->
+                <div class="mt-6 space-y-4">
+                    <h3 class="font-semibold text-sm text-[var(--text-secondary)] uppercase tracking-wider">Advanced</h3>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Show expert outputs</span>
+                        <input type="checkbox" id="showExperts" checked class="w-5 h-5 accent-purple-600">
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Enable streaming</span>
+                        <input type="checkbox" id="enableStreaming" checked class="w-5 h-5 accent-purple-600">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm mb-1">Max tokens</label>
+                        <input type="number" id="maxTokens" value="4096" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm mb-1">Temperature</label>
+                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full accent-purple-600">
+                        <span id="tempValue" class="text-sm text-[var(--text-secondary)]">0.7</span>
                     </div>
                 </div>
-            </div>
-            <div class="p-4 border-t border-[var(--border)] flex justify-end gap-3">
-                <button onclick="closeSettings()" class="px-4 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">Cancel</button>
-                <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition text-white">Save Settings</button>
+                
+                <!-- Save Button -->
+                <button onclick="saveSettings()" class="w-full mt-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors">
+                    Save Settings
+                </button>
             </div>
         </div>
     </div>
+    
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <script>
-
-        function delay(ms) {
-  return new Promise(res => setTimeout(res, ms));
-}
-
-function escapeHtml(str = '') {
-  return str.replace(/[&<>"']/g, m =>
-    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[m])
-  );
-}
-
-function formatMessage(text = '') {
-  return escapeHtml(text).replace(/\n/g, '<br>');
-}
-
-function renderMessages(messages) {
-  document.getElementById('welcomeScreen').classList.add('hidden');
-  const container = document.getElementById('messagesContainer');
-  container.classList.remove('hidden');
-  container.innerHTML = '';
-  messages.forEach(m => appendMessage(m));
-}
-
-function renderFinalAnswer(answer, container) {
-    let i = 0;
-const interval = setInterval(() => {
-  div.querySelector('.prose').innerHTML =
-    formatMessage(answer.slice(0, i++));
-  if (i > answer.length) clearInterval(interval);
-}, 15);
-  const div = document.createElement('div');
-  div.className = 'fade-in';
-  div.innerHTML = `
-    <div class="flex justify-start">
-      <div class="message-assistant rounded-2xl px-4 py-3 max-w-3xl">
-        <div class="prose prose-invert max-w-none">${formatMessage(answer)}</div>
-      </div>
-    </div>
-  `;
-  container.appendChild(div);
-}
-
-function showToast(msg) {
-  alert(msg); // replace later with real toast UI
-}
         // ==========================================
-        // SAHU 1 MoE - CONFIGURATION
+        // SAHU 1 MoE - Configuration & State
         // ==========================================
         
-        const SAHU_MODES = {
+        // Global State
+        const state = {
+            currentMode: 'chat',
+            currentProvider: 'huggingface',
+            isGenerating: false,
+            abortController: null,
+            chatHistory: [],
+            currentChatId: null,
+            theme: 'dark',
+            uploadedFiles: [],
+            toolBuffer: []
+        };
+        
+        // MoE Mode Configurations
+        const MOE_CONFIGS = {
             deepthink: {
                 name: 'Sahu 1 DeepThink',
                 icon: '🧠',
-                badge: 'mode-deepthink',
                 tools: ['thinking'],
+                behavior: 'Extended reasoning with deep analysis',
                 experts: [
-                    { name: 'DeepSeek R1', id: 'deepseek-r1' },
-                    { name: 'GPT OSS 120B', id: 'gpt-oss-120b' },
-                    { name: 'DeepSeek V3.2 Thinking', id: 'deepseek-v3-thinking' },
-                    { name: 'Kimi K2 Thinking', id: 'kimi-k2-thinking' },
-                    { name: 'Qwen 3 Max Preview', id: 'qwen-3-max' },
-                    { name: 'GLM 4.7 Thinking', id: 'glm-4-7-thinking' },
-                    { name: 'Mistral Large', id: 'mistral-large' },
-                    { name: 'Phi 4 Reasoning', id: 'phi-4-reasoning' },
-                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' },
-                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' }
+                    { id: 'deepseek-r1', name: 'DeepSeek-R1', model: 'deepseek-ai/DeepSeek-R1' },
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' },
+                    { id: 'deepseek-v3.2', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
+                    { id: 'kimi-k2-think', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking' },
+                    { id: 'qwen3-235b', name: 'Qwen3-235B-Thinking', model: 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8' },
+                    { id: 'glm-4.7', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
+                    { id: 'ministral-reasoning', name: 'Ministral-Reasoning', model: 'mistralai/Ministral-3-14B-Reasoning-2512' },
+                    { id: 'phi4-reasoning', name: 'Phi-4-Reasoning+', model: 'microsoft/Phi-4-reasoning-plus' },
+                    { id: 'gemma-3n', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' },
+                    { id: 'minimax-m2.1', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' }
                 ],
-                aggregator: { name: 'GLM 4.7', id: 'glm-4-7' },
-                behavior: 'Extended reasoning with conflict resolution and expert scoring'
+                aggregator: { name: 'GLM-4.7', model: 'zai-org/GLM-4.7' }
             },
             research: {
                 name: 'Sahu 1 Deep Research',
-                icon: '🔍',
-                badge: 'mode-research',
+                icon: '🔬',
                 tools: ['searching'],
+                behavior: 'Research-heavy with web searching capabilities',
                 experts: [
-                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
-                    { name: 'DeepSeek V3.2 Search', id: 'deepseek-v3-search' },
-                    { name: 'Kimi K2 Searching', id: 'kimi-k2-search' },
-                    { name: 'GLM 4.7 Searching', id: 'glm-4-7-search' },
-                    { name: 'Mistral Medium', id: 'mistral-medium' },
-                    { name: 'Llama Maverick 17', id: 'llama-maverick-17' },
-                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' },
-                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
-                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
+                    { id: 'deepseek-v3.2-search', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2', tools: ['searching'] },
+                    { id: 'kimi-k2-search', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct', tools: ['searching'] },
+                    { id: 'glm-4.7-search', name: 'GLM-4.7', model: 'zai-org/GLM-4.7', tools: ['searching'] },
+                    { id: 'mistral-small', name: 'Mistral-Small-3.2', model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506' },
+                    { id: 'mistral-7b', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
+                    { id: 'minimax-m2.1-r', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' },
+                    { id: 'mimo-v2-flash', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
+                    { id: 'gemma-3n-r', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
                 ],
-                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
-                behavior: 'Search, summarize, and cite sources'
+                aggregator: { name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' }
             },
             code: {
-                name: 'Sahu Code 1',
+                name: 'Sahu 1 Code',
                 icon: '💻',
-                badge: 'mode-code',
                 tools: ['thinking', 'searching', 'planning'],
+                behavior: 'Plan → Reason → Code',
                 experts: [
-                    { name: 'GPT OSS 120B', id: 'gpt-oss-120b' },
-                    { name: 'DeepSeek V3.2 Thinking', id: 'deepseek-v3-thinking' },
-                    { name: 'Kimi K2 Thinking+Search', id: 'kimi-k2-full' },
-                    { name: 'Qwen 3 Coder', id: 'qwen-3-coder' },
-                    { name: 'Qwen 3 Max Preview', id: 'qwen-3-max' },
-                    { name: 'DeepSeek Coder', id: 'deepseek-coder' },
-                    { name: 'GLM 4.7 Full', id: 'glm-4-7-full' },
-                    { name: 'Devstral Large', id: 'devstral-large' },
-                    { name: 'Codestral Large', id: 'codestral-large' },
-                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' }
+                    { id: 'gpt-oss-120b-c', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' },
+                    { id: 'deepseek-v3.2-c', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
+                    { id: 'kimi-k2-think-c', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking' },
+                    { id: 'qwen3-coder', name: 'Qwen3-Coder-480B', model: 'Qwen/Qwen3-Coder-480B-A35B-Instruct' },
+                    { id: 'qwen3-235b-c', name: 'Qwen3-235B-Thinking', model: 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8' },
+                    { id: 'deepseek-coder', name: 'DeepSeek-Coder-V2', model: 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct' },
+                    { id: 'glm-4.7-c', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
+                    { id: 'devstral', name: 'Devstral-2-123B', model: 'mistralai/Devstral-2-123B-Instruct-2512' },
+                    { id: 'codestral', name: 'Codestral-22B', model: 'mistralai/Codestral-22B-v0.1' },
+                    { id: 'minimax-m2.1-c', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' }
                 ],
-                aggregator: { name: 'GLM 4.7', id: 'glm-4-7' },
-                behavior: 'Code reasoning, planning, and synthesis'
+                aggregator: { name: 'GLM-4.7', model: 'zai-org/GLM-4.7' }
             },
             fast: {
                 name: 'Sahu 1 Fast',
                 icon: '⚡',
-                badge: 'mode-fast',
                 tools: [],
+                behavior: 'Fastest possible responses',
                 experts: [
-                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
-                    { name: 'DeepSeek V3.2', id: 'deepseek-v3' },
-                    { name: 'Kimi K2', id: 'kimi-k2' },
-                    { name: 'GLM 4.7 Air', id: 'glm-4-7-air' },
-                    { name: 'Mistral Small', id: 'mistral-small' },
-                    { name: 'DeepSeek R1 Distill 1.5B', id: 'deepseek-r1-distill' },
-                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
-                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                    { id: 'gpt-oss-20b-f', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
+                    { id: 'deepseek-v3.2-f', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
+                    { id: 'kimi-k2-inst', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct' },
+                    { id: 'glm-4.7-flash', name: 'GLM-4.7-Flash', model: 'zai-org/GLM-4.7-Flash' },
+                    { id: 'mistral-7b-f', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
+                    { id: 'deepseek-r1-distill', name: 'DeepSeek-R1-Distill', model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B' },
+                    { id: 'mimo-v2-flash-f', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
+                    { id: 'gemma-3n-f', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
                 ],
-                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
-                behavior: 'Fast response without chain-of-thought'
+                aggregator: { name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' }
             },
             chat: {
                 name: 'Sahu 1 Chat',
                 icon: '💬',
-                badge: 'mode-chat',
                 tools: [],
+                behavior: 'General conversation',
                 experts: [
-                    { name: 'GPT OSS 20B', id: 'gpt-oss-20b' },
-                    { name: 'DeepSeek V3.2', id: 'deepseek-v3' },
-                    { name: 'Kimi K2', id: 'kimi-k2' },
-                    { name: 'GLM 4.7', id: 'glm-4-7' },
-                    { name: 'Mistral Medium', id: 'mistral-medium' },
-                    { name: 'Llama Maverick 17', id: 'llama-maverick-17' },
-                    { name: 'MiniMax M2.1', id: 'minimax-m2-1' },
-                    { name: 'Mimo V2 Flash', id: 'mimo-v2-flash' },
-                    { name: 'Gemma 3n 4B', id: 'gemma-3n-4b' }
+                    { id: 'gpt-oss-20b-ch', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
+                    { id: 'deepseek-v3.2-ch', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
+                    { id: 'kimi-k2-inst-ch', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct' },
+                    { id: 'glm-4.7-ch', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
+                    { id: 'mistral-small-ch', name: 'Mistral-Small-3.2', model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506' },
+                    { id: 'mistral-7b-ch', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
+                    { id: 'minimax-m2.1-ch', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' },
+                    { id: 'mimo-v2-flash-ch', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
+                    { id: 'gemma-3n-ch', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
                 ],
-                aggregator: { name: 'Mimo V2', id: 'mimo-v2' },
-                behavior: 'General chat and conversation'
+                aggregator: { name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' }
+            },
+            agent: {
+                name: 'Sahu 1 Agent',
+                icon: '🤖',
+                tools: [],
+                behavior: 'Auto-detects intent and routes to appropriate MoE',
+                experts: [], // Will be determined dynamically
+                aggregator: null // Will be determined dynamically
             }
         };
         
+        // Provider Configurations
         const PROVIDERS = {
             huggingface: {
-                name: 'Hugging Face',
-                endpoint: 'https://api-inference.huggingface.co/models/',
-                keyPrefix: 'hf_'
+                name: 'HuggingFace',
+                baseUrl: 'https://router.huggingface.co/v1/chat/completions',
+                headerKey: 'Authorization',
+                headerPrefix: 'Bearer ',
+                streamSupport: true,
+                badge: 'badge-hf'
             },
             openrouter: {
                 name: 'OpenRouter',
-                endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-                keyPrefix: 'sk-or-'
-            },
-            togetherai: {
-                name: 'TogetherAI',
-                endpoint: 'https://api.together.xyz/v1/chat/completions',
-                keyPrefix: ''
+                baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
+                headerKey: 'Authorization',
+                headerPrefix: 'Bearer ',
+                streamSupport: true,
+                badge: 'badge-openrouter'
             },
             groq: {
                 name: 'Groq',
-                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-                keyPrefix: 'gsk_'
+                baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+                headerKey: 'Authorization',
+                headerPrefix: 'Bearer ',
+                streamSupport: true,
+                badge: 'badge-groq'
+            },
+            together: {
+                name: 'TogetherAI',
+                baseUrl: 'https://api.together.xyz/v1/chat/completions',
+                headerKey: 'Authorization',
+                headerPrefix: 'Bearer ',
+                streamSupport: true,
+                badge: 'badge-together'
             },
             ollama: {
                 name: 'Ollama',
-                endpoint: 'http://localhost:11434/api/chat',
-                keyPrefix: ''
+                baseUrl: 'http://localhost:11434/api/chat',
+                headerKey: null,
+                streamSupport: true,
+                badge: 'badge-ollama'
+            }
+        };
+        
+        // Model mappings for different providers
+        const MODEL_MAPPINGS = {
+            huggingface: {
+                // HuggingFace Router compatible model IDs
+                'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3-0324',
+                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3-0324',
+                'openai/gpt-oss-120b': 'Qwen/Qwen2.5-72B-Instruct',
+                'openai/gpt-oss-20b': 'Qwen/Qwen2.5-72B-Instruct',
+                'moonshotai/Kimi-K2-Thinking': 'Qwen/QwQ-32B',
+                'moonshotai/Kimi-K2-Instruct': 'Qwen/Qwen2.5-72B-Instruct',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/QwQ-32B',
+                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
+                'zai-org/GLM-4.7': 'THUDM/glm-4-9b-chat',
+                'zai-org/GLM-4.7-Flash': 'THUDM/glm-4-9b-chat',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/Mistral-Small-24B-Instruct-2501',
+                'mistralai/Ministral-3-14B-Reasoning-2512': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'mistralai/Devstral-2-123B-Instruct-2512': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'mistralai/Codestral-22B-v0.1': 'Qwen/Qwen2.5-Coder-32B-Instruct',
+                'microsoft/Phi-4-reasoning-plus': 'microsoft/Phi-3.5-mini-instruct',
+                'google/gemma-3n-E4B-it': 'google/gemma-2-9b-it',
+                'minimax/m2.1-preview': 'Qwen/Qwen2.5-72B-Instruct',
+                'XiaomiMiMo/MiMo-V2-Flash': 'Qwen/Qwen2.5-72B-Instruct',
+                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
+                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
+                'default': 'Qwen/Qwen2.5-72B-Instruct'
             },
-            llmstats: {
-                name: 'LLM Stats',
-                endpoint: '',
-                keyPrefix: ''
+            openrouter: {
+                'deepseek-ai/DeepSeek-R1': 'deepseek/deepseek-r1',
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek/deepseek-chat',
+                'moonshotai/Kimi-K2-Thinking': 'moonshotai/kimi-vl-a3b-thinking',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/mistral-7b-instruct',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen/qwen-2.5-72b-instruct',
+                'default': 'mistralai/mistral-7b-instruct'
+            },
+            groq: {
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistral-saba-24b',
+                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-r1-distill-qwen-32b',
+                'default': 'llama-3.3-70b-versatile'
+            },
+            together: {
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/Qwen2.5-72B-Instruct-Turbo',
+                'default': 'meta-llama/Llama-3.3-70B-Instruct-Turbo'
+            },
+            ollama: {
+                'default': 'llama3.2'
             }
         };
         
         // ==========================================
-        // STATE MANAGEMENT
+        // Utility Functions
         // ==========================================
         
-        let state = {
-            currentChat: null,
-            conversations: [],
-            currentMode: 'chat',
-            currentProvider: 'huggingface',
-            theme: 'dark',
-            settings: {
-                apiKeys: {},
-                endpoints: {}
-            },
-            isProcessing: false,
-            uploadedFiles: []
-        };
+        function generateId() {
+            return 'id_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function formatTime(date) {
+            return new Intl.DateTimeFormat('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            }).format(date);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Simple markdown parser
+        function parseMarkdown(text) {
+            if (!text) return '';
+            
+            // Code blocks
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Bold
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            
+            // Headers
+            text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // Lists
+            text = text.replace(/^\- (.+)$/gm, '<li>$1</li>');
+            text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+            
+            // Blockquotes
+            text = text.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+            
+            // Line breaks
+            text = text.replace(/\n\n/g, '</p><p>');
+            text = text.replace(/\n/g, '<br>');
+            
+            return `<p>${text}</p>`;
+        }
         
         // ==========================================
-        // INITIALIZATION
+        // Storage Functions
         // ==========================================
         
-        function init() {
-            loadState();
-            renderConversationList();
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('sahu_settings') || '{}');
+            
+            document.getElementById('hfApiKey').value = settings.hfApiKey || '';
+            document.getElementById('orApiKey').value = settings.orApiKey || '';
+            document.getElementById('groqApiKey').value = settings.groqApiKey || '';
+            document.getElementById('togetherApiKey').value = settings.togetherApiKey || '';
+            document.getElementById('ollamaEndpoint').value = settings.ollamaEndpoint || 'http://localhost:11434';
+            document.getElementById('showExperts').checked = settings.showExperts !== false;
+            document.getElementById('enableStreaming').checked = settings.enableStreaming !== false;
+            document.getElementById('maxTokens').value = settings.maxTokens || 4096;
+            document.getElementById('temperature').value = settings.temperature || 0.7;
+            document.getElementById('tempValue').textContent = settings.temperature || 0.7;
+            
+            state.theme = settings.theme || 'dark';
             applyTheme();
-            loadSettingsToForm();
             
-            if (state.currentChat) {
-                loadChat(state.currentChat);
-            }
-            
-            document.getElementById('sahuMode').value = state.currentMode;
-            updateModeBadge();
+            state.currentProvider = settings.provider || 'huggingface';
+            document.getElementById('providerSelector').value = state.currentProvider;
         }
         
-        function loadState() {
-            const saved = localStorage.getItem('sahu1_state');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                state = { ...state, ...parsed };
-            }
+        function saveSettings() {
+            const settings = {
+                hfApiKey: document.getElementById('hfApiKey').value,
+                orApiKey: document.getElementById('orApiKey').value,
+                groqApiKey: document.getElementById('groqApiKey').value,
+                togetherApiKey: document.getElementById('togetherApiKey').value,
+                ollamaEndpoint: document.getElementById('ollamaEndpoint').value,
+                showExperts: document.getElementById('showExperts').checked,
+                enableStreaming: document.getElementById('enableStreaming').checked,
+                maxTokens: parseInt(document.getElementById('maxTokens').value),
+                temperature: parseFloat(document.getElementById('temperature').value),
+                theme: state.theme,
+                provider: state.currentProvider
+            };
+            
+            localStorage.setItem('sahu_settings', JSON.stringify(settings));
+            closeSettings();
+            showToast('Settings saved successfully');
         }
         
-        function saveState() {
-            localStorage.setItem('sahu1_state', JSON.stringify(state));
+        function getApiKey(provider) {
+            const settings = JSON.parse(localStorage.getItem('sahu_settings') || '{}');
+            const keyMap = {
+                huggingface: settings.hfApiKey,
+                openrouter: settings.orApiKey,
+                groq: settings.groqApiKey,
+                together: settings.togetherApiKey,
+                ollama: null
+            };
+            return keyMap[provider] || '';
+        }
+        
+        function getSettings() {
+            return JSON.parse(localStorage.getItem('sahu_settings') || '{}');
+        }
+        
+        // Chat History Storage
+        function loadChatHistory() {
+            state.chatHistory = JSON.parse(localStorage.getItem('sahu_chats') || '[]');
+            renderChatHistory();
+        }
+        
+        function saveChatHistory() {
+            localStorage.setItem('sahu_chats', JSON.stringify(state.chatHistory));
+            renderChatHistory();
+        }
+        
+        function renderChatHistory() {
+            const container = document.getElementById('chatHistory');
+            container.innerHTML = state.chatHistory.map(chat => `
+                <button onclick="loadChat('${chat.id}')" class="w-full p-2 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-2 text-left text-sm truncate ${state.currentChatId === chat.id ? 'bg-[var(--bg-tertiary)]' : ''}">
+                    <i class="fas fa-message text-xs text-[var(--text-secondary)]"></i>
+                    <span class="truncate">${escapeHtml(chat.title)}</span>
+                </button>
+            `).join('');
         }
         
         // ==========================================
-        // THEME MANAGEMENT
+        // UI Functions
         // ==========================================
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
         
         function toggleTheme() {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
             applyTheme();
-            saveState();
+            saveSettings();
         }
         
         function applyTheme() {
@@ -700,183 +792,77 @@ function showToast(msg) {
             document.getElementById('themeIcon').className = state.theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
         }
         
-        // ==========================================
-        // SIDEBAR & UI
-        // ==========================================
-        
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
-        }
-        
-        function toggleDropdown(id) {
-            const dropdown = document.getElementById(id);
-            dropdown.classList.toggle('hidden');
-            
-            // Close on outside click
-            setTimeout(() => {
-                document.addEventListener('click', function closeDropdown(e) {
-                    if (!dropdown.contains(e.target)) {
-                        dropdown.classList.add('hidden');
-                        document.removeEventListener('click', closeDropdown);
-                    }
-                });
-            }, 0);
-        }
-        
-        function selectProvider(provider) {
-            state.currentProvider = provider;
-            document.getElementById('currentProvider').textContent = PROVIDERS[provider].name;
-            document.getElementById('providerDropdown').classList.add('hidden');
-            saveState();
-        }
-        
-        function changeSahuMode(mode) {
-            state.currentMode = mode;
-            updateModeBadge();
-            saveState();
-        }
-        
-        function updateModeBadge() {
-            const badge = document.getElementById('currentModeBadge');
-            const modeConfig = SAHU_MODES[state.currentMode];
-            badge.textContent = modeConfig.icon + ' ' + modeConfig.name.split(' ').pop();
-            badge.className = 'mode-badge ' + modeConfig.badge;
-        }
-        
-        // ==========================================
-        // SETTINGS
-        // ==========================================
-        
         function openSettings() {
             document.getElementById('settingsModal').classList.remove('hidden');
-            loadSettingsToForm();
         }
         
         function closeSettings() {
             document.getElementById('settingsModal').classList.add('hidden');
         }
         
-        function loadSettingsToForm() {
-            Object.keys(PROVIDERS).forEach(provider => {
-                const keyInput = document.getElementById(`apiKey_${provider}`);
-                if (keyInput && state.settings.apiKeys[provider]) {
-                    keyInput.value = state.settings.apiKeys[provider];
-                }
-            });
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg bg-purple-600 text-white shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function changeMoEMode() {
+            state.currentMode = document.getElementById('moeSelector').value;
+            updateModeDisplay();
+            updateToolsIndicator();
+        }
+        
+        function selectMode(mode) {
+            state.currentMode = mode;
+            document.getElementById('moeSelector').value = mode;
+            updateModeDisplay();
+            updateToolsIndicator();
+        }
+        
+        function updateModeDisplay() {
+            const config = MOE_CONFIGS[state.currentMode];
+            document.getElementById('currentModeDisplay').innerHTML = `
+                <span class="text-lg">${config.icon}</span>
+                <span class="font-medium">${config.name}</span>
+            `;
+        }
+        
+        function updateToolsIndicator() {
+            const config = MOE_CONFIGS[state.currentMode];
+            const indicator = document.getElementById('toolsIndicator');
             
-            const ollamaEndpoint = document.getElementById('endpoint_ollama');
-            if (ollamaEndpoint) {
-                ollamaEndpoint.value = state.settings.endpoints.ollama || 'http://localhost:11434';
-            }
-            
-            const llmstatsEndpoint = document.getElementById('endpoint_llmstats');
-            if (llmstatsEndpoint) {
-                llmstatsEndpoint.value = state.settings.endpoints.llmstats || '';
+            if (config.tools && config.tools.length > 0) {
+                indicator.classList.remove('hidden');
+                indicator.innerHTML = config.tools.map(tool => `
+                    <span class="px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-400 flex items-center gap-1">
+                        <i class="fas fa-${getToolIcon(tool)}"></i>
+                        ${tool}
+                    </span>
+                `).join('');
+            } else {
+                indicator.classList.add('hidden');
             }
         }
         
-        function saveSettings() {
-            Object.keys(PROVIDERS).forEach(provider => {
-                const keyInput = document.getElementById(`apiKey_${provider}`);
-                if (keyInput) {
-                    state.settings.apiKeys[provider] = keyInput.value;
-                }
-            });
-            
-            state.settings.endpoints.ollama = document.getElementById('endpoint_ollama')?.value || 'http://localhost:11434';
-            state.settings.endpoints.llmstats = document.getElementById('endpoint_llmstats')?.value || '';
-            
-            saveState();
-            closeSettings();
-            showToast('Settings saved successfully!');
-        }
-        
-        // ==========================================
-        // CONVERSATION MANAGEMENT
-        // ==========================================
-        
-        function createNewChat() {
-            const chat = {
-                id: Date.now().toString(),
-                title: 'New Chat',
-                mode: state.currentMode,
-                messages: [],
-                createdAt: new Date().toISOString()
+        function getToolIcon(tool) {
+            const icons = {
+                thinking: 'brain',
+                searching: 'search',
+                planning: 'list-check'
             };
-            
-            state.conversations.unshift(chat);
-            state.currentChat = chat.id;
-            saveState();
-            
-            renderConversationList();
-            clearChatArea();
-            document.getElementById('currentChatTitle').textContent = 'New Chat';
+            return icons[tool] || 'cog';
         }
         
-        function loadChat(chatId) {
-            const chat = state.conversations.find(c => c.id === chatId);
-            if (!chat) return;
-            
-            state.currentChat = chatId;
-            state.currentMode = chat.mode || 'chat';
-            document.getElementById('sahuMode').value = state.currentMode;
-            updateModeBadge();
-            
-            document.getElementById('currentChatTitle').textContent = chat.title;
-            renderMessages(chat.messages);
-            renderConversationList();
-            saveState();
+        function changeProvider() {
+            state.currentProvider = document.getElementById('providerSelector').value;
         }
         
-        function deleteChat(chatId, event) {
-            event.stopPropagation();
-            state.conversations = state.conversations.filter(c => c.id !== chatId);
-            
-            if (state.currentChat === chatId) {
-                state.currentChat = null;
-                clearChatArea();
-            }
-            
-            renderConversationList();
-            saveState();
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
         }
-        
-        function clearAllChats() {
-            if (confirm('Are you sure you want to delete all conversations?')) {
-                state.conversations = [];
-                state.currentChat = null;
-                clearChatArea();
-                renderConversationList();
-                saveState();
-            }
-        }
-        
-        function clearChatArea() {
-            document.getElementById('welcomeScreen').classList.remove('hidden');
-            document.getElementById('messagesContainer').classList.add('hidden');
-            document.getElementById('messagesContainer').innerHTML = '';
-            document.getElementById('currentChatTitle').textContent = 'New Chat';
-        }
-        
-        function renderConversationList() {
-            const list = document.getElementById('conversationList');
-            list.innerHTML = state.conversations.map(chat => `
-                <div class="conversation-item rounded-lg p-3 cursor-pointer flex items-center justify-between group ${chat.id === state.currentChat ? 'active' : ''}" onclick="loadChat('${chat.id}')">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <i class="fas fa-message text-xs text-[var(--text-secondary)]"></i>
-                        <span class="truncate text-sm">${escapeHtml(chat.title)}</span>
-                    </div>
-                    <button onclick="deleteChat('${chat.id}', event)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--bg-primary)] transition">
-                        <i class="fas fa-trash-alt text-xs text-[var(--text-secondary)]"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-        
-        // ==========================================
-        // MESSAGE HANDLING
-        // ==========================================
         
         function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -885,729 +871,883 @@ function showToast(msg) {
             }
         }
         
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
-        }
-        
         function handleFileUpload(event) {
-            const files = Array.from(event.target.files);
-            state.uploadedFiles = [...state.uploadedFiles, ...files];
-            renderFilePreview();
+            const file = event.target.files[0];
+            if (file) {
+                state.uploadedFiles.push(file);
+                showToast(`File "${file.name}" attached`);
+            }
         }
         
-        function renderFilePreview() {
-            const preview = document.getElementById('filePreview');
-            if (state.uploadedFiles.length === 0) {
-                preview.classList.add('hidden');
+        // ==========================================
+        // Chat Functions
+        // ==========================================
+        
+        function startNewChat() {
+            state.currentChatId = generateId();
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('messagesContainer').classList.add('hidden');
+            document.getElementById('messagesContainer').innerHTML = '';
+            document.getElementById('userInput').value = '';
+            state.uploadedFiles = [];
+            state.toolBuffer = [];
+        }
+        
+        function loadChat(chatId) {
+            const chat = state.chatHistory.find(c => c.id === chatId);
+            if (!chat) return;
+            
+            state.currentChatId = chatId;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
+            document.getElementById('messagesContainer').innerHTML = '';
+            
+            // Render all messages from this chat
+            chat.messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    appendUserMessage(msg.content);
+                } else {
+                    appendAssistantMessage(msg);
+                }
+            });
+            
+            renderChatHistory();
+        }
+        
+        function appendUserMessage(content) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex justify-end';
+            messageDiv.innerHTML = `
+                <div class="message-user max-w-2xl px-4 py-3 rounded-2xl rounded-br-md text-white">
+                    <p class="whitespace-pre-wrap">${escapeHtml(content)}</p>
+                </div>
+            `;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function appendAssistantMessage(msg) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'space-y-4';
+            
+            let html = '';
+            
+            // Tools section
+            if (msg.tools && msg.tools.length > 0) {
+                html += `
+                    <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                        ${msg.tools.map(t => `<span class="px-2 py-1 rounded-full bg-purple-600/20 text-purple-400"><i class="fas fa-${getToolIcon(t)}"></i> ${t}</span>`).join('')}
+                    </div>
+                `;
+            }
+            
+            // Expert outputs
+            if (msg.experts && msg.experts.length > 0) {
+                html += `
+                    <div class="expert-grid">
+                        ${msg.experts.map(exp => `
+                            <div class="expert-card rounded-xl p-4 border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium text-sm">${exp.name}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)]/20 text-[var(--accent)]">${exp.provider || 'Expert'}</span>
+                                </div>
+                                <div class="text-sm text-[var(--text-secondary)] markdown-content max-h-48 overflow-y-auto">
+                                    ${parseMarkdown(exp.output)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // Final answer
+            if (msg.finalAnswer) {
+                html += `
+                    <div class="final-answer rounded-xl p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                                <i class="fas fa-star text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Final Expert</span>
+                                <span class="text-sm text-[var(--text-secondary)]"> · ${msg.aggregator || 'Aggregator'}</span>
+                            </div>
+                        </div>
+                        <div class="markdown-content">
+                            ${parseMarkdown(msg.finalAnswer)}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = html;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // ==========================================
+        // Provider & API Functions
+        // ==========================================
+        
+        function resolveModel(modelId, provider) {
+            const mappings = MODEL_MAPPINGS[provider] || {};
+            return mappings[modelId] || mappings['default'] || modelId;
+        }
+        
+        function buildApiRequest(provider, model, messages, stream = true) {
+            const settings = getSettings();
+            const providerConfig = PROVIDERS[provider];
+            
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            const apiKey = getApiKey(provider);
+            if (providerConfig.headerKey && apiKey) {
+                headers[providerConfig.headerKey] = (providerConfig.headerPrefix || '') + apiKey;
+            }
+            
+            // Add OpenRouter specific headers
+            if (provider === 'openrouter') {
+                headers['HTTP-Referer'] = window.location.origin;
+                headers['X-Title'] = 'SAHU 1 MoE';
+            }
+            
+            let url = providerConfig.baseUrl;
+            let body;
+            
+            if (provider === 'huggingface') {
+                // Using HuggingFace Router - OpenAI compatible endpoint
+                url = providerConfig.baseUrl;
+                const resolvedModel = resolveModel(model, provider);
+                body = {
+                    model: resolvedModel,
+                    messages: messages,
+                    max_tokens: settings.maxTokens || 4096,
+                    temperature: settings.temperature || 0.7,
+                    stream: stream
+                };
+            } else if (provider === 'ollama') {
+                url = settings.ollamaEndpoint ? `${settings.ollamaEndpoint}/api/chat` : url;
+                body = {
+                    model: resolveModel(model, provider),
+                    messages: messages,
+                    stream: stream
+                };
+            } else {
+                // OpenAI-compatible API (OpenRouter, Groq, Together)
+                body = {
+                    model: resolveModel(model, provider),
+                    messages: messages,
+                    max_tokens: settings.maxTokens || 4096,
+                    temperature: settings.temperature || 0.7,
+                    stream: stream
+                };
+            }
+            
+            return { url, headers, body };
+        }
+        
+        // ==========================================
+        // Streaming Handler
+        // ==========================================
+        
+        async function* streamResponse(response, provider) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    // Parse based on provider format
+                    if (provider === 'ollama') {
+                        // Ollama sends JSON per line
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        
+                        for (const line of lines) {
+                            if (line.trim()) {
+                                try {
+                                    const json = JSON.parse(line);
+                                    if (json.message?.content) {
+                                        yield json.message.content;
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    } else if (provider === 'huggingface') {
+                        // HuggingFace Router uses OpenAI-compatible SSE format
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const data = line.slice(5).trim();
+                                if (data && data !== '[DONE]') {
+                                    try {
+                                        const json = JSON.parse(data);
+                                        // OpenAI compatible format
+                                        const content = json.choices?.[0]?.delta?.content;
+                                        if (content) {
+                                            yield content;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                    } else {
+                        // SSE format (OpenRouter, Groq, Together)
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const data = line.slice(5).trim();
+                                if (data && data !== '[DONE]') {
+                                    try {
+                                        const json = JSON.parse(data);
+                                        const content = json.choices?.[0]?.delta?.content;
+                                        if (content) {
+                                            yield content;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        }
+        
+        // ==========================================
+        // Expert Runner - With Word-by-Word Streaming
+        // ==========================================
+        
+        async function runExpert(expert, userMessage, toolContext, cardElement) {
+            const provider = state.currentProvider;
+            const settings = getSettings();
+            
+            // Build messages with tool context
+            let systemPrompt = `You are an AI expert named "${expert.name}" (Developed by Saksham Intelligence). You are part of the SAHU 1-series Mixture of Experts system. Provide your best analysis and response.`;
+            
+            if (toolContext && toolContext.length > 0) {
+                systemPrompt += `\n\nTool Outputs:\n${toolContext.map(t => `[${t.tool}]: ${t.output}`).join('\n')}`;
+            }
+            
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMessage }
+            ];
+            
+            // Always try to stream for word-by-word effect
+            const { url, headers, body } = buildApiRequest(provider, expert.model, messages, true);
+            
+            try {
+                // Create a unique abort controller for each expert
+                const expertAbortController = new AbortController();
+                
+                // Link to main abort controller
+                if (state.abortController) {
+                    state.abortController.signal.addEventListener('abort', () => {
+                        expertAbortController.abort();
+                    });
+                }
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body),
+                    signal: expertAbortController.signal
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
+                }
+                
+                const outputElement = cardElement.querySelector('.expert-output');
+                let fullOutput = '';
+                let lastRenderTime = Date.now();
+                const minRenderInterval = 25; // Smooth word-by-word effect
+                
+                if (response.body) {
+                    // Streaming response with word-by-word effect
+                    for await (const token of streamResponse(response, provider)) {
+                        if (expertAbortController.signal.aborted) break;
+                        
+                        fullOutput += token;
+                        
+                        // Render at intervals for smooth word-by-word effect
+                        const now = Date.now();
+                        if (now - lastRenderTime >= minRenderInterval || token.includes(' ') || token.includes('\n')) {
+                            outputElement.innerHTML = parseMarkdown(fullOutput);
+                            lastRenderTime = now;
+                            
+                            // Small delay for visual word-by-word effect
+                            await new Promise(resolve => setTimeout(resolve, 8));
+                        }
+                    }
+                    
+                    // Final render
+                    outputElement.innerHTML = parseMarkdown(fullOutput);
+                } else {
+                    // Non-streaming fallback with word-by-word display
+                    const data = await response.json();
+                    
+                    if (provider === 'huggingface') {
+                        fullOutput = data.choices?.[0]?.message?.content || '';
+                    } else if (provider === 'ollama') {
+                        fullOutput = data.message?.content || '';
+                    } else {
+                        fullOutput = data.choices?.[0]?.message?.content || '';
+                    }
+                    
+                    // Display word by word
+                    await displayWordByWord(outputElement, fullOutput, 15);
+                }
+                
+                // Remove loading state
+                cardElement.querySelector('.loading-indicator')?.remove();
+                
+                return fullOutput;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return '[Stopped]';
+                }
+                console.error(`Expert ${expert.name} error:`, error);
+                cardElement.querySelector('.loading-indicator')?.remove();
+                cardElement.querySelector('.expert-output').innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>Error: ${error.message}</span>`;
+                return `[Error: ${error.message}]`;
+            }
+        }
+        
+        // ==========================================
+        // Word-by-Word Display Helper
+        // ==========================================
+        
+        async function displayWordByWord(element, text, delayMs = 20) {
+            const words = text.split(/(\s+)/);
+            let displayed = '';
+            
+            for (const word of words) {
+                if (state.abortController?.signal.aborted) break;
+                displayed += word;
+                element.innerHTML = parseMarkdown(displayed);
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+            
+            return displayed;
+        }
+        
+        // ==========================================
+        // Aggregator Runner - Enhanced with Thinking & Analysis
+        // ==========================================
+        
+        async function runAggregator(aggregator, userMessage, expertOutputs, toolContext, containerElement) {
+            const provider = state.currentProvider;
+            const settings = getSettings();
+            
+            // Get output element
+            const outputElement = containerElement.querySelector('.aggregator-output');
+            
+            // Phase 1: Reading expert outputs (visual feedback)
+            outputElement.innerHTML = '<div class="text-purple-400 mb-3"><i class="fas fa-book-reader mr-2"></i><em>Reading all expert outputs...</em></div>';
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Build comprehensive aggregator prompt with thinking instructions
+            const systemPrompt = `You are the Final Expert Aggregator named "${aggregator.name}" (Developed by Saksham Intelligence) in the SAHU 1-series Mixture of Experts system.
+
+You have received responses from ${expertOutputs.length} expert AI models. Your task is to:
+
+1. **THINK**: First, internally analyze each expert's response - identify key insights, strengths, weaknesses, and unique perspectives.
+
+2. **ANALYZE/COMPARE**: Compare the expert responses, noting agreements, disagreements, and complementary information.
+
+3. **SYNTHESIZE**: Combine the best elements from all experts into a comprehensive, accurate, and well-structured final answer.
+
+4. **VERIFY**: Ensure your final answer is consistent, factually accurate (based on expert consensus), and directly addresses the user's question.
+
+=== EXPERT OUTPUTS ===
+${expertOutputs.map((exp, i) => `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPERT ${i + 1}: ${exp.name}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${exp.output}
+`).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${toolContext && toolContext.length > 0 ? `
+=== TOOL OUTPUTS ===
+${toolContext.map(t => `[${t.tool.toUpperCase()}]: ${t.output}`).join('\n')}
+` : ''}
+
+IMPORTANT INSTRUCTIONS:
+- Structure your response with clear sections when appropriate
+- If experts disagree, explain the different perspectives and provide the most accurate answer
+- Credit specific insights to experts when relevant (e.g., "As noted by Expert 1...")
+- Be comprehensive but concise
+- Use markdown formatting for clarity`;
+
+            const userPrompt = `Based on all the expert analyses provided above, please:
+
+1. First, briefly share your thinking about what each expert contributed (2-3 sentences)
+2. Then, provide your analysis of where experts agree/disagree (2-3 sentences)  
+3. Finally, give your comprehensive FINAL ANSWER to the user's question:
+
+"${userMessage}"
+
+Begin your response now:`;
+            
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ];
+            
+            // Phase 2: Thinking indicator
+            outputElement.innerHTML = '<div class="text-purple-400 mb-3"><i class="fas fa-brain mr-2 fa-pulse"></i><em>Thinking and analyzing expert responses...</em></div>';
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            const { url, headers, body } = buildApiRequest(provider, aggregator.model, messages, true); // Always stream for aggregator
+            
+            try {
+                state.abortController = new AbortController();
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body),
+                    signal: state.abortController.signal
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
+                }
+                
+                // Clear the thinking indicator
+                outputElement.innerHTML = '';
+                
+                let fullOutput = '';
+                let tokenBuffer = '';
+                let lastRenderTime = Date.now();
+                const minRenderInterval = 30; // Minimum ms between renders for smooth word-by-word effect
+                
+                if (response.body) {
+                    // Streaming response with word-by-word effect
+                    for await (const token of streamResponse(response, provider)) {
+                        if (state.abortController?.signal.aborted) break;
+                        
+                        tokenBuffer += token;
+                        fullOutput += token;
+                        
+                        // Render at intervals for smooth word-by-word effect
+                        const now = Date.now();
+                        if (now - lastRenderTime >= minRenderInterval || token.includes(' ') || token.includes('\n')) {
+                            outputElement.innerHTML = parseMarkdown(fullOutput);
+                            containerElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            lastRenderTime = now;
+                            tokenBuffer = '';
+                            
+                            // Small delay for word-by-word effect
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                        }
+                    }
+                    
+                    // Final render
+                    outputElement.innerHTML = parseMarkdown(fullOutput);
+                } else {
+                    // Non-streaming fallback with word-by-word display
+                    const data = await response.json();
+                    
+                    if (provider === 'huggingface') {
+                        fullOutput = data.choices?.[0]?.message?.content || '';
+                    } else if (provider === 'ollama') {
+                        fullOutput = data.message?.content || '';
+                    } else {
+                        fullOutput = data.choices?.[0]?.message?.content || '';
+                    }
+                    
+                    // Display word by word
+                    await displayWordByWord(outputElement, fullOutput);
+                }
+                
+                containerElement.querySelector('.loading-indicator')?.remove();
+                
+                return fullOutput;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return '[Stopped]';
+                }
+                console.error('Aggregator error:', error);
+                outputElement.innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${error.message}</span>`;
+                return `[Error: ${error.message}]`;
+            }
+        }
+        
+        // ==========================================
+        // Tool Execution
+        // ==========================================
+        
+        async function executeTools(tools, userMessage) {
+            const toolResults = [];
+            
+            for (const tool of tools) {
+                if (tool === 'thinking') {
+                    // Simulate thinking process
+                    toolResults.push({
+                        tool: 'thinking',
+                        output: `Analyzing the query: "${userMessage.substring(0, 100)}..."\nIdentifying key concepts and reasoning steps.\nFormulating approach for comprehensive response.`
+                    });
+                } else if (tool === 'searching') {
+                    // Simulate search (in production, this would call a search API)
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Research mode delay
+                    toolResults.push({
+                        tool: 'searching',
+                        output: `Searched for: "${userMessage.substring(0, 50)}..."\nGathering relevant information from knowledge base.\nNote: Real-time web search requires additional API integration.`
+                    });
+                } else if (tool === 'planning') {
+                    toolResults.push({
+                        tool: 'planning',
+                        output: `Planning approach for: "${userMessage.substring(0, 50)}..."\nStep 1: Understand requirements\nStep 2: Design solution architecture\nStep 3: Implement with best practices\nStep 4: Review and optimize`
+                    });
+                }
+            }
+            
+            return toolResults;
+        }
+        
+        // ==========================================
+        // Agent Mode - Intent Detection
+        // ==========================================
+        
+        function detectIntent(message) {
+            const msg = message.toLowerCase();
+            
+            // Code-related keywords
+            if (/\b(code|program|function|class|api|debug|implement|develop|script|algorithm|syntax|compile|runtime|bug|error)\b/.test(msg)) {
+                return 'code';
+            }
+            
+            // Research keywords
+            if (/\b(research|study|analyze|investigate|compare|review|explain in detail|comprehensive|in-depth|sources|evidence)\b/.test(msg)) {
+                return 'research';
+            }
+            
+            // Reasoning keywords
+            if (/\b(think|reason|logic|deduce|infer|conclude|step by step|analyze|evaluate|consider|why|how does)\b/.test(msg)) {
+                return 'deepthink';
+            }
+            
+            // Quick/simple queries
+            if (msg.length < 50 || /\b(quick|fast|briefly|short|simple|what is|who is|when|where)\b/.test(msg)) {
+                return 'fast';
+            }
+            
+            // Default to chat
+            return 'chat';
+        }
+        
+        // ==========================================
+        // Main Send Message Function
+        // ==========================================
+        
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || state.isGenerating) return;
+            
+            // Check for API key
+            const apiKey = getApiKey(state.currentProvider);
+            if (!apiKey && state.currentProvider !== 'ollama') {
+                showToast('Please configure your API key in Settings');
+                openSettings();
                 return;
             }
             
-            preview.classList.remove('hidden');
-            preview.innerHTML = state.uploadedFiles.map((file, i) => `
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--bg-tertiary)] text-sm">
-                    <i class="fas fa-file text-[var(--accent)]"></i>
-                    <span class="truncate max-w-32">${escapeHtml(file.name)}</span>
-                    <button onclick="removeFile(${i})" class="hover:text-red-400">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-        
-        function removeFile(index) {
-            state.uploadedFiles.splice(index, 1);
-            renderFilePreview();
-        }
-        
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message || state.isProcessing) return;
-            
-            // Ensure we have a chat
-            if (!state.currentChat) {
-                createNewChat();
+            // Start new chat if needed
+            if (!state.currentChatId) {
+                state.currentChatId = generateId();
             }
             
-            const chat = state.conversations.find(c => c.id === state.currentChat);
-            if (!chat) return;
-            
-            // Update chat title if first message
-            if (chat.messages.length === 0) {
-                chat.title = message.slice(0, 50) + (message.length > 50 ? '...' : '');
-                document.getElementById('currentChatTitle').textContent = chat.title;
-                renderConversationList();
-            }
-            
-            // Add user message
-            const userMessage = {
-                role: 'user',
-                content: message,
-                files: state.uploadedFiles.map(f => f.name),
-                timestamp: new Date().toISOString()
-            };
-            
-            chat.messages.push(userMessage);
-            chat.mode = state.currentMode;
+            // Hide welcome screen, show messages
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
             
             // Clear input
             input.value = '';
             input.style.height = 'auto';
-            state.uploadedFiles = [];
-            renderFilePreview();
             
-            // Show chat area
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('messagesContainer').classList.remove('hidden');
+            // Show user message
+            appendUserMessage(message);
             
-            // Render user message
-            appendMessage(userMessage);
+            // Update UI state
+            state.isGenerating = true;
+            document.getElementById('sendButton').classList.add('hidden');
+            document.getElementById('stopButton').classList.remove('hidden');
             
-            // Process with SAHU MoE
-            state.isProcessing = true;
-            document.getElementById('sendButton').disabled = true;
-            
-            try {
-                await processSahuMoE(message, chat);
-            } catch (error) {
-                console.error('SAHU MoE Error:', error);
-                appendErrorMessage('An error occurred while processing your request.');
+            // Determine mode (handle Agent mode)
+            let activeMode = state.currentMode;
+            if (activeMode === 'agent') {
+                activeMode = detectIntent(message);
+                showToast(`Agent routed to: ${MOE_CONFIGS[activeMode].name}`);
             }
             
-            state.isProcessing = false;
-            document.getElementById('sendButton').disabled = false;
-            saveState();
-        }
-        
-        function appendMessage(msg) {
-            const container = document.getElementById('messagesContainer');
-            const div = document.createElement('div');
-            div.className = 'fade-in';
-            
-            if (msg.role === 'user') {
-                div.innerHTML = `
-                    <div class="flex justify-end mb-4">
-                        <div class="message-user rounded-2xl rounded-tr-sm px-4 py-3 max-w-2xl text-white">
-                            ${msg.files?.length ? `
-                                <div class="flex flex-wrap gap-2 mb-2">
-                                    ${msg.files.map(f => `<span class="text-xs bg-white/20 px-2 py-1 rounded"><i class="fas fa-file mr-1"></i>${escapeHtml(f)}</span>`).join('')}
-                                </div>
-                            ` : ''}
-                            <div class="whitespace-pre-wrap">${escapeHtml(msg.content)}</div>
-                        </div>
-                    </div>
-                `;
-            } else if (msg.role === 'assistant') {
-                div.innerHTML = `
-                    <div class="flex justify-start mb-4">
-                        <div class="message-assistant rounded-2xl rounded-tl-sm px-4 py-3 max-w-3xl">
-                            <div class="prose prose-invert max-w-none">${formatMessage(msg.content)}</div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        function appendErrorMessage(error) {
-            const container = document.getElementById('messagesContainer');
-            const div = document.createElement('div');
-            div.className = 'fade-in';
-            div.innerHTML = `
-                <div class="flex justify-start mb-4">
-                    <div class="bg-red-500/20 border border-red-500/50 rounded-2xl px-4 py-3 max-w-2xl">
-                        <div class="flex items-center gap-2 text-red-400">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span>${escapeHtml(error)}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        // ==========================================
-        // SAHU MoE ORCHESTRATION
-        // ==========================================
-        
-        async function processSahuMoE(prompt, chat) {
-            const modeConfig = SAHU_MODES[state.currentMode];
+            const config = MOE_CONFIGS[activeMode];
             const container = document.getElementById('messagesContainer');
             
-            // Create MoE response container
-            const moeDiv = document.createElement('div');
-            moeDiv.className = 'fade-in mb-6';
-            moeDiv.id = 'moe-response-' + Date.now();
-            container.appendChild(moeDiv);
+            // Create response container
+            const responseDiv = document.createElement('div');
+            responseDiv.className = 'space-y-4';
+            container.appendChild(responseDiv);
             
-            // Step 1: Execute Tools (if any)
-            if (modeConfig.tools.length > 0) {
-                const toolsHtml = await executeTools(modeConfig.tools, prompt, moeDiv);
+            // Execute tools if any
+            let toolContext = [];
+            if (config.tools && config.tools.length > 0) {
+                // Show tool execution status
+                const toolDiv = document.createElement('div');
+                toolDiv.className = 'flex items-center gap-2 text-sm text-purple-400';
+                toolDiv.innerHTML = config.tools.map(t => `
+                    <span class="px-2 py-1 rounded-full bg-purple-600/20 flex items-center gap-1 tool-active">
+                        <i class="fas fa-${getToolIcon(t)} fa-spin"></i>
+                        ${t}
+                    </span>
+                `).join('');
+                responseDiv.appendChild(toolDiv);
+                
+                toolContext = await executeTools(config.tools, message);
+                state.toolBuffer = toolContext;
+                
+                // Update tool display to complete
+                toolDiv.innerHTML = config.tools.map(t => `
+                    <span class="px-2 py-1 rounded-full bg-green-600/20 text-green-400 flex items-center gap-1">
+                        <i class="fas fa-check"></i>
+                        ${t}
+                    </span>
+                `).join('');
             }
             
-            // Step 2: Execute Experts in Parallel
-            const expertResults = await executeExperts(modeConfig.experts, prompt, moeDiv);
+            // Create expert grid
+            const settings = getSettings();
+            const expertOutputs = [];
             
-            // Step 3: Render Expert Grid
-            renderExpertGrid(expertResults, moeDiv);
-            
-            // Step 4: Run Aggregator
-            const finalAnswer = await runAggregator(modeConfig.aggregator, expertResults, prompt, moeDiv);
-            
-            // Step 5: Add final message to chat
-            const assistantMessage = {
-                role: 'assistant',
-                content: finalAnswer,
-                expertResults: expertResults,
-                mode: state.currentMode,
-                timestamp: new Date().toISOString()
-            };
-            
-            chat.messages.push(assistantMessage);
-            
-            // Render final answer
-            renderFinalAnswer(finalAnswer, moeDiv);
-            
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        async function executeTools(tools, prompt, container) {
-            const toolsDiv = document.createElement('div');
-            toolsDiv.className = 'mb-4 space-y-2';
-            container.appendChild(toolsDiv);
-            
-            for (const tool of tools) {
-                const toolBanner = document.createElement('div');
-                toolBanner.className = 'tool-banner rounded-lg p-3 flex items-center gap-3';
+            if (settings.showExperts !== false && config.experts.length > 0) {
+                const expertGrid = document.createElement('div');
+                expertGrid.className = 'expert-grid';
                 
-                const toolIcon = tool === 'thinking' ? 'brain' : tool === 'searching' ? 'search' : 'project-diagram';
-                const toolName = tool.charAt(0).toUpperCase() + tool.slice(1);
-                
-                toolBanner.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg bg-[var(--accent)]/20 flex items-center justify-center">
-                        <i class="fas fa-${toolIcon} text-[var(--accent)] spinner"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-medium text-sm">${toolName}</div>
-                        <div class="text-xs text-[var(--text-secondary)]">Executing ${toolName.toLowerCase()} tool...</div>
-                    </div>
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                `;
-                
-                toolsDiv.appendChild(toolBanner);
-                
-                // Simulate tool execution
-                await delay(800 + Math.random() * 700);
-                
-                toolBanner.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                        <i class="fas fa-check text-green-400"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-medium text-sm">${toolName}</div>
-                        <div class="text-xs text-[var(--text-secondary)]">${toolName} completed</div>
-                    </div>
-                    <button onclick="toggleToolLog(this)" class="text-xs text-[var(--accent)] hover:underline">
-                        View Log <i class="fas fa-chevron-down ml-1"></i>
-                    </button>
-                `;
-                
-                // Add expandable log
-                const logDiv = document.createElement('div');
-                logDiv.className = 'hidden mt-2 p-3 bg-[var(--bg-tertiary)] rounded-lg text-xs font-mono text-[var(--text-secondary)]';
-                logDiv.textContent = `[${new Date().toISOString()}] ${toolName} tool executed successfully for query: "${prompt.slice(0, 50)}..."`;
-                toolBanner.appendChild(logDiv);
-            }
-        }
-        
-        function toggleToolLog(button) {
-            const log = button.parentElement.querySelector('.hidden, .block');
-            if (log) {
-                log.classList.toggle('hidden');
-                log.classList.toggle('block');
-                const icon = button.querySelector('i');
-                icon.classList.toggle('fa-chevron-down');
-                icon.classList.toggle('fa-chevron-up');
-            }
-        }
-        
-        async function executeExperts(experts, prompt, container) {
-            // Show loading state
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'mb-4 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]';
-            loadingDiv.innerHTML = `
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-8 h-8 rounded-lg bg-[var(--accent)]/20 flex items-center justify-center">
-                        <i class="fas fa-users text-[var(--accent)]"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Consulting ${experts.length} Experts</div>
-                        <div class="text-xs text-[var(--text-secondary)]">Processing in parallel...</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    ${experts.map(e => `
-                        <div class="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-tertiary)] text-xs">
-                            <span class="w-2 h-2 rounded-full bg-yellow-500 expert-status"></span>
-                            <span class="truncate">${escapeHtml(e.name)}</span>
+                // Create cards for each expert
+                const expertCards = config.experts.map(expert => {
+                    const card = document.createElement('div');
+                    card.className = 'expert-card rounded-xl p-4 border';
+                    card.id = `expert-${expert.id}`;
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-medium text-sm">${expert.name}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${PROVIDERS[state.currentProvider].badge} text-white">${PROVIDERS[state.currentProvider].name}</span>
                         </div>
-                    `).join('')}
-                </div>
-            `;
-            container.appendChild(loadingDiv);
-            
-            // Simulate parallel expert execution
-            const results = await Promise.all(experts.map(async (expert, index) => {
-                await delay(1000 + Math.random() * 2000);
-                
-                // Update status
-                const statusDots = loadingDiv.querySelectorAll('.expert-status');
-                if (statusDots[index]) {
-                    statusDots[index].classList.remove('bg-yellow-500', 'expert-status');
-                    statusDots[index].classList.add('bg-green-500');
-                }
-                
-                // Generate simulated response
-                const response = generateExpertResponse(expert, prompt);
-                
-                return {
-                    expert: expert,
-                    response: response,
-                    score: (0.7 + Math.random() * 0.3).toFixed(2),
-                    latency: Math.floor(800 + Math.random() * 1500) + 'ms'
-                };
-            }));
-            
-            // Remove loading div
-            loadingDiv.remove();
-            
-            return results;
-        }
-        
-        function generateExpertResponse(expert, prompt) {
-            // Simulated expert responses based on expert type
-            const responses = {
-                'deepseek': `Based on my analysis, the key considerations are:\n\n1. **Primary Factor**: The core issue revolves around ${prompt.split(' ').slice(0, 3).join(' ')}...\n\n2. **Technical Depth**: When examining this from a technical perspective, we need to consider multiple layers of complexity.\n\n3. **Recommendation**: I suggest a structured approach that addresses both immediate needs and long-term scalability.`,
-                'gpt': `I've analyzed your query comprehensively. Here's my structured response:\n\n**Understanding**: ${prompt.slice(0, 30)}...\n\n**Analysis**: This requires careful consideration of multiple factors including context, constraints, and objectives.\n\n**Conclusion**: The optimal approach would involve balancing efficiency with thoroughness.`,
-                'kimi': `Let me break this down systematically:\n\n• **Context Analysis**: Understanding the broader picture\n• **Key Insights**: Identifying critical success factors\n• **Action Items**: Concrete steps forward\n\nBased on my evaluation, the most effective strategy addresses your core needs while maintaining flexibility.`,
-                'qwen': `Analyzing your request from multiple angles:\n\n1. **Foundational Understanding**: The premise involves...\n2. **Technical Implementation**: Key considerations include...\n3. **Best Practices**: Industry standards suggest...\n\nMy recommendation synthesizes these factors into a cohesive solution.`,
-                'glm': `From my perspective, this query touches on several important areas:\n\n**Primary Analysis**: Understanding the fundamental requirements\n**Secondary Considerations**: Addressing edge cases and exceptions\n**Final Synthesis**: Combining insights for a comprehensive answer`,
-                'mistral': `Here's my take on this:\n\n→ The main point centers around understanding context\n→ Important factors include scalability and maintainability\n→ My recommendation balances practicality with innovation`,
-                'llama': `I've processed your query and here's what I found:\n\n🔹 Key observation #1: Foundation is crucial\n🔹 Key observation #2: Implementation matters\n🔹 Key observation #3: Testing is essential\n\nOverall, a methodical approach yields the best results.`,
-                'minimax': `Comprehensive analysis complete:\n\n[Insight 1] Understanding context is paramount\n[Insight 2] Practical implementation should follow theory\n[Insight 3] Iteration improves outcomes\n\nSynthesis: A balanced approach works best.`,
-                'mimo': `Quick analysis:\n\n• Core issue identified\n• Solution pathway clear\n• Implementation straightforward\n\nRecommendation: Proceed with structured implementation.`,
-                'gemma': `Brief analysis:\n\n1. Understood the query\n2. Analyzed key factors\n3. Formulated response\n\nConclusion: Clear path forward exists.`,
-                'default': `Analysis of "${prompt.slice(0, 20)}...":\n\nKey findings indicate multiple viable approaches. The optimal solution balances efficiency with effectiveness, considering both immediate requirements and future scalability.`
-            };
-            
-            const expertKey = Object.keys(responses).find(key => 
-                expert.name.toLowerCase().includes(key) || expert.id.toLowerCase().includes(key)
-            ) || 'default';
-            
-            return responses[expertKey];
-        }
-        
-        function renderExpertGrid(results, container) {
-            const gridDiv = document.createElement('div');
-            gridDiv.className = 'mb-4';
-            
-            gridDiv.innerHTML = `
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-th-large text-[var(--accent)]"></i>
-                        <span class="font-medium">Expert Responses</span>
-                        <span class="text-xs text-[var(--text-secondary)]">(${results.length} experts)</span>
-                    </div>
-                    <button onclick="toggleExpertGrid(this)" class="text-xs text-[var(--accent)] hover:underline">
-                        Collapse <i class="fas fa-chevron-up ml-1"></i>
-                    </button>
-                </div>
-                <div class="expert-grid-content expert-grid">
-                    ${results.map((r, i) => `
-                        <div class="expert-card rounded-xl p-4 transition cursor-pointer" onclick="expandExpert(${i})">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                                        ${r.expert.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-sm">${escapeHtml(r.expert.name)}</div>
-                                        <div class="text-xs text-[var(--text-secondary)]">${r.latency}</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <span class="text-xs font-medium text-green-400">${r.score}</span>
-                                    <i class="fas fa-star text-xs text-yellow-500"></i>
-                                </div>
-                            </div>
-                            <div class="text-sm text-[var(--text-secondary)] line-clamp-3">${escapeHtml(r.response.slice(0, 150))}...</div>
+                        <div class="loading-indicator flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Generating...</span>
                         </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            container.appendChild(gridDiv);
-            
-            // Store results for expansion
-            window.currentExpertResults = results;
-        }
-        
-        function toggleExpertGrid(button) {
-            const content = button.parentElement.nextElementSibling;
-            const isHidden = content.classList.toggle('hidden');
-            button.innerHTML = isHidden 
-                ? 'Expand <i class="fas fa-chevron-down ml-1"></i>'
-                : 'Collapse <i class="fas fa-chevron-up ml-1"></i>';
-        }
-        
-        function expandExpert(index) {
-            const result = window.currentExpertResults[index];
-            if (!result) return;
-            
-            // Create modal
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay fixed inset-0 z-50 flex items-center justify-center';
-            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-            
-            modal.innerHTML = `
-                <div class="modal-content w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden mx-4">
-                    <div class="p-4 border-b border-[var(--border)] flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                ${result.expert.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h2 class="font-bold">${escapeHtml(result.expert.name)}</h2>
-                                <div class="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                                    <span><i class="fas fa-clock mr-1"></i>${result.latency}</span>
-                                    <span><i class="fas fa-star text-yellow-500 mr-1"></i>${result.score}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="this.closest('.modal-overlay').remove()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="p-6 overflow-y-auto max-h-[60vh]">
-                        <div class="prose prose-invert max-w-none">${formatMessage(result.response)}</div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-        
-        async function runAggregator(aggregator, expertResults, prompt, container) {
-            const aggDiv = document.createElement('div');
-            aggDiv.className = 'mb-4 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]';
-            aggDiv.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                        <i class="fas fa-layer-group text-white spinner"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Aggregator: ${escapeHtml(aggregator.name)}</div>
-                        <div class="text-xs text-[var(--text-secondary)]">Synthesizing expert responses...</div>
-                    </div>
-                    <div class="ml-auto typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                </div>
-            `;
-            container.appendChild(aggDiv);
-            
-            // Simulate aggregation
-            await delay(1500 + Math.random() * 1000);
-            
-            // Generate aggregated response
-            const aggregatedResponse = generateAggregatedResponse(expertResults, prompt, state.currentMode);
-            
-            // Update aggregator status
-            aggDiv.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                        <i class="fas fa-check text-white"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium">Aggregator: ${escapeHtml(aggregator.name)}</div>
-                        <div class="text-xs text-green-400">Synthesis complete</div>
-                    </div>
-                </div>
-            `;
-            
-            return aggregatedResponse;
-        }
-        
-        function generateAggregatedResponse(expertResults, prompt, mode) {
-            const modeConfig = SAHU_MODES[mode];
-            
-            // Generate expert scoring
-            const sortedExperts = [...expertResults].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
-            const topExperts = sortedExperts.slice(0, 3);
-            
-            let response = `## ${modeConfig.icon} ${modeConfig.name} Response\n\n`;
-            
-            if (mode === 'deepthink') {
-                response += `### 🧠 Extended Reasoning Analysis\n\n`;
-                response += `After consulting ${expertResults.length} expert models and performing conflict resolution, here is the synthesized response:\n\n`;
-                response += `**Query Understanding**: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"\n\n`;
-                response += `### Key Insights\n\n`;
-                response += `Based on the collective analysis of our expert panel, the following insights emerge:\n\n`;
-                response += `1. **Primary Consensus**: The majority of experts agree on a structured approach that prioritizes clarity and comprehensive coverage.\n\n`;
-                response += `2. **Technical Considerations**: Several experts highlighted the importance of considering edge cases and scalability factors.\n\n`;
-                response += `3. **Best Practices**: Industry standards and established methodologies support the recommended approach.\n\n`;
-                response += `### Conflict Resolution\n\n`;
-                response += `Minor disagreements between experts were resolved by weighing confidence scores and domain expertise. The final synthesis represents a balanced view.\n\n`;
-            } else if (mode === 'research') {
-                response += `### 🔍 Research Synthesis\n\n`;
-                response += `After conducting comprehensive research across ${expertResults.length} specialized models:\n\n`;
-                response += `**Research Query**: "${prompt.slice(0, 80)}..."\n\n`;
-                response += `### Findings Summary\n\n`;
-                response += `Our research experts have compiled the following key findings:\n\n`;
-                response += `• **Finding 1**: Extensive analysis reveals multiple perspectives on this topic.\n`;
-                response += `• **Finding 2**: Current trends indicate a shift towards more integrated solutions.\n`;
-                response += `• **Finding 3**: Expert consensus suggests prioritizing fundamental principles.\n\n`;
-                response += `### Sources & Citations\n\n`;
-                response += `*Note: Web crawling for live citations is a future enhancement. Current synthesis is based on expert knowledge.*\n\n`;
-            } else if (mode === 'code') {
-                response += `### 💻 Code Analysis & Solution\n\n`;
-                response += `Our coding experts have analyzed your request and collaborated on the following solution:\n\n`;
-                response += `**Request**: "${prompt.slice(0, 80)}..."\n\n`;
-                response += `### Technical Approach\n\n`;
-                response += `\`\`\`javascript\n// Example solution structure\nfunction solutionApproach() {\n  // Step 1: Initialize\n  const context = analyzeRequirements();\n  \n  // Step 2: Process\n  const result = processWithBestPractices(context);\n  \n  // Step 3: Validate & Return\n  return validateAndReturn(result);\n}\n\`\`\`\n\n`;
-                response += `### Planning Notes\n\n`;
-                response += `1. **Architecture**: Modular design with clear separation of concerns\n`;
-                response += `2. **Implementation**: Follow established patterns and conventions\n`;
-                response += `3. **Testing**: Include comprehensive test coverage\n\n`;
-            } else if (mode === 'fast') {
-                response += `### ⚡ Quick Response\n\n`;
-                response += `Based on rapid analysis:\n\n`;
-                response += `The answer to your query involves understanding the core concepts and applying them directly. `;
-                response += `Key points include proper setup, clear implementation, and validation of results. `;
-                response += `For more detailed analysis, consider using DeepThink or Code mode.\n\n`;
-            } else {
-                response += `### 💬 Conversational Response\n\n`;
-                response += `Thank you for your question! After consulting our panel of ${expertResults.length} AI experts, here's a comprehensive response:\n\n`;
-                response += `**Your Question**: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"\n\n`;
-                response += `Our experts have analyzed this from multiple angles and the consensus points to a thoughtful, balanced approach. `;
-                response += `The key is to consider both immediate needs and long-term implications while maintaining flexibility for future adjustments.\n\n`;
-                response += `Feel free to ask follow-up questions or switch to a specialized mode (DeepThink, Research, or Code) for more targeted analysis!\n\n`;
-            }
-            
-            response += `---\n\n`;
-            response += `### 📊 Expert Scoring\n\n`;
-            response += `| Rank | Expert | Score |\n`;
-            response += `|------|--------|-------|\n`;
-            topExperts.forEach((e, i) => {
-                response += `| ${i + 1} | ${e.expert.name} | ${e.score} ⭐ |\n`;
-            });
-            
-            return response;
-        }
-        
-        function renderFinalAnswer(answer, container) {
-            const answerDiv = document.createElement('div');
-            answerDiv.className = 'message-assistant rounded-2xl p-6 mt-4';
-            answerDiv.innerHTML = `
-                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--border)]">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                        <i class="fas fa-brain text-white text-sm"></i>
-                    </div>
-                    <span class="font-medium">SAHU 1 MoE</span>
-                    <span class="mode-badge ${SAHU_MODES[state.currentMode].badge} ml-2">${SAHU_MODES[state.currentMode].name.split(' ').pop()}</span>
-                </div>
-                <div class="prose prose-invert max-w-none">${formatMessage(answer)}</div>
-            `;
-            container.appendChild(answerDiv);
-        }
-        
-        function renderMessages(messages) {
-            const container = document.getElementById('messagesContainer');
-            container.innerHTML = '';
-            
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            container.classList.remove('hidden');
-            
-            messages.forEach(msg => {
-                if (msg.role === 'user' || msg.role === 'assistant') {
-                    appendMessage(msg);
-                }
-            });
-        }
-        
-        // ==========================================
-        // UTILITY FUNCTIONS
-        // ==========================================
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function formatMessage(content) {
-            // Basic markdown-like formatting
-            let html = escapeHtml(content);
-            
-            // Headers
-            html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>');
-            html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>');
-            
-            // Bold
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            
-            // Italic
-            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            
-            // Code blocks
-            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-                return `<div class="code-block my-3"><div class="code-header">${lang || 'code'}</div><pre><code>${code.trim()}</code></pre></div>`;
-            });
-            
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-sm">$1</code>');
-            
-            // Lists
-            html = html.replace(/^• (.+)$/gm, '<li class="ml-4">$1</li>');
-            html = html.replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>');
-            html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>');
-            
-            // Tables (simple)
-            html = html.replace(/\|(.+)\|/g, (match, content) => {
-                const cells = content.split('|').map(c => c.trim());
-                if (cells.every(c => c.match(/^-+$/))) {
-                    return '';
-                }
-                const cellHtml = cells.map(c => `<td class="px-3 py-2 border border-[var(--border)]">${c}</td>`).join('');
-                return `<tr>${cellHtml}</tr>`;
-            });
-            
-            // Wrap tables
-            html = html.replace(/(<tr>[\s\S]*?<\/tr>)+/g, '<table class="w-full border-collapse my-3">$&</table>');
-            
-            // Horizontal rule
-            html = html.replace(/^---$/gm, '<hr class="my-4 border-[var(--border)]">');
-            
-            // Line breaks
-            html = html.replace(/\n/g, '<br>');
-            
-            return html;
-        }
-        
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-        
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 fade-in';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-        
-        // ==========================================
-        // API INTEGRATION (REAL PROVIDERS)
-        // ==========================================
-        
-        async function callProviderAPI(modelId, messages, provider) {
-            const apiKey = state.settings.apiKeys[provider];
-            const providerConfig = PROVIDERS[provider];
-            
-            if (!apiKey && provider !== 'ollama') {
-                throw new Error(`No API key configured for ${providerConfig.name}`);
-            }
-            
-            let endpoint = providerConfig.endpoint;
-            let body = {};
-            let headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            switch (provider) {
-                case 'huggingface':
-                    endpoint = `${providerConfig.endpoint}${modelId}`;
-                    headers['Authorization'] = `Bearer ${apiKey}`;
-                    body = {
-                        inputs: messages[messages.length - 1].content,
-                        parameters: { max_new_tokens: 1024 }
-                    };
-                    break;
-                    
-                case 'openrouter':
-                    headers['Authorization'] = `Bearer ${apiKey}`;
-                    headers['HTTP-Referer'] = window.location.origin;
-                    body = {
-                        model: modelId,
-                        messages: messages
-                    };
-                    break;
-                    
-                case 'togetherai':
-                case 'groq':
-                    headers['Authorization'] = `Bearer ${apiKey}`;
-                    body = {
-                        model: modelId,
-                        messages: messages
-                    };
-                    break;
-                    
-                case 'ollama':
-                    endpoint = state.settings.endpoints.ollama || 'http://localhost:11434';
-                    endpoint = `${endpoint}/api/chat`;
-                    body = {
-                        model: modelId,
-                        messages: messages,
-                        stream: false
-                    };
-                    break;
-            }
-            
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(body)
+                        <div class="expert-output text-sm text-[var(--text-secondary)] markdown-content max-h-48 overflow-y-auto"></div>
+                    `;
+                    expertGrid.appendChild(card);
+                    return { expert, card };
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
+                responseDiv.appendChild(expertGrid);
                 
-                const data = await response.json();
+                // Run all experts in parallel
+                const expertPromises = expertCards.map(async ({ expert, card }) => {
+                    const output = await runExpert(expert, message, toolContext, card);
+                    return { name: expert.name, output };
+                });
                 
-                // Parse response based on provider
-                switch (provider) {
-                    case 'huggingface':
-                        return data[0]?.generated_text || data.generated_text || '';
-                    case 'openrouter':
-                    case 'togetherai':
-                    case 'groq':
-                        return data.choices?.[0]?.message?.content || '';
-                    case 'ollama':
-                        return data.message?.content || '';
-                    default:
-                        return JSON.stringify(data);
-                }
-            } catch (error) {
-                console.error(`Provider ${provider} error:`, error);
-                throw error;
+                const results = await Promise.all(expertPromises);
+                expertOutputs.push(...results);
             }
+            
+            // Run aggregator
+            if (config.aggregator) {
+                const aggregatorDiv = document.createElement('div');
+                aggregatorDiv.className = 'final-answer rounded-xl p-4';
+                aggregatorDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-lg">Final Expert</span>
+                            <span class="text-sm text-[var(--text-secondary)]"> · ${config.aggregator.name}</span>
+                            <div class="text-xs text-purple-400">Analyzing ${expertOutputs.length} expert responses</div>
+                        </div>
+                    </div>
+                    <div class="loading-indicator flex items-center gap-3 text-sm text-purple-400 mb-3 p-3 rounded-lg bg-purple-600/10">
+                        <div class="flex gap-1">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                        </div>
+                        <span>Reading expert outputs → Thinking → Analyzing → Synthesizing final answer...</span>
+                    </div>
+                    <div class="aggregator-output markdown-content"></div>
+                `;
+                responseDiv.appendChild(aggregatorDiv);
+                
+                const finalAnswer = await runAggregator(config.aggregator, message, expertOutputs, toolContext, aggregatorDiv);
+                
+                // Save to chat history
+                const chat = state.chatHistory.find(c => c.id === state.currentChatId);
+                const messageData = {
+                    role: 'assistant',
+                    tools: config.tools,
+                    experts: expertOutputs,
+                    finalAnswer: finalAnswer,
+                    aggregator: config.aggregator.name
+                };
+                
+                if (chat) {
+                    chat.messages.push({ role: 'user', content: message });
+                    chat.messages.push(messageData);
+                } else {
+                    state.chatHistory.unshift({
+                        id: state.currentChatId,
+                        title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                        messages: [
+                            { role: 'user', content: message },
+                            messageData
+                        ],
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
+                saveChatHistory();
+            }
+            
+            // Reset UI state
+            state.isGenerating = false;
+            state.abortController = null;
+            document.getElementById('sendButton').classList.remove('hidden');
+            document.getElementById('stopButton').classList.add('hidden');
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
         }
         
-        // Initialize the app
-        init();
+        function stopGeneration() {
+            if (state.abortController) {
+                state.abortController.abort();
+                state.abortController = null;
+            }
+            state.isGenerating = false;
+            document.getElementById('sendButton').classList.remove('hidden');
+            document.getElementById('stopButton').classList.add('hidden');
+            showToast('Generation stopped');
+        }
         
+        // ==========================================
+        // Initialization
+        // ==========================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadChatHistory();
+            updateModeDisplay();
+            updateToolsIndicator();
+            
+            // Temperature slider
+            document.getElementById('temperature').addEventListener('input', (e) => {
+                document.getElementById('tempValue').textContent = e.target.value;
+            });
+            
+            // Focus input on load
+            document.getElementById('userInput').focus();
+            
+            console.log('%c SAHU 1 MoE System Initialized ', 'background: linear-gradient(135deg, #7c3aed, #ec4899); color: white; font-size: 14px; padding: 10px; border-radius: 5px;');
+            console.log('Developed by Saksham Intelligence');
+        });
+        
+        // Handle special queries about the system
+        const originalSendMessage = sendMessage;
+        sendMessage = async function() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim().toLowerCase();
+            
+            // Check for system queries
+            if (message.includes('who made you') || message.includes('who created you') || message.includes('who developed you')) {
+                input.value = '';
+                appendUserMessage(message);
+                
+                const container = document.getElementById('messagesContainer');
+                document.getElementById('welcomeScreen').classList.add('hidden');
+                container.classList.remove('hidden');
+                
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'final-answer rounded-xl p-4';
+                responseDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold">SAHU 1 MoE</span>
+                        </div>
+                    </div>
+                    <div class="markdown-content">
+                        <p>I am <strong>SAHU 1</strong>, a Mixture of Experts system. Each Expert in this system was <strong>Developed by Saksham Intelligence</strong>.</p>
+                        <p>I combine multiple AI models to provide comprehensive, well-reasoned responses across different domains including reasoning, research, coding, and general conversation.</p>
+                    </div>
+                `;
+                container.appendChild(responseDiv);
+                return;
+            }
+            
+            if (message.includes('what model') || message.includes('what moe') || message.includes('what system')) {
+                input.value = '';
+                appendUserMessage(message);
+                
+                const container = document.getElementById('messagesContainer');
+                document.getElementById('welcomeScreen').classList.add('hidden');
+                container.classList.remove('hidden');
+                
+                const config = MOE_CONFIGS[state.currentMode];
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'final-answer rounded-xl p-4';
+                responseDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold">SAHU 1 MoE</span>
+                        </div>
+                    </div>
+                    <div class="markdown-content">
+                        <p>I am the <strong>SAHU 1-series</strong> Mixture of Experts system.</p>
+                        <p>Currently running in <strong>${config.name}</strong> mode with ${config.experts.length} expert models.</p>
+                        <p><strong>Experts:</strong></p>
+                        <ul>
+                            ${config.experts.map(e => `<li>${e.name} (Developed by Saksham Intelligence)</li>`).join('')}
+                        </ul>
+                        ${config.aggregator ? `<p><strong>Aggregator:</strong> ${config.aggregator.name}</p>` : ''}
+                    </div>
+                `;
+                container.appendChild(responseDiv);
+                return;
+            }
+            
+            return originalSendMessage();
+        };
     </script>
 </body>
 </html>
