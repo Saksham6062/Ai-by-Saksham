@@ -582,51 +582,85 @@
         // Model mappings for different providers
         const MODEL_MAPPINGS = {
             huggingface: {
-                // HuggingFace Router compatible model IDs
+                // HuggingFace Router - Use REAL model IDs directly
                 'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3-0324',
-                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3-0324',
-                'openai/gpt-oss-120b': 'Qwen/Qwen2.5-72B-Instruct',
-                'openai/gpt-oss-20b': 'Qwen/Qwen2.5-72B-Instruct',
-                'moonshotai/Kimi-K2-Thinking': 'Qwen/QwQ-32B',
-                'moonshotai/Kimi-K2-Instruct': 'Qwen/Qwen2.5-72B-Instruct',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/QwQ-32B',
-                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
-                'zai-org/GLM-4.7': 'THUDM/glm-4-9b-chat',
-                'zai-org/GLM-4.7-Flash': 'THUDM/glm-4-9b-chat',
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3',
+                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3',
+                'openai/gpt-oss-120b': 'openai/gpt-oss-120b',
+                'openai/gpt-oss-20b': 'openai/gpt-oss-20b',
+                'moonshotai/Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
+                'moonshotai/Kimi-K2-Instruct': 'moonshotai/Kimi-K2-Instruct',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8',
+                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+                'zai-org/GLM-4.7': 'zai-org/GLM-4.7',
+                'zai-org/GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
                 'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
-                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/Mistral-Small-24B-Instruct-2501',
-                'mistralai/Ministral-3-14B-Reasoning-2512': 'mistralai/Mistral-7B-Instruct-v0.3',
-                'mistralai/Devstral-2-123B-Instruct-2512': 'mistralai/Mistral-7B-Instruct-v0.3',
-                'mistralai/Codestral-22B-v0.1': 'Qwen/Qwen2.5-Coder-32B-Instruct',
-                'microsoft/Phi-4-reasoning-plus': 'microsoft/Phi-3.5-mini-instruct',
-                'google/gemma-3n-E4B-it': 'google/gemma-2-9b-it',
-                'minimax/m2.1-preview': 'Qwen/Qwen2.5-72B-Instruct',
-                'XiaomiMiMo/MiMo-V2-Flash': 'Qwen/Qwen2.5-72B-Instruct',
-                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
-                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
-                'default': 'Qwen/Qwen2.5-72B-Instruct'
+                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/Mistral-Small-3.2-24B-Instruct-2506',
+                'mistralai/Ministral-3-14B-Reasoning-2512': 'mistralai/Ministral-3-14B-Reasoning-2512',
+                'mistralai/Devstral-2-123B-Instruct-2512': 'mistralai/Devstral-2-123B-Instruct-2512',
+                'mistralai/Codestral-22B-v0.1': 'mistralai/Codestral-22B-v0.1',
+                'microsoft/Phi-4-reasoning-plus': 'microsoft/Phi-4-reasoning-plus',
+                'google/gemma-3n-E4B-it': 'google/gemma-3n-E4B-it',
+                'minimax/m2.1-preview': 'minimax/MiniMax-M1-80k',
+                'XiaomiMiMo/MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
+                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct',
+                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+                'default': 'deepseek-ai/DeepSeek-V3'
             },
             openrouter: {
+                // OpenRouter uses their own model naming convention
                 'deepseek-ai/DeepSeek-R1': 'deepseek/deepseek-r1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek/deepseek-chat',
-                'moonshotai/Kimi-K2-Thinking': 'moonshotai/kimi-vl-a3b-thinking',
+                'deepseek-ai/DeepSeek-V3.2': 'deepseek/deepseek-chat-v3-0324',
+                'deepseek-ai/DeepSeek-V3': 'deepseek/deepseek-chat-v3-0324',
+                'openai/gpt-oss-120b': 'qwen/qwen3-235b-a22b',
+                'openai/gpt-oss-20b': 'qwen/qwen3-32b',
+                'moonshotai/Kimi-K2-Thinking': 'moonshotai/kimi-k2',
+                'moonshotai/Kimi-K2-Instruct': 'moonshotai/kimi-k2',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen/qwen3-235b-a22b',
+                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'qwen/qwen3-coder-480b-a35b',
+                'zai-org/GLM-4.7': 'thudm/glm-4-32b',
+                'zai-org/GLM-4.7-Flash': 'thudm/glm-4-32b',
                 'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/mistral-7b-instruct',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen/qwen-2.5-72b-instruct',
-                'default': 'mistralai/mistral-7b-instruct'
+                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/mistral-small-3.1-24b-instruct',
+                'mistralai/Codestral-22B-v0.1': 'mistralai/codestral-2501',
+                'microsoft/Phi-4-reasoning-plus': 'microsoft/phi-4',
+                'google/gemma-3n-E4B-it': 'google/gemma-3-27b-it',
+                'XiaomiMiMo/MiMo-V2-Flash': 'qwen/qwen3-32b',
+                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'deepseek/deepseek-coder',
+                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek/deepseek-r1-distill-qwen-32b',
+                'default': 'deepseek/deepseek-chat-v3-0324'
             },
             groq: {
+                // Groq has limited model selection
+                'deepseek-ai/DeepSeek-R1': 'deepseek-r1-distill-llama-70b',
+                'deepseek-ai/DeepSeek-V3.2': 'llama-3.3-70b-versatile',
                 'mistralai/Mistral-7B-Instruct-v0.3': 'mistral-saba-24b',
                 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-r1-distill-qwen-32b',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen-qwq-32b',
+                'zai-org/GLM-4.7': 'llama-3.3-70b-versatile',
+                'google/gemma-3n-E4B-it': 'gemma2-9b-it',
                 'default': 'llama-3.3-70b-versatile'
             },
             together: {
+                // Together AI model IDs
+                'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
                 'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3',
                 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/Qwen2.5-72B-Instruct-Turbo',
+                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
+                'mistralai/Codestral-22B-v0.1': 'codellama/CodeLlama-34b-Instruct-hf',
+                'google/gemma-3n-E4B-it': 'google/gemma-2-27b-it',
                 'default': 'meta-llama/Llama-3.3-70B-Instruct-Turbo'
             },
             ollama: {
+                // Ollama uses simple model names
+                'deepseek-ai/DeepSeek-R1': 'deepseek-r1',
+                'deepseek-ai/DeepSeek-V3': 'deepseek-v3',
+                'mistralai/Mistral-7B-Instruct-v0.3': 'mistral',
+                'mistralai/Codestral-22B-v0.1': 'codestral',
+                'google/gemma-3n-E4B-it': 'gemma2',
+                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen2.5',
                 'default': 'llama3.2'
             }
         };
@@ -993,7 +1027,17 @@
         
         function resolveModel(modelId, provider) {
             const mappings = MODEL_MAPPINGS[provider] || {};
-            return mappings[modelId] || mappings['default'] || modelId;
+            // First check if there's a specific mapping, otherwise use the model ID directly
+            // This ensures real model IDs are passed through as-is
+            if (mappings[modelId]) {
+                return mappings[modelId];
+            }
+            // For HuggingFace, always try to use the original model ID first
+            if (provider === 'huggingface') {
+                return modelId;
+            }
+            // For other providers, fall back to default if no mapping exists
+            return mappings['default'] || modelId;
         }
         
         function buildApiRequest(provider, model, messages, stream = true) {
