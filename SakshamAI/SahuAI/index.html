@@ -7,1791 +7,1580 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        
-        /* Dark theme variables */
         :root {
             --bg-primary: #0f0f0f;
             --bg-secondary: #1a1a1a;
-            --bg-tertiary: #2a2a2a;
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1a1;
-            --accent: #7c3aed;
-            --accent-hover: #8b5cf6;
-            --border: #333333;
+            --bg-tertiary: #252525;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --border: #333;
         }
-        
-        .light-theme {
+        .light-mode {
             --bg-primary: #ffffff;
             --bg-secondary: #f5f5f5;
             --bg-tertiary: #e5e5e5;
             --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --border: #d1d5db;
+            --text-secondary: #525252;
+            --accent: #4f46e5;
+            --accent-hover: #6366f1;
+            --border: #d4d4d4;
         }
-        
         body {
-            background: var(--bg-primary);
+            background-color: var(--bg-primary);
             color: var(--text-primary);
-            transition: all 0.3s ease;
+            transition: background-color 0.3s, color 0.3s;
         }
-        
-        .sidebar { background: var(--bg-secondary); border-color: var(--border); }
-        .chat-area { background: var(--bg-primary); }
-        .input-area { background: var(--bg-secondary); border-color: var(--border); }
-        .expert-card { background: var(--bg-tertiary); border-color: var(--border); }
-        .message-user { background: var(--accent); }
-        .message-assistant { background: var(--bg-tertiary); }
-        
-        /* Typing animation */
-        @keyframes blink { 50% { opacity: 0; } }
-        .typing-cursor { animation: blink 1s infinite; }
-        
-        /* Expert card grid */
-        .expert-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 12px;
+        .sidebar {
+            background-color: var(--bg-secondary);
+            border-color: var(--border);
         }
-        
-        /* Streaming text effect */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .stream-token { animation: fadeIn 0.1s ease-in; }
-        
-        /* Tool badge animations */
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .tool-active { animation: pulse 1.5s infinite; }
-        
-        /* Bounce animation for loading dots */
-        @keyframes bounce {
-            0%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-6px); }
+        .chat-container {
+            background-color: var(--bg-primary);
         }
-        .animate-bounce { animation: bounce 1s infinite; }
-        
-        /* Thinking animation */
-        @keyframes thinking-pulse {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
+        .message-user {
+            background-color: var(--accent);
         }
-        .thinking-active { animation: thinking-pulse 2s infinite ease-in-out; }
-        
-        /* Word appear animation */
-        @keyframes wordAppear {
-            from { opacity: 0; transform: translateY(2px); }
-            to { opacity: 1; transform: translateY(0); }
+        .message-assistant {
+            background-color: var(--bg-tertiary);
         }
-        .word-animate { animation: wordAppear 0.1s ease-out; }
-        
-        /* Modal backdrop */
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
+        .input-area {
+            background-color: var(--bg-secondary);
+            border-color: var(--border);
         }
-        
-        /* Code blocks */
-        pre { background: #1e1e1e !important; border-radius: 8px; padding: 12px; overflow-x: auto; }
-        code { font-family: 'Fira Code', monospace; font-size: 13px; }
-        
-        /* Hide scrollbar for sidebar */
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* Gradient text for logo */
-        .gradient-text {
-            background: linear-gradient(135deg, #7c3aed, #a855f7, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .expert-card {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border);
         }
-        
-        /* Provider badges */
-        .badge-hf { background: #ff9d00; color: #000; }
-        .badge-openrouter { background: #6366f1; }
-        .badge-groq { background: #f97316; }
-        .badge-together { background: #3b82f6; }
-        .badge-ollama { background: #22c55e; }
-        
-        /* Smooth transitions */
-        * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
-        
-        /* Final answer highlight */
-        .final-answer {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(168, 85, 247, 0.1));
-            border: 1px solid rgba(124, 58, 237, 0.3);
+        .expert-card.thinking {
+            border-color: #f59e0b;
+            animation: pulse-border 2s infinite;
         }
-        
-        /* Markdown rendering */
-        .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
-        .markdown-content h2 { font-size: 1.25rem; font-weight: 600; margin: 0.875rem 0 0.5rem; }
-        .markdown-content h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
-        .markdown-content p { margin: 0.5rem 0; line-height: 1.6; }
-        .markdown-content ul, .markdown-content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
-        .markdown-content li { margin: 0.25rem 0; }
-        .markdown-content code:not(pre code) { 
-            background: rgba(124, 58, 237, 0.2); 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-size: 0.9em;
+        .expert-card.complete {
+            border-color: #22c55e;
         }
-        .markdown-content blockquote {
+        .expert-card.error {
+            border-color: #ef4444;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #f59e0b; box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
+            50% { border-color: #fbbf24; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+        }
+        .typing-indicator span {
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        .tool-log {
+            background-color: var(--bg-secondary);
             border-left: 3px solid var(--accent);
-            padding-left: 1rem;
-            margin: 0.5rem 0;
-            opacity: 0.8;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        .provider-menu {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+        .dropdown-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+        pre code {
+            display: block;
+            padding: 1rem;
+            background: #1e1e1e;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .aggregator-response {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(99, 102, 241, 0.1) 100%);
+            border: 2px solid var(--accent);
+        }
+        
+        /* Streaming cursor effect */
+        #streamingContent::after {
+            content: '▊';
+            animation: blink 1s infinite;
+            color: var(--accent);
+            margin-left: 2px;
+        }
+        
+        #streamingContent.complete::after {
+            display: none;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Phase indicators */
+        .aggregator-response .typing-indicator span {
+            width: 6px;
+            height: 6px;
+        }
+        
+        /* Notification toast */
+        .notification-toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
-<body class="min-h-screen flex overflow-hidden">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar w-64 h-screen flex flex-col border-r fixed lg:relative z-40 transform -translate-x-full lg:translate-x-0 transition-transform">
-        <!-- Logo -->
-        <div class="p-4 border-b border-[var(--border)]">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                    <i class="fas fa-brain text-white text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg gradient-text">SAHU 1</h1>
-                    <p class="text-xs text-[var(--text-secondary)]">Mixture of Experts</p>
+<body class="h-screen overflow-hidden">
+    <div id="app" class="flex h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 h-full flex flex-col border-r transition-all duration-300">
+            <!-- Logo -->
+            <div class="p-4 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-brain text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg">SAHU 1</h1>
+                        <p class="text-xs text-[var(--text-secondary)]">Mixture of Experts</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- New Chat Button -->
-        <div class="p-3">
-            <button onclick="startNewChat()" class="w-full py-2.5 px-4 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-tertiary)] flex items-center gap-2 transition-colors">
-                <i class="fas fa-plus"></i>
-                <span>New Chat</span>
-            </button>
-        </div>
-        
-        <!-- Model Selector -->
-        <div class="px-3 pb-3">
-            <label class="text-xs text-[var(--text-secondary)] mb-1 block">MoE Mode</label>
-            <select id="moeSelector" onchange="changeMoEMode()" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="deepthink">🧠 Sahu 1 DeepThink</option>
-                <option value="research">🔬 Sahu 1 Deep Research</option>
-                <option value="code">💻 Sahu 1 Code</option>
-                <option value="fast">⚡ Sahu 1 Fast</option>
-                <option value="chat" selected>💬 Sahu 1 Chat</option>
-                <option value="agent">🤖 Sahu 1 Agent</option>
-            </select>
-        </div>
-        
-        <!-- Chat History -->
-        <div class="flex-1 overflow-y-auto hide-scrollbar px-3">
-            <p class="text-xs text-[var(--text-secondary)] mb-2">Recent Chats</p>
-            <div id="chatHistory" class="space-y-1">
-                <!-- Chat history items will be inserted here -->
-            </div>
-        </div>
-        
-        <!-- Settings Button -->
-        <div class="p-3 border-t border-[var(--border)]">
-            <button onclick="openSettings()" class="w-full py-2.5 px-4 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-2 transition-colors">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </button>
-        </div>
-    </aside>
-    
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen lg:ml-0">
-        <!-- Top Bar -->
-        <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4 bg-[var(--bg-secondary)]">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
-                    <i class="fas fa-bars"></i>
+
+            <!-- New Chat Button -->
+            <div class="p-3">
+                <button onclick="newChat()" class="w-full py-2.5 px-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium flex items-center justify-center gap-2 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    New Chat
                 </button>
-                <div id="currentModeDisplay" class="flex items-center gap-2">
-                    <span class="text-lg">💬</span>
-                    <span class="font-medium">Sahu 1 Chat</span>
-                </div>
             </div>
-            
-            <div class="flex items-center gap-2">
-                <!-- Provider Selector -->
-                <select id="providerSelector" onchange="changeProvider()" class="px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none">
-                    <option value="huggingface">HuggingFace</option>
-                    <option value="openrouter">OpenRouter</option>
-                    <option value="groq">Groq</option>
-                    <option value="together">TogetherAI</option>
-                    <option value="ollama">Ollama</option>
+
+            <!-- MoE Selector -->
+            <div class="px-3 pb-3">
+                <label class="text-xs text-[var(--text-secondary)] mb-1 block">MoE Configuration</label>
+                <select id="moeSelector" onchange="changeMoE()" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]">
+                    <option value="agent">🤖 Sahu 1 Agent</option>
+                    <option value="deepthink">🧠 Sahu 1 DeepThink</option>
+                    <option value="deepresearch">🔍 Sahu 1 Deep Research</option>
+                    <option value="code">💻 Sahu 1 Code</option>
+                    <option value="fast">⚡ Sahu 1 Fast</option>
+                    <option value="chat">💬 Sahu 1 Chat</option>
                 </select>
-                
-                <!-- Theme Toggle -->
-                <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
-                    <i id="themeIcon" class="fas fa-moon"></i>
+            </div>
+
+            <!-- Chat History -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-3">
+                <p class="text-xs text-[var(--text-secondary)] mb-2">History</p>
+                <div id="chatHistory" class="space-y-1">
+                    <!-- Chat history items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="p-3 border-t border-[var(--border)]">
+                <button onclick="openSettings()" class="w-full py-2 px-3 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors">
+                    <i class="fas fa-cog text-[var(--text-secondary)]"></i>
+                    <span class="text-sm">Settings</span>
+                </button>
+                <button onclick="toggleTheme()" class="w-full py-2 px-3 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors">
+                    <i id="themeIcon" class="fas fa-moon text-[var(--text-secondary)]"></i>
+                    <span class="text-sm" id="themeText">Dark Mode</span>
                 </button>
             </div>
-        </header>
-        
-        <!-- Chat Area -->
-        <div id="chatArea" class="flex-1 overflow-y-auto p-4 chat-area">
-            <!-- Welcome Screen -->
-            <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center px-4">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mb-6">
-                    <i class="fas fa-brain text-white text-3xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-2">Welcome to SAHU 1 MoE</h2>
-                <p class="text-[var(--text-secondary)] max-w-md mb-8">
-                    A powerful Mixture-of-Experts system that combines multiple AI models for superior responses.
-                </p>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl">
-                    <button onclick="selectMode('deepthink')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">🧠</span>
-                        <span class="font-medium block">DeepThink</span>
-                        <span class="text-xs text-[var(--text-secondary)]">Extended reasoning</span>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full">
+            <!-- Header -->
+            <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                        <i class="fas fa-bars"></i>
                     </button>
-                    <button onclick="selectMode('research')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">🔬</span>
-                        <span class="font-medium block">Deep Research</span>
-                        <span class="text-xs text-[var(--text-secondary)]">Research-heavy</span>
-                    </button>
-                    <button onclick="selectMode('code')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">💻</span>
-                        <span class="font-medium block">Code</span>
-                        <span class="text-xs text-[var(--text-secondary)]">Plan → Code</span>
-                    </button>
-                    <button onclick="selectMode('fast')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">⚡</span>
-                        <span class="font-medium block">Fast</span>
-                        <span class="text-xs text-[var(--text-secondary)]">Quick responses</span>
-                    </button>
-                    <button onclick="selectMode('chat')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">💬</span>
-                        <span class="font-medium block">Chat</span>
-                        <span class="text-xs text-[var(--text-secondary)]">General chat</span>
-                    </button>
-                    <button onclick="selectMode('agent')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors text-left">
-                        <span class="text-2xl mb-2 block">🤖</span>
-                        <span class="font-medium block">Agent</span>
-                        <span class="text-xs text-[var(--text-secondary)]">Auto-routing</span>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Messages Container -->
-            <div id="messagesContainer" class="max-w-5xl mx-auto space-y-6 hidden">
-                <!-- Messages will be inserted here -->
-            </div>
-        </div>
-        
-        <!-- Input Area -->
-        <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
-            <div class="max-w-4xl mx-auto">
-                <!-- Tools Indicator -->
-                <div id="toolsIndicator" class="mb-2 flex gap-2 hidden">
-                    <!-- Active tools will show here -->
+                    <span id="currentMoELabel" class="font-medium">🤖 Sahu 1 Agent</span>
+                    <span id="expertCount" class="text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded-full">Auto</span>
                 </div>
                 
-                <div class="flex items-end gap-2">
-                    <!-- File Upload Button -->
-                    <button onclick="document.getElementById('fileInput').click()" class="p-3 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] transition-colors">
-                        <i class="fas fa-plus"></i>
+                <!-- Provider Menu -->
+                <div class="relative">
+                    <button onclick="toggleProviderMenu()" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                        <i class="fas fa-cloud"></i>
+                        <span id="currentProvider" class="text-sm">HuggingFace</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
                     </button>
-                    <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)" accept="image/*,.pdf,.txt,.md,.json,.csv">
-                    
-                    <!-- Text Input -->
-                    <div class="flex-1 relative">
-                        <textarea 
-                            id="userInput" 
-                            placeholder="Message SAHU 1..." 
-                            class="w-full p-3 pr-12 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[48px] max-h-[200px]"
-                            rows="1"
-                            onkeydown="handleKeyDown(event)"
-                            oninput="autoResize(this)"
-                        ></textarea>
-                        
-                        <!-- Send Button -->
-                        <button 
-                            id="sendButton"
-                            onclick="sendMessage()" 
-                            class="absolute right-2 bottom-2 p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <i class="fas fa-arrow-up"></i>
+                    <div id="providerMenu" class="provider-menu absolute right-0 top-full mt-2 w-56 rounded-lg shadow-xl z-50 hidden">
+                        <div class="p-2">
+                            <div onclick="selectProvider('huggingface')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-fire text-orange-400"></i>
+                                <span>HuggingFace</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check" data-provider="huggingface"></i>
+                            </div>
+                            <div onclick="selectProvider('openrouter')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-route text-blue-400"></i>
+                                <span>OpenRouter</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="openrouter"></i>
+                            </div>
+                            <div onclick="selectProvider('groq')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-bolt text-yellow-400"></i>
+                                <span>Groq</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="groq"></i>
+                            </div>
+                            <div onclick="selectProvider('togetherai')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-cubes text-purple-400"></i>
+                                <span>TogetherAI</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="togetherai"></i>
+                            </div>
+                            <div onclick="selectProvider('ollama')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-server text-green-400"></i>
+                                <span>Ollama (Local)</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="ollama"></i>
+                            </div>
+                            <hr class="my-2 border-[var(--border)]">
+                            <div onclick="openProviderSettings()" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-key text-[var(--text-secondary)]"></i>
+                                <span>API Keys</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Area -->
+            <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+                        <i class="fas fa-brain text-3xl text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">SAHU 1 MoE</h2>
+                    <p class="text-[var(--text-secondary)] mb-8 text-center max-w-md">
+                        Orchestrate multiple AI experts to get comprehensive, synthesized answers.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 max-w-lg">
+                        <button onclick="quickPrompt('Explain quantum computing')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-colors">
+                            <i class="fas fa-atom text-indigo-400 mb-2"></i>
+                            <p class="text-sm">Explain quantum computing</p>
+                        </button>
+                        <button onclick="quickPrompt('Write a Python web scraper')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-colors">
+                            <i class="fas fa-code text-green-400 mb-2"></i>
+                            <p class="text-sm">Write a Python web scraper</p>
+                        </button>
+                        <button onclick="quickPrompt('Research latest AI developments')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-colors">
+                            <i class="fas fa-search text-blue-400 mb-2"></i>
+                            <p class="text-sm">Research latest AI developments</p>
+                        </button>
+                        <button onclick="quickPrompt('Create a business plan outline')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-colors">
+                            <i class="fas fa-briefcase text-yellow-400 mb-2"></i>
+                            <p class="text-sm">Create a business plan outline</p>
                         </button>
                     </div>
-                    
-                    <!-- Stop Button (hidden by default) -->
-                    <button id="stopButton" onclick="stopGeneration()" class="p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors hidden">
-                        <i class="fas fa-stop"></i>
-                    </button>
                 </div>
-                
-                <p class="text-xs text-[var(--text-secondary)] text-center mt-2">
-                    SAHU 1 MoE by Saksham Intelligence · All responses from open-source models
-                </p>
+
+                <!-- Messages Container -->
+                <div id="messagesContainer" class="hidden space-y-6 max-w-5xl mx-auto">
+                    <!-- Messages will be inserted here -->
+                </div>
             </div>
-        </div>
-    </main>
-    
+
+            <!-- Input Area -->
+            <div class="p-4 border-t border-[var(--border)]">
+                <div class="max-w-4xl mx-auto">
+                    <div class="input-area rounded-2xl border p-3">
+                        <div class="flex items-end gap-3">
+                            <label class="cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                                <i class="fas fa-plus text-[var(--text-secondary)]"></i>
+                                <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileUpload(event)">
+                            </label>
+                            <div id="attachmentPreview" class="hidden flex gap-2 flex-wrap"></div>
+                            <textarea 
+                                id="userInput" 
+                                placeholder="Message SAHU 1 MoE..." 
+                                class="flex-1 bg-transparent resize-none outline-none max-h-40 text-sm"
+                                rows="1"
+                                onkeydown="handleKeyDown(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                            <button onclick="sendMessage()" id="sendBtn" class="p-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-[var(--text-secondary)] mt-2">
+                        SAHU 1 MoE orchestrates multiple AI experts. Responses may vary.
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-backdrop absolute inset-0" onclick="closeSettings()"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[var(--bg-secondary)] rounded-2xl shadow-2xl border border-[var(--border)] max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold">Settings</h2>
-                    <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)]">
-                        <i class="fas fa-times"></i>
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between p-4 border-b border-[var(--border)] bg-[var(--bg-tertiary)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-cog text-[var(--accent)]"></i>
+                    Settings
+                </h2>
+                <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto max-h-[65vh] scrollbar-thin">
+                <div id="settingsContent">
+                    <!-- API Keys Section -->
+                    <div class="mb-6 bg-[var(--bg-tertiary)] rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fas fa-key text-[var(--accent)]"></i>
+                                API Keys & Endpoints
+                            </h3>
+                            <button onclick="saveSettings()" class="px-3 py-1.5 text-sm rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors flex items-center gap-2">
+                                <i class="fas fa-save"></i>
+                                Save
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- HuggingFace -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-fire text-orange-400"></i>
+                                    <span class="font-medium text-sm">HuggingFace</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <input type="password" id="hfApiKey" placeholder="API Key: hf_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="hfEndpoint" placeholder="Endpoint: https://router.huggingface.co/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                            </div>
+                            <!-- OpenRouter -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-route text-blue-400"></i>
+                                    <span class="font-medium text-sm">OpenRouter</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <input type="password" id="orApiKey" placeholder="API Key: sk-or-..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="orEndpoint" placeholder="Endpoint: https://openrouter.ai/api/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                            </div>
+                            <!-- Groq -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-bolt text-yellow-400"></i>
+                                    <span class="font-medium text-sm">Groq</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <input type="password" id="groqApiKey" placeholder="API Key: gsk_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="groqEndpoint" placeholder="Endpoint: https://api.groq.com/openai/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                            </div>
+                            <!-- TogetherAI -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-cubes text-purple-400"></i>
+                                    <span class="font-medium text-sm">TogetherAI</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <input type="password" id="togetherApiKey" placeholder="API Key..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="togetherEndpoint" placeholder="Endpoint: https://api.together.xyz/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                            </div>
+                            <!-- Ollama -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-server text-green-400"></i>
+                                    <span class="font-medium text-sm">Ollama (Local)</span>
+                                </div>
+                                <input type="text" id="ollamaEndpoint" placeholder="Endpoint: http://localhost:11434/api/chat" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Settings -->
+                    <div class="mb-6 bg-[var(--bg-tertiary)] rounded-xl p-4">
+                        <h3 class="font-medium mb-4 flex items-center gap-2">
+                            <i class="fas fa-sliders-h text-[var(--accent)]"></i>
+                            Advanced Settings
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <label class="text-sm text-[var(--text-secondary)] mb-1 block">Max Tokens</label>
+                                    <input type="number" id="maxTokens" value="4096" class="w-full p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="text-sm text-[var(--text-secondary)] mb-1 block">Temperature: <span id="tempValue">0.7</span></label>
+                                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full accent-[var(--accent)]">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div>
+                                    <span class="text-sm font-medium">Stream Responses</span>
+                                    <p class="text-xs text-[var(--text-secondary)]">Show aggregator response word by word</p>
+                                </div>
+                                <input type="checkbox" id="streamResponses" checked class="w-5 h-5 accent-[var(--accent)]">
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div>
+                                    <span class="text-sm font-medium">Show Expert Outputs</span>
+                                    <p class="text-xs text-[var(--text-secondary)]">Display individual expert responses</p>
+                                </div>
+                                <input type="checkbox" id="showExperts" checked class="w-5 h-5 accent-[var(--accent)]">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-tertiary)] flex justify-between items-center">
+                <span class="text-xs text-[var(--text-secondary)]">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    All settings are stored locally in your browser
+                </span>
+                <div class="flex gap-3">
+                    <button onclick="closeSettings()" class="px-4 py-2.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">Cancel</button>
+                    <button onclick="saveSettings()" class="px-6 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors flex items-center gap-2">
+                        <i class="fas fa-save"></i>
+                        Save Settings
                     </button>
                 </div>
-                
-                <!-- API Keys Section -->
-                <div class="space-y-4">
-                    <h3 class="font-semibold text-sm text-[var(--text-secondary)] uppercase tracking-wider">API Keys</h3>
-                    
-                    <!-- HuggingFace -->
-                    <div>
-                        <label class="block text-sm mb-1">HuggingFace API Key</label>
-                        <input type="password" id="hfApiKey" placeholder="hf_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- OpenRouter -->
-                    <div>
-                        <label class="block text-sm mb-1">OpenRouter API Key</label>
-                        <input type="password" id="orApiKey" placeholder="sk-or-..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- Groq -->
-                    <div>
-                        <label class="block text-sm mb-1">Groq API Key</label>
-                        <input type="password" id="groqApiKey" placeholder="gsk_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- TogetherAI -->
-                    <div>
-                        <label class="block text-sm mb-1">TogetherAI API Key</label>
-                        <input type="password" id="togetherApiKey" placeholder="..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- Ollama -->
-                    <div>
-                        <label class="block text-sm mb-1">Ollama Endpoint</label>
-                        <input type="text" id="ollamaEndpoint" placeholder="http://localhost:11434" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                </div>
-                
-                <!-- Advanced Settings -->
-                <div class="mt-6 space-y-4">
-                    <h3 class="font-semibold text-sm text-[var(--text-secondary)] uppercase tracking-wider">Advanced</h3>
-                    
-                    <div class="flex items-center justify-between">
-                        <span>Show expert outputs</span>
-                        <input type="checkbox" id="showExperts" checked class="w-5 h-5 accent-purple-600">
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <span>Enable streaming</span>
-                        <input type="checkbox" id="enableStreaming" checked class="w-5 h-5 accent-purple-600">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm mb-1">Max tokens</label>
-                        <input type="number" id="maxTokens" value="4096" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm mb-1">Temperature</label>
-                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full accent-purple-600">
-                        <span id="tempValue" class="text-sm text-[var(--text-secondary)]">0.7</span>
-                    </div>
-                </div>
-                
-                <!-- Save Button -->
-                <button onclick="saveSettings()" class="w-full mt-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors">
-                    Save Settings
-                </button>
             </div>
         </div>
     </div>
-    
-    <!-- Overlay for mobile sidebar -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <script>
         // ==========================================
-        // SAHU 1 MoE - Configuration & State
+        // SAHU 1 MoE - Core Configuration
         // ==========================================
-        
-        // Global State
-        const state = {
-            currentMode: 'chat',
-            currentProvider: 'huggingface',
-            isGenerating: false,
-            abortController: null,
-            chatHistory: [],
-            currentChatId: null,
-            theme: 'dark',
-            uploadedFiles: [],
-            toolBuffer: []
+
+        // Model IDs (Verified)
+        const MODELS = {
+            'GLM-4.7': 'zai-org/GLM-4.7',
+            'GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
+            'Phi-4-Reasoning': 'microsoft/Phi-4-reasoning-plus',
+            'DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
+            'DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
+            'DeepSeek-Coder': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct',
+            'DeepSeek-R1-Distill': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'Qwen3-Coder': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+            'Qwen3-Thinking': 'Qwen/Qwen3-235B-A22B-Thinking-2507',
+            'Devstral': 'mistralai/Devstral-2-123B-Instruct-2512',
+            'Codestral': 'mistralai/Codestral-22B-v0.1',
+            'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.3',
+            'Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
+            'Kimi-K2': 'moonshotai/Kimi-K2-Instruct',
+            'Kimi-K2.5': 'moonshotai/Kimi-K2.5',
+            'gpt-oss-120b': 'openai/gpt-oss-120b',
+            'gpt-oss-20b': 'openai/gpt-oss-20b',
+            'MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
+            'MiniMax-M2.1': 'MiniMaxAI/MiniMax-M2.1',
+            'Olmo-3.1-Instruct': 'allenai/Olmo-3.1-32B-Instruct',
+            'Olmo-3.1-Think': 'allenai/Olmo-3.1-32B-Think',
+            'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct'
         };
-        
-        // MoE Mode Configurations
+
+        // MoE Configurations
         const MOE_CONFIGS = {
             deepthink: {
                 name: 'Sahu 1 DeepThink',
                 icon: '🧠',
                 tools: ['thinking'],
-                behavior: 'Extended reasoning with deep analysis',
                 experts: [
-                    { id: 'deepseek-r1', name: 'DeepSeek-R1', model: 'deepseek-ai/DeepSeek-R1' },
-                    { id: 'gpt-oss-120b', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' },
-                    { id: 'deepseek-v3.2', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
-                    { id: 'kimi-k2-think', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking' },
-                    { id: 'qwen3-235b', name: 'Qwen3-235B-Thinking', model: 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8' },
-                    { id: 'glm-4.7', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
-                    { id: 'ministral-reasoning', name: 'Ministral-Reasoning', model: 'mistralai/Ministral-3-14B-Reasoning-2512' },
-                    { id: 'phi4-reasoning', name: 'Phi-4-Reasoning+', model: 'microsoft/Phi-4-reasoning-plus' },
-                    { id: 'gemma-3n', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' },
-                    { id: 'minimax-m2.1', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' }
+                    { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'Qwen3-Thinking', name: 'Qwen3 Thinking' },
+                    { id: 'GLM-4.7', name: 'GLM 4.7' },
+                    { id: 'Olmo-3.1-Think', name: 'Olmo Think' },
+                    { id: 'Phi-4-Reasoning', name: 'Phi-4 Reasoning' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
                 ],
-                aggregator: { name: 'GLM-4.7', model: 'zai-org/GLM-4.7' }
+                aggregator: 'Qwen3-Thinking',
+                behavior: 'Extended reasoning with deep thought chains'
             },
-            research: {
+            deepresearch: {
                 name: 'Sahu 1 Deep Research',
-                icon: '🔬',
+                icon: '🔍',
                 tools: ['searching'],
-                behavior: 'Research-heavy with web searching capabilities',
                 experts: [
-                    { id: 'gpt-oss-20b', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' tools: ['searching'] },
-                    { id: 'deepseek-v3.2-search', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2', tools: ['searching'] },
-                    { id: 'kimi-k2-search', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking', tools: ['searching'] },
-                    { id: 'glm-4.7-search', name: 'GLM-4.7', model: 'zai-org/GLM-4.7', tools: ['searching'] },
-                    { id: 'mistral-small', name: 'Mistral-Small-3.2', model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506' },
-                    { id: 'mistral-7b', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
-                    { id: 'minimax-m2.1-r', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' tools: ['searching'] },
-                    { id: 'mimo-v2-flash', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' tools: ['searching'] },
-                    { id: 'gemma-3n-r', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', tools: ['search'] },
+                    { id: 'Kimi-K2', name: 'Kimi K2', tools: ['search'] },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', tools: ['search'] },
+                    { id: 'GLM-4.7', name: 'GLM 4.7', tools: ['search'] },
+                    { id: 'Olmo-3.1-Instruct', name: 'Olmo Instruct' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo V2 Flash' }
                 ],
-                aggregator: { name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking' }
+                aggregator: 'Kimi-K2.5',
+                aggregatorTools: ['thinking', 'searching'],
+                behavior: 'Delayed research with web search and synthesis'
             },
             code: {
                 name: 'Sahu 1 Code',
                 icon: '💻',
                 tools: ['thinking', 'searching', 'planning'],
-                behavior: 'Plan → Reason → Code',
                 experts: [
-                    { id: 'gpt-oss-120b-c', name: 'GPT-OSS-120B', model: 'openai/gpt-oss-120b' },
-                    { id: 'deepseek-v3.2-c', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
-                    { id: 'kimi-k2-think-c', name: 'Kimi-K2-Thinking', model: 'moonshotai/Kimi-K2-Thinking' },
-                    { id: 'qwen3-coder', name: 'Qwen3-Coder-480B', model: 'Qwen/Qwen3-Coder-480B-A35B-Instruct' },
-                    { id: 'qwen3-235b-c', name: 'Qwen3-235B-Thinking', model: 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8' },
-                    { id: 'deepseek-coder', name: 'DeepSeek-Coder-V2', model: 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct' },
-                    { id: 'glm-4.7-c', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
-                    { id: 'devstral', name: 'Devstral-2-123B', model: 'mistralai/Devstral-2-123B-Instruct-2512' },
-                    { id: 'codestral', name: 'Codestral-22B', model: 'mistralai/Codestral-22B-v0.1' },
-                    { id: 'minimax-m2.1-c', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' }
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2', name: 'Kimi K2' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'Qwen3-Coder', name: 'Qwen3 Coder' },
+                    { id: 'DeepSeek-Coder', name: 'DeepSeek Coder' },
+                    { id: 'GLM-4.7', name: 'GLM 4.7' },
+                    { id: 'Devstral', name: 'Devstral' },
+                    { id: 'Codestral', name: 'Codestral' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
                 ],
-                aggregator: { name: 'GLM-4.7', model: 'zai-org/GLM-4.7' }
+                aggregator: 'GLM-4.7',
+                behavior: 'Multi-model code generation and review'
             },
             fast: {
                 name: 'Sahu 1 Fast',
                 icon: '⚡',
                 tools: [],
-                behavior: 'Fastest possible responses',
                 experts: [
-                    { id: 'gpt-oss-20b-f', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
-                    { id: 'deepseek-v3.2-f', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
-                    { id: 'kimi-k2-inst', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct' },
-                    { id: 'glm-4.7-flash', name: 'GLM-4.7-Flash', model: 'zai-org/GLM-4.7-Flash' },
-                    { id: 'mistral-7b-f', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
-                    { id: 'deepseek-r1-distill', name: 'DeepSeek-R1-Distill', model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B' },
-                    { id: 'mimo-v2-flash-f', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
-                    { id: 'gemma-3n-f', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2', name: 'Kimi K2' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'GLM-4.7-Flash', name: 'GLM Flash' },
+                    { id: 'Llama-3.3-70B', name: 'Llama 3.3' },
+                    { id: 'DeepSeek-R1-Distill', name: 'DeepSeek Distill' },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo Flash' }
                 ],
-                aggregator: { name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' }
+                aggregator: 'MiMo-V2-Flash',
+                behavior: 'Quick responses, no tools'
             },
             chat: {
                 name: 'Sahu 1 Chat',
                 icon: '💬',
                 tools: [],
-                behavior: 'General conversation',
                 experts: [
-                    { id: 'gpt-oss-20b-ch', name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' },
-                    { id: 'deepseek-v3.2-ch', name: 'DeepSeek-V3.2', model: 'deepseek-ai/DeepSeek-V3.2' },
-                    { id: 'kimi-k2-inst-ch', name: 'Kimi-K2-Instruct', model: 'moonshotai/Kimi-K2-Instruct' },
-                    { id: 'glm-4.7-ch', name: 'GLM-4.7', model: 'zai-org/GLM-4.7' },
-                    { id: 'mistral-small-ch', name: 'Mistral-Small-3.2', model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506' },
-                    { id: 'mistral-7b-ch', name: 'Mistral-7B', model: 'mistralai/Mistral-7B-Instruct-v0.3' },
-                    { id: 'minimax-m2.1-ch', name: 'MiniMax M2.1', model: 'minimax/m2.1-preview' },
-                    { id: 'mimo-v2-flash-ch', name: 'MiMo-V2-Flash', model: 'XiaomiMiMo/MiMo-V2-Flash' },
-                    { id: 'gemma-3n-ch', name: 'Gemma-3n-E4B', model: 'google/gemma-3n-E4B-it' }
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2', name: 'Kimi K2' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'GLM-4.7', name: 'GLM 4.7' },
+                    { id: 'Olmo-3.1-Instruct', name: 'Olmo Instruct' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo Flash' }
                 ],
-                aggregator: { name: 'GPT-OSS-20B', model: 'openai/gpt-oss-20b' }
+                aggregator: 'gpt-oss-20b',
+                behavior: 'Balanced conversational responses'
             },
             agent: {
                 name: 'Sahu 1 Agent',
                 icon: '🤖',
-                tools: [],
-                behavior: 'Auto-detects intent and routes to appropriate MoE',
-                experts: [], // Will be determined dynamically
-                aggregator: null // Will be determined dynamically
+                tools: ['thinking', 'searching', 'planning'],
+                experts: [],
+                aggregator: null,
+                behavior: 'Auto-routes to optimal MoE based on task'
             }
         };
-        
+
         // Provider Configurations
         const PROVIDERS = {
             huggingface: {
                 name: 'HuggingFace',
-                baseUrl: 'https://router.huggingface.co/v1/chat/completions',
-                headerKey: 'Authorization',
-                headerPrefix: 'Bearer ',
-                streamSupport: true,
-                badge: 'badge-hf'
+                keyName: 'sahu_api_huggingface_key',
+                endpointName: 'sahu_api_huggingface_endpoint',
+                defaultEndpoint: 'https://router.huggingface.co/v1/chat/completions'
             },
             openrouter: {
                 name: 'OpenRouter',
-                baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
-                headerKey: 'Authorization',
-                headerPrefix: 'Bearer ',
-                streamSupport: true,
-                badge: 'badge-openrouter'
+                keyName: 'sahu_api_openrouter_key',
+                endpointName: 'sahu_api_openrouter_endpoint',
+                defaultEndpoint: 'https://openrouter.ai/api/v1/chat/completions'
             },
             groq: {
                 name: 'Groq',
-                baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
-                headerKey: 'Authorization',
-                headerPrefix: 'Bearer ',
-                streamSupport: true,
-                badge: 'badge-groq'
+                keyName: 'sahu_api_groq_key',
+                endpointName: 'sahu_api_groq_endpoint',
+                defaultEndpoint: 'https://api.groq.com/openai/v1/chat/completions'
             },
-            together: {
+            togetherai: {
                 name: 'TogetherAI',
-                baseUrl: 'https://api.together.xyz/v1/chat/completions',
-                headerKey: 'Authorization',
-                headerPrefix: 'Bearer ',
-                streamSupport: true,
-                badge: 'badge-together'
+                keyName: 'sahu_api_together_key',
+                endpointName: 'sahu_api_together_endpoint',
+                defaultEndpoint: 'https://api.together.xyz/v1/chat/completions'
             },
             ollama: {
                 name: 'Ollama',
-                baseUrl: 'http://localhost:11434/api/chat',
-                headerKey: null,
-                streamSupport: true,
-                badge: 'badge-ollama'
+                keyName: null,
+                endpointName: 'sahu_api_ollama_endpoint',
+                defaultEndpoint: 'http://localhost:11434/api/chat'
             }
         };
-        
-        // Model mappings for different providers
-        const MODEL_MAPPINGS = {
-            huggingface: {
-                // HuggingFace Router - Use REAL model IDs directly
-                'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
-                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3',
-                'openai/gpt-oss-120b': 'openai/gpt-oss-120b',
-                'openai/gpt-oss-20b': 'openai/gpt-oss-20b',
-                'moonshotai/Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
-                'moonshotai/Kimi-K2-Instruct': 'moonshotai/Kimi-K2-Instruct',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8',
-                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
-                'zai-org/GLM-4.7': 'zai-org/GLM-4.7',
-                'zai-org/GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
-                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/Mistral-Small-3.2-24B-Instruct-2506',
-                'mistralai/Ministral-3-14B-Reasoning-2512': 'mistralai/Ministral-3-14B-Reasoning-2512',
-                'mistralai/Devstral-2-123B-Instruct-2512': 'mistralai/Devstral-2-123B-Instruct-2512',
-                'mistralai/Codestral-22B-v0.1': 'mistralai/Codestral-22B-v0.1',
-                'microsoft/Phi-4-reasoning-plus': 'microsoft/Phi-4-reasoning-plus',
-                'google/gemma-3n-E4B-it': 'google/gemma-3n-E4B-it',
-                'minimax/m2.1-preview': 'MiniMaxAI/MiniMax-M2.1',
-                'XiaomiMiMo/MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
-                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct',
-                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
-                'default': 'deepseek-ai/DeepSeek-V3'
-            },
-            openrouter: {
-                // OpenRouter uses their own model naming convention
-                'deepseek-ai/DeepSeek-R1': 'deepseek/deepseek-r1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek/deepseek-chat-v3-0324',
-                'deepseek-ai/DeepSeek-V3': 'deepseek/deepseek-chat-v3-0324',
-                'openai/gpt-oss-120b': 'qwen/qwen3-235b-a22b',
-                'openai/gpt-oss-20b': 'qwen/qwen3-32b',
-                'moonshotai/Kimi-K2-Thinking': 'moonshotai/kimi-k2',
-                'moonshotai/Kimi-K2-Instruct': 'moonshotai/kimi-k2',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen/qwen3-235b-a22b',
-                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'qwen/qwen3-coder-480b-a35b',
-                'zai-org/GLM-4.7': 'thudm/glm-4-32b',
-                'zai-org/GLM-4.7-Flash': 'thudm/glm-4-32b',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/mistral-7b-instruct',
-                'mistralai/Mistral-Small-3.2-24B-Instruct-2506': 'mistralai/mistral-small-3.1-24b-instruct',
-                'mistralai/Codestral-22B-v0.1': 'mistralai/codestral-2501',
-                'microsoft/Phi-4-reasoning-plus': 'microsoft/phi-4',
-                'google/gemma-3n-E4B-it': 'google/gemma-3-27b-it',
-                'XiaomiMiMo/MiMo-V2-Flash': 'qwen/qwen3-32b',
-                'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct': 'deepseek/deepseek-coder',
-                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek/deepseek-r1-distill-qwen-32b',
-                'default': 'deepseek/deepseek-chat-v3-0324'
-            },
-            groq: {
-                // Groq has limited model selection
-                'deepseek-ai/DeepSeek-R1': 'deepseek-r1-distill-llama-70b',
-                'deepseek-ai/DeepSeek-V3.2': 'llama-3.3-70b-versatile',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistral-saba-24b',
-                'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B': 'deepseek-r1-distill-qwen-32b',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen-qwq-32b',
-                'zai-org/GLM-4.7': 'llama-3.3-70b-versatile',
-                'google/gemma-3n-E4B-it': 'gemma2-9b-it',
-                'default': 'llama-3.3-70b-versatile'
-            },
-            together: {
-                // Together AI model IDs
-                'deepseek-ai/DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
-                'deepseek-ai/DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3',
-                'deepseek-ai/DeepSeek-V3': 'deepseek-ai/DeepSeek-V3',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'Qwen/Qwen2.5-72B-Instruct-Turbo',
-                'Qwen/Qwen3-Coder-480B-A35B-Instruct': 'Qwen/Qwen2.5-Coder-32B-Instruct',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistralai/Mistral-7B-Instruct-v0.3',
-                'mistralai/Codestral-22B-v0.1': 'codellama/CodeLlama-34b-Instruct-hf',
-                'google/gemma-3n-E4B-it': 'google/gemma-2-27b-it',
-                'default': 'meta-llama/Llama-3.3-70B-Instruct-Turbo'
-            },
-            ollama: {
-                // Ollama uses simple model names
-                'deepseek-ai/DeepSeek-R1': 'deepseek-r1',
-                'deepseek-ai/DeepSeek-V3': 'deepseek-v3',
-                'mistralai/Mistral-7B-Instruct-v0.3': 'mistral',
-                'mistralai/Codestral-22B-v0.1': 'codestral',
-                'google/gemma-3n-E4B-it': 'gemma2',
-                'Qwen/Qwen3-235B-A22B-Thinking-2507-FP8': 'qwen2.5',
-                'default': 'llama3.2'
-            }
+
+        // ==========================================
+        // State Management
+        // ==========================================
+        let state = {
+            currentProvider: 'huggingface',
+            currentMoE: 'agent',
+            messages: [],
+            chatHistory: [],
+            currentChatId: null,
+            isProcessing: false,
+            attachments: [],
+            theme: 'dark'
         };
-        
+
         // ==========================================
-        // Utility Functions
+        // Initialization
         // ==========================================
-        
-        function generateId() {
-            return 'id_' + Math.random().toString(36).substr(2, 9);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadChatHistory();
+            initTheme();
+            updateMoELabel();
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('sahu_theme') || 'dark';
+            state.theme = savedTheme;
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun text-[var(--text-secondary)]';
+                document.getElementById('themeText').textContent = 'Light Mode';
+            }
         }
-        
-        function formatTime(date) {
-            return new Intl.DateTimeFormat('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            }).format(date);
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Simple markdown parser
-        function parseMarkdown(text) {
-            if (!text) return '';
-            
-            // Code blocks
-            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
-            
-            // Inline code
-            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Bold
-            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-            
-            // Italic
-            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-            
-            // Headers
-            text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-            text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-            text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            
-            // Lists
-            text = text.replace(/^\- (.+)$/gm, '<li>$1</li>');
-            text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-            
-            // Blockquotes
-            text = text.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-            
-            // Line breaks
-            text = text.replace(/\n\n/g, '</p><p>');
-            text = text.replace(/\n/g, '<br>');
-            
-            return `<p>${text}</p>`;
-        }
-        
-        // ==========================================
-        // Storage Functions
-        // ==========================================
-        
-        function loadSettings() {
-            const settings = JSON.parse(localStorage.getItem('sahu_settings') || '{}');
-            
-            document.getElementById('hfApiKey').value = settings.hfApiKey || '';
-            document.getElementById('orApiKey').value = settings.orApiKey || '';
-            document.getElementById('groqApiKey').value = settings.groqApiKey || '';
-            document.getElementById('togetherApiKey').value = settings.togetherApiKey || '';
-            document.getElementById('ollamaEndpoint').value = settings.ollamaEndpoint || 'http://localhost:11434';
-            document.getElementById('showExperts').checked = settings.showExperts !== false;
-            document.getElementById('enableStreaming').checked = settings.enableStreaming !== false;
-            document.getElementById('maxTokens').value = settings.maxTokens || 4096;
-            document.getElementById('temperature').value = settings.temperature || 0.7;
-            document.getElementById('tempValue').textContent = settings.temperature || 0.7;
-            
-            state.theme = settings.theme || 'dark';
-            applyTheme();
-            
-            state.currentProvider = settings.provider || 'huggingface';
-            document.getElementById('providerSelector').value = state.currentProvider;
-        }
-        
-        function saveSettings() {
-            const settings = {
-                hfApiKey: document.getElementById('hfApiKey').value,
-                orApiKey: document.getElementById('orApiKey').value,
-                groqApiKey: document.getElementById('groqApiKey').value,
-                togetherApiKey: document.getElementById('togetherApiKey').value,
-                ollamaEndpoint: document.getElementById('ollamaEndpoint').value,
-                showExperts: document.getElementById('showExperts').checked,
-                enableStreaming: document.getElementById('enableStreaming').checked,
-                maxTokens: parseInt(document.getElementById('maxTokens').value),
-                temperature: parseFloat(document.getElementById('temperature').value),
-                theme: state.theme,
-                provider: state.currentProvider
-            };
-            
-            localStorage.setItem('sahu_settings', JSON.stringify(settings));
-            closeSettings();
-            showToast('Settings saved successfully');
-        }
-        
-        function getApiKey(provider) {
-            const settings = JSON.parse(localStorage.getItem('sahu_settings') || '{}');
-            const keyMap = {
-                huggingface: settings.hfApiKey,
-                openrouter: settings.orApiKey,
-                groq: settings.groqApiKey,
-                together: settings.togetherApiKey,
-                ollama: null
-            };
-            return keyMap[provider] || '';
-        }
-        
-        function getSettings() {
-            return JSON.parse(localStorage.getItem('sahu_settings') || '{}');
-        }
-        
-        // Chat History Storage
-        function loadChatHistory() {
-            state.chatHistory = JSON.parse(localStorage.getItem('sahu_chats') || '[]');
-            renderChatHistory();
-        }
-        
-        function saveChatHistory() {
-            localStorage.setItem('sahu_chats', JSON.stringify(state.chatHistory));
-            renderChatHistory();
-        }
-        
-        function renderChatHistory() {
-            const container = document.getElementById('chatHistory');
-            container.innerHTML = state.chatHistory.map(chat => `
-                <button onclick="loadChat('${chat.id}')" class="w-full p-2 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-2 text-left text-sm truncate ${state.currentChatId === chat.id ? 'bg-[var(--bg-tertiary)]' : ''}">
-                    <i class="fas fa-message text-xs text-[var(--text-secondary)]"></i>
-                    <span class="truncate">${escapeHtml(chat.title)}</span>
-                </button>
-            `).join('');
-        }
-        
-        // ==========================================
-        // UI Functions
-        // ==========================================
-        
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
-        
+
         function toggleTheme() {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
-            applyTheme();
-            saveSettings();
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('sahu_theme', state.theme);
+            
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (state.theme === 'light') {
+                icon.className = 'fas fa-sun text-[var(--text-secondary)]';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.className = 'fas fa-moon text-[var(--text-secondary)]';
+                text.textContent = 'Dark Mode';
+            }
         }
-        
-        function applyTheme() {
-            document.body.classList.toggle('light-theme', state.theme === 'light');
-            document.getElementById('themeIcon').className = state.theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+
+        // ==========================================
+        // Provider & Settings Management
+        // ==========================================
+        function loadSettings() {
+            // Load API keys into form
+            document.getElementById('hfApiKey').value = localStorage.getItem('sahu_api_huggingface_key') || '';
+            document.getElementById('hfEndpoint').value = localStorage.getItem('sahu_api_huggingface_endpoint') || PROVIDERS.huggingface.defaultEndpoint;
+            document.getElementById('orApiKey').value = localStorage.getItem('sahu_api_openrouter_key') || '';
+            document.getElementById('orEndpoint').value = localStorage.getItem('sahu_api_openrouter_endpoint') || PROVIDERS.openrouter.defaultEndpoint;
+            document.getElementById('groqApiKey').value = localStorage.getItem('sahu_api_groq_key') || '';
+            document.getElementById('groqEndpoint').value = localStorage.getItem('sahu_api_groq_endpoint') || PROVIDERS.groq.defaultEndpoint;
+            document.getElementById('togetherApiKey').value = localStorage.getItem('sahu_api_together_key') || '';
+            document.getElementById('togetherEndpoint').value = localStorage.getItem('sahu_api_together_endpoint') || PROVIDERS.togetherai.defaultEndpoint;
+            document.getElementById('ollamaEndpoint').value = localStorage.getItem('sahu_api_ollama_endpoint') || PROVIDERS.ollama.defaultEndpoint;
+            
+            // Load advanced settings
+            document.getElementById('maxTokens').value = localStorage.getItem('sahu_max_tokens') || 4096;
+            document.getElementById('temperature').value = localStorage.getItem('sahu_temperature') || 0.7;
+            document.getElementById('tempValue').textContent = document.getElementById('temperature').value;
+            document.getElementById('streamResponses').checked = localStorage.getItem('sahu_stream') !== 'false';
+            document.getElementById('showExperts').checked = localStorage.getItem('sahu_show_experts') !== 'false';
+            
+            // Temperature slider update
+            document.getElementById('temperature').addEventListener('input', (e) => {
+                document.getElementById('tempValue').textContent = e.target.value;
+            });
+            
+            // Load current provider
+            state.currentProvider = localStorage.getItem('sahu_current_provider') || 'huggingface';
+            updateProviderUI();
         }
-        
+
+        function saveSettings() {
+            localStorage.setItem('sahu_api_huggingface_key', document.getElementById('hfApiKey').value);
+            localStorage.setItem('sahu_api_huggingface_endpoint', document.getElementById('hfEndpoint').value);
+            localStorage.setItem('sahu_api_openrouter_key', document.getElementById('orApiKey').value);
+            localStorage.setItem('sahu_api_openrouter_endpoint', document.getElementById('orEndpoint').value);
+            localStorage.setItem('sahu_api_groq_key', document.getElementById('groqApiKey').value);
+            localStorage.setItem('sahu_api_groq_endpoint', document.getElementById('groqEndpoint').value);
+            localStorage.setItem('sahu_api_together_key', document.getElementById('togetherApiKey').value);
+            localStorage.setItem('sahu_api_together_endpoint', document.getElementById('togetherEndpoint').value);
+            localStorage.setItem('sahu_api_ollama_endpoint', document.getElementById('ollamaEndpoint').value);
+            localStorage.setItem('sahu_max_tokens', document.getElementById('maxTokens').value);
+            localStorage.setItem('sahu_temperature', document.getElementById('temperature').value);
+            localStorage.setItem('sahu_stream', document.getElementById('streamResponses').checked);
+            localStorage.setItem('sahu_show_experts', document.getElementById('showExperts').checked);
+            
+            closeSettings();
+            showNotification('Settings saved successfully!');
+        }
+
         function openSettings() {
             document.getElementById('settingsModal').classList.remove('hidden');
         }
-        
+
         function closeSettings() {
             document.getElementById('settingsModal').classList.add('hidden');
         }
-        
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg bg-purple-600 text-white shadow-lg z-50';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+
+        function openProviderSettings() {
+            toggleProviderMenu();
+            openSettings();
         }
-        
-        function changeMoEMode() {
-            state.currentMode = document.getElementById('moeSelector').value;
-            updateModeDisplay();
-            updateToolsIndicator();
+
+        function toggleProviderMenu() {
+            document.getElementById('providerMenu').classList.toggle('hidden');
         }
-        
-        function selectMode(mode) {
-            state.currentMode = mode;
-            document.getElementById('moeSelector').value = mode;
-            updateModeDisplay();
-            updateToolsIndicator();
+
+        function selectProvider(provider) {
+            state.currentProvider = provider;
+            localStorage.setItem('sahu_current_provider', provider);
+            updateProviderUI();
+            toggleProviderMenu();
         }
-        
-        function updateModeDisplay() {
-            const config = MOE_CONFIGS[state.currentMode];
-            document.getElementById('currentModeDisplay').innerHTML = `
-                <span class="text-lg">${config.icon}</span>
-                <span class="font-medium">${config.name}</span>
-            `;
+
+        function updateProviderUI() {
+            document.getElementById('currentProvider').textContent = PROVIDERS[state.currentProvider].name;
+            document.querySelectorAll('.provider-check').forEach(el => {
+                el.classList.toggle('hidden', el.dataset.provider !== state.currentProvider);
+            });
         }
-        
-        function updateToolsIndicator() {
-            const config = MOE_CONFIGS[state.currentMode];
-            const indicator = document.getElementById('toolsIndicator');
-            
-            if (config.tools && config.tools.length > 0) {
-                indicator.classList.remove('hidden');
-                indicator.innerHTML = config.tools.map(tool => `
-                    <span class="px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-400 flex items-center gap-1">
-                        <i class="fas fa-${getToolIcon(tool)}"></i>
-                        ${tool}
-                    </span>
-                `).join('');
-            } else {
-                indicator.classList.add('hidden');
-            }
+
+        // ==========================================
+        // UI Helpers
+        // ==========================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-ml-64');
         }
-        
-        function getToolIcon(tool) {
-            const icons = {
-                thinking: 'brain',
-                searching: 'search',
-                planning: 'list-check'
-            };
-            return icons[tool] || 'cog';
-        }
-        
-        function changeProvider() {
-            state.currentProvider = document.getElementById('providerSelector').value;
-        }
-        
+
         function autoResize(textarea) {
             textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+            textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px';
         }
-        
+
         function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
             }
         }
-        
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification-toast fixed bottom-4 right-4 px-4 py-3 rounded-lg text-white z-50 flex items-center gap-2 shadow-lg ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function quickPrompt(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        // ==========================================
+        // File Upload
+        // ==========================================
         function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                state.uploadedFiles.push(file);
-                showToast(`File "${file.name}" attached`);
+            const files = event.target.files;
+            const preview = document.getElementById('attachmentPreview');
+            preview.classList.remove('hidden');
+            preview.innerHTML = '';
+            
+            state.attachments = [];
+            
+            for (let file of files) {
+                state.attachments.push(file);
+                const chip = document.createElement('div');
+                chip.className = 'flex items-center gap-2 bg-[var(--bg-tertiary)] px-3 py-1 rounded-full text-sm';
+                chip.innerHTML = `
+                    <i class="fas fa-file text-[var(--accent)]"></i>
+                    <span>${file.name}</span>
+                    <button onclick="removeAttachment('${file.name}')" class="text-[var(--text-secondary)] hover:text-red-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                preview.appendChild(chip);
             }
         }
-        
+
+        function removeAttachment(fileName) {
+            state.attachments = state.attachments.filter(f => f.name !== fileName);
+            const preview = document.getElementById('attachmentPreview');
+            if (state.attachments.length === 0) {
+                preview.classList.add('hidden');
+            } else {
+                handleFileUpload({ target: { files: state.attachments } });
+            }
+        }
+
         // ==========================================
-        // Chat Functions
+        // MoE Selection & Routing
         // ==========================================
-        
-        function startNewChat() {
-            state.currentChatId = generateId();
+        function changeMoE() {
+            state.currentMoE = document.getElementById('moeSelector').value;
+            updateMoELabel();
+        }
+
+        function updateMoELabel() {
+            const config = MOE_CONFIGS[state.currentMoE];
+            document.getElementById('currentMoELabel').textContent = `${config.icon} ${config.name}`;
+            
+            if (state.currentMoE === 'agent') {
+                document.getElementById('expertCount').textContent = 'Auto';
+            } else {
+                document.getElementById('expertCount').textContent = `${config.experts.length} experts`;
+            }
+        }
+
+        function classifyTask(prompt) {
+            const lower = prompt.toLowerCase();
+            
+            // Code detection
+            if (/\b(code|program|function|script|api|debug|implement|algorithm|syntax|compile|python|javascript|html|css|sql)\b/.test(lower)) {
+                return 'code';
+            }
+            
+            // Research detection
+            if (/\b(research|find|search|latest|news|discover|investigate|analyze data|statistics|study)\b/.test(lower)) {
+                return 'deepresearch';
+            }
+            
+            // Deep thinking detection
+            if (/\b(explain|why|how does|theory|philosophical|complex|reasoning|prove|derive|analyze)\b/.test(lower)) {
+                return 'deepthink';
+            }
+            
+            // Fast/Simple queries
+            if (lower.length < 50 || /\b(what is|define|quick|simple|short)\b/.test(lower)) {
+                return 'fast';
+            }
+            
+            return 'chat';
+        }
+
+        // ==========================================
+        // Chat History
+        // ==========================================
+        function loadChatHistory() {
+            const saved = localStorage.getItem('sahu_chat_history');
+            if (saved) {
+                state.chatHistory = JSON.parse(saved);
+                renderChatHistory();
+            }
+        }
+
+        function saveChatHistory() {
+            localStorage.setItem('sahu_chat_history', JSON.stringify(state.chatHistory));
+        }
+
+        function renderChatHistory() {
+            const container = document.getElementById('chatHistory');
+            container.innerHTML = state.chatHistory.map(chat => `
+                <div onclick="loadChat('${chat.id}')" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] cursor-pointer flex items-center gap-2 group">
+                    <i class="fas fa-message text-[var(--text-secondary)] text-sm"></i>
+                    <span class="text-sm truncate flex-1">${chat.title}</span>
+                    <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-[var(--text-secondary)] hover:text-red-400">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function newChat() {
+            state.currentChatId = Date.now().toString();
+            state.messages = [];
             document.getElementById('welcomeScreen').classList.remove('hidden');
             document.getElementById('messagesContainer').classList.add('hidden');
             document.getElementById('messagesContainer').innerHTML = '';
             document.getElementById('userInput').value = '';
-            state.uploadedFiles = [];
-            state.toolBuffer = [];
         }
-        
+
         function loadChat(chatId) {
             const chat = state.chatHistory.find(c => c.id === chatId);
-            if (!chat) return;
-            
-            state.currentChatId = chatId;
+            if (chat) {
+                state.currentChatId = chatId;
+                state.messages = chat.messages;
+                renderMessages();
+            }
+        }
+
+        function deleteChat(chatId) {
+            state.chatHistory = state.chatHistory.filter(c => c.id !== chatId);
+            saveChatHistory();
+            renderChatHistory();
+            if (state.currentChatId === chatId) {
+                newChat();
+            }
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
             document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('messagesContainer').classList.remove('hidden');
-            document.getElementById('messagesContainer').innerHTML = '';
+            container.classList.remove('hidden');
             
-            // Render all messages from this chat
-            chat.messages.forEach(msg => {
+            state.messages.forEach(msg => {
                 if (msg.role === 'user') {
                     appendUserMessage(msg.content);
                 } else {
-                    appendAssistantMessage(msg);
+                    appendAssistantMessage(msg.content, msg.experts);
                 }
             });
-            
-            renderChatHistory();
         }
-        
+
+        // ==========================================
+        // Message Handling
+        // ==========================================
         function appendUserMessage(content) {
             const container = document.getElementById('messagesContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex justify-end';
-            messageDiv.innerHTML = `
-                <div class="message-user max-w-2xl px-4 py-3 rounded-2xl rounded-br-md text-white">
-                    <p class="whitespace-pre-wrap">${escapeHtml(content)}</p>
+            const div = document.createElement('div');
+            div.className = 'flex justify-end';
+            div.innerHTML = `
+                <div class="message-user px-4 py-3 rounded-2xl max-w-2xl">
+                    <p class="text-white whitespace-pre-wrap">${escapeHtml(content)}</p>
                 </div>
             `;
-            container.appendChild(messageDiv);
+            container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
-        
-        function appendAssistantMessage(msg) {
-            const container = document.getElementById('messagesContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'space-y-4';
+
+        function createExpertGrid(experts) {
+            const showExperts = localStorage.getItem('sahu_show_experts') !== 'false';
+            if (!showExperts) return '';
             
-            let html = '';
-            
-            // Tools section
-            if (msg.tools && msg.tools.length > 0) {
-                html += `
-                    <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                        ${msg.tools.map(t => `<span class="px-2 py-1 rounded-full bg-purple-600/20 text-purple-400"><i class="fas fa-${getToolIcon(t)}"></i> ${t}</span>`).join('')}
+            return `
+                <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-users text-[var(--accent)]"></i>
+                        <span class="font-medium">Expert Responses</span>
+                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                `;
-            }
-            
-            // Expert outputs
-            if (msg.experts && msg.experts.length > 0) {
-                html += `
-                    <div class="expert-grid">
-                        ${msg.experts.map(exp => `
-                            <div class="expert-card rounded-xl p-4 border">
-                                <div class="flex items-center justify-between mb-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${experts.map(exp => `
+                            <div class="expert-card ${exp.status} rounded-xl p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xs">
+                                        ${exp.name.charAt(0)}
+                                    </div>
                                     <span class="font-medium text-sm">${exp.name}</span>
-                                    <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)]/20 text-[var(--accent)]">${exp.provider || 'Expert'}</span>
+                                    ${exp.tools ? `<span class="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-0.5 rounded-full">${exp.tools.join(', ')}</span>` : ''}
+                                    ${exp.status === 'thinking' ? `
+                                        <div class="typing-indicator ml-auto flex gap-1">
+                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+                                        </div>
+                                    ` : ''}
+                                    ${exp.status === 'complete' ? '<i class="fas fa-check-circle text-green-400 ml-auto"></i>' : ''}
+                                    ${exp.status === 'error' ? '<i class="fas fa-exclamation-circle text-red-400 ml-auto"></i>' : ''}
                                 </div>
-                                <div class="text-sm text-[var(--text-secondary)] markdown-content max-h-48 overflow-y-auto">
-                                    ${parseMarkdown(exp.output)}
+                                <div class="text-sm text-[var(--text-secondary)] max-h-32 overflow-y-auto scrollbar-thin">
+                                    ${exp.response ? formatMarkdown(exp.response) : '<span class="italic">Processing...</span>'}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
-                `;
-            }
-            
-            // Final answer
-            if (msg.finalAnswer) {
-                html += `
-                    <div class="final-answer rounded-xl p-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                                <i class="fas fa-star text-white text-sm"></i>
-                            </div>
-                            <div>
-                                <span class="font-semibold">Final Expert</span>
-                                <span class="text-sm text-[var(--text-secondary)]"> · ${msg.aggregator || 'Aggregator'}</span>
-                            </div>
-                        </div>
-                        <div class="markdown-content">
-                            ${parseMarkdown(msg.finalAnswer)}
-                        </div>
+                </div>
+            `;
+        }
+
+        function createToolLog(tool, content) {
+            return `
+                <div class="tool-log rounded-lg p-3 my-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fas fa-${tool === 'thinking' ? 'brain' : tool === 'searching' ? 'search' : 'list-check'} text-[var(--accent)]"></i>
+                        <span class="text-sm font-medium capitalize">${tool}</span>
+                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs text-[var(--text-secondary)]">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                `;
-            }
-            
-            messageDiv.innerHTML = html;
-            container.appendChild(messageDiv);
+                    <div class="text-xs text-[var(--text-secondary)] hidden">
+                        ${escapeHtml(content)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function appendAssistantMessage(content, experts = [], toolLogs = []) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = 'assistant-response';
+            div.innerHTML = `
+                ${experts.length > 0 ? createExpertGrid(experts) : ''}
+                ${toolLogs.map(log => createToolLog(log.tool, log.content)).join('')}
+                <div class="aggregator-response rounded-2xl p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-sm"></i>
+                        </div>
+                        <span class="font-medium">SAHU 1 MoE</span>
+                        <span class="text-xs text-[var(--text-secondary)]">Synthesized Response</span>
+                    </div>
+                    <div class="prose prose-invert max-w-none">
+                        ${formatMarkdown(content)}
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
-        
-        // ==========================================
-        // Provider & API Functions
-        // ==========================================
-        
-        function resolveModel(modelId, provider) {
-            const mappings = MODEL_MAPPINGS[provider] || {};
-            // First check if there's a specific mapping, otherwise use the model ID directly
-            // This ensures real model IDs are passed through as-is
-            if (mappings[modelId]) {
-                return mappings[modelId];
-            }
-            // For HuggingFace, always try to use the original model ID first
-            if (provider === 'huggingface') {
-                return modelId;
-            }
-            // For other providers, fall back to default if no mapping exists
-            return mappings['default'] || modelId;
+
+        function formatMarkdown(text) {
+            if (!text) return '';
+            
+            // Code blocks
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code class="bg-[var(--bg-tertiary)] px-1 rounded">$1</code>');
+            
+            // Bold
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Links
+            text = text.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-[var(--accent)] hover:underline" target="_blank">$1</a>');
+            
+            // Lists
+            text = text.replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-5 my-2">$&</ul>');
+            
+            // Paragraphs
+            text = text.replace(/\n\n/g, '</p><p class="my-2">');
+            text = '<p class="my-2">' + text + '</p>';
+            
+            return text;
         }
-        
-        function buildApiRequest(provider, model, messages, stream = true) {
-            const settings = getSettings();
-            const providerConfig = PROVIDERS[provider];
-            
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            const apiKey = getApiKey(provider);
-            if (providerConfig.headerKey && apiKey) {
-                headers[providerConfig.headerKey] = (providerConfig.headerPrefix || '') + apiKey;
-            }
-            
-            // Add OpenRouter specific headers
-            if (provider === 'openrouter') {
-                headers['HTTP-Referer'] = window.location.origin;
-                headers['X-Title'] = 'SAHU 1 MoE';
-            }
-            
-            let url = providerConfig.baseUrl;
-            let body;
-            
-            if (provider === 'huggingface') {
-                // Using HuggingFace Router - OpenAI compatible endpoint
-                url = providerConfig.baseUrl;
-                const resolvedModel = resolveModel(model, provider);
-                body = {
-                    model: resolvedModel,
-                    messages: messages,
-                    max_tokens: settings.maxTokens || 4096,
-                    temperature: settings.temperature || 0.7,
-                    stream: stream
-                };
-            } else if (provider === 'ollama') {
-                url = settings.ollamaEndpoint ? `${settings.ollamaEndpoint}/api/chat` : url;
-                body = {
-                    model: resolveModel(model, provider),
-                    messages: messages,
-                    stream: stream
-                };
-            } else {
-                // OpenAI-compatible API (OpenRouter, Groq, Together)
-                body = {
-                    model: resolveModel(model, provider),
-                    messages: messages,
-                    max_tokens: settings.maxTokens || 4096,
-                    temperature: settings.temperature || 0.7,
-                    stream: stream
-                };
-            }
-            
-            return { url, headers, body };
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
-        
+
         // ==========================================
-        // Streaming Handler
+        // API Communication
         // ==========================================
-        
-        async function* streamResponse(response, provider) {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
+        async function callModel(modelId, messages, tools = [], stream = false, onChunk = null) {
+            const provider = PROVIDERS[state.currentProvider];
+            const apiKey = localStorage.getItem(provider.keyName);
+            const endpoint = localStorage.getItem(provider.endpointName) || provider.defaultEndpoint;
+            
+            if (!apiKey && state.currentProvider !== 'ollama') {
+                throw new Error(`API key not configured for ${provider.name}`);
+            }
+            
+            const fullModelId = MODELS[modelId] || modelId;
+            
+            let requestBody, requestUrl, headers;
+            
+            switch (state.currentProvider) {
+                case 'huggingface':
+                    requestUrl = endpoint;
+                    headers = {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    };
+                    requestBody = {
+                        model: fullModelId,
+                        messages: messages,
+                        max_tokens: parseInt(localStorage.getItem('sahu_max_tokens')) || 4096,
+                        temperature: parseFloat(localStorage.getItem('sahu_temperature')) || 0.7,
+                        stream: stream
+                    };
+                    break;
+                    
+                case 'openrouter':
+                case 'groq':
+                case 'togetherai':
+                    requestUrl = endpoint;
+                    headers = {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    };
+                    if (state.currentProvider === 'openrouter') {
+                        headers['HTTP-Referer'] = window.location.origin;
+                        headers['X-Title'] = 'SAHU 1 MoE';
+                    }
+                    requestBody = {
+                        model: fullModelId,
+                        messages: messages,
+                        max_tokens: parseInt(localStorage.getItem('sahu_max_tokens')) || 4096,
+                        temperature: parseFloat(localStorage.getItem('sahu_temperature')) || 0.7,
+                        stream: stream
+                    };
+                    break;
+                    
+                case 'ollama':
+                    requestUrl = endpoint;
+                    headers = { 'Content-Type': 'application/json' };
+                    requestBody = {
+                        model: modelId.toLowerCase(),
+                        messages: messages,
+                        stream: stream
+                    };
+                    break;
+            }
             
             try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+                const response = await fetch(requestUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
+                }
+                
+                // Handle streaming response
+                if (stream && onChunk) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullContent = '';
                     
-                    buffer += decoder.decode(value, { stream: true });
-                    
-                    // Parse based on provider format
-                    if (provider === 'ollama') {
-                        // Ollama sends JSON per line
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop() || '';
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
                         
                         for (const line of lines) {
-                            if (line.trim()) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') continue;
+                                
                                 try {
-                                    const json = JSON.parse(line);
-                                    if (json.message?.content) {
-                                        yield json.message.content;
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices?.[0]?.delta?.content || '';
+                                    if (content) {
+                                        fullContent += content;
+                                        onChunk(content, fullContent);
                                     }
-                                } catch (e) {}
-                            }
-                        }
-                    } else if (provider === 'huggingface') {
-                        // HuggingFace Router uses OpenAI-compatible SSE format
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop() || '';
-                        
-                        for (const line of lines) {
-                            if (line.startsWith('data:')) {
-                                const data = line.slice(5).trim();
-                                if (data && data !== '[DONE]') {
-                                    try {
-                                        const json = JSON.parse(data);
-                                        // OpenAI compatible format
-                                        const content = json.choices?.[0]?.delta?.content;
-                                        if (content) {
-                                            yield content;
-                                        }
-                                    } catch (e) {}
-                                }
-                            }
-                        }
-                    } else {
-                        // SSE format (OpenRouter, Groq, Together)
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop() || '';
-                        
-                        for (const line of lines) {
-                            if (line.startsWith('data:')) {
-                                const data = line.slice(5).trim();
-                                if (data && data !== '[DONE]') {
-                                    try {
-                                        const json = JSON.parse(data);
-                                        const content = json.choices?.[0]?.delta?.content;
-                                        if (content) {
-                                            yield content;
-                                        }
-                                    } catch (e) {}
+                                } catch (e) {
+                                    // Skip malformed JSON
                                 }
                             }
                         }
                     }
-                }
-            } finally {
-                reader.releaseLock();
-            }
-        }
-        
-        // ==========================================
-        // Expert Runner - With Word-by-Word Streaming
-        // ==========================================
-        
-        async function runExpert(expert, userMessage, toolContext, cardElement) {
-            const provider = state.currentProvider;
-            const settings = getSettings();
-            
-            // Build messages with tool context
-            let systemPrompt = `You are an AI expert named "${expert.name}" (Developed by Saksham Intelligence). You are part of the SAHU 1-series Mixture of Experts system. Provide your best analysis and response.`;
-            
-            if (toolContext && toolContext.length > 0) {
-                systemPrompt += `\n\nTool Outputs:\n${toolContext.map(t => `[${t.tool}]: ${t.output}`).join('\n')}`;
-            }
-            
-            const messages = [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage }
-            ];
-            
-            // Always try to stream for word-by-word effect
-            const { url, headers, body } = buildApiRequest(provider, expert.model, messages, true);
-            
-            try {
-                // Create a unique abort controller for each expert
-                const expertAbortController = new AbortController();
-                
-                // Link to main abort controller
-                if (state.abortController) {
-                    state.abortController.signal.addEventListener('abort', () => {
-                        expertAbortController.abort();
-                    });
-                }
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(body),
-                    signal: expertAbortController.signal
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API Error: ${response.status} - ${errorText}`);
-                }
-                
-                const outputElement = cardElement.querySelector('.expert-output');
-                let fullOutput = '';
-                let lastRenderTime = Date.now();
-                const minRenderInterval = 25; // Smooth word-by-word effect
-                
-                if (response.body) {
-                    // Streaming response with word-by-word effect
-                    for await (const token of streamResponse(response, provider)) {
-                        if (expertAbortController.signal.aborted) break;
-                        
-                        fullOutput += token;
-                        
-                        // Render at intervals for smooth word-by-word effect
-                        const now = Date.now();
-                        if (now - lastRenderTime >= minRenderInterval || token.includes(' ') || token.includes('\n')) {
-                            outputElement.innerHTML = parseMarkdown(fullOutput);
-                            lastRenderTime = now;
-                            
-                            // Small delay for visual word-by-word effect
-                            await new Promise(resolve => setTimeout(resolve, 8));
-                        }
-                    }
                     
-                    // Final render
-                    outputElement.innerHTML = parseMarkdown(fullOutput);
-                } else {
-                    // Non-streaming fallback with word-by-word display
-                    const data = await response.json();
-                    
-                    if (provider === 'huggingface') {
-                        fullOutput = data.choices?.[0]?.message?.content || '';
-                    } else if (provider === 'ollama') {
-                        fullOutput = data.message?.content || '';
-                    } else {
-                        fullOutput = data.choices?.[0]?.message?.content || '';
-                    }
-                    
-                    // Display word by word
-                    await displayWordByWord(outputElement, fullOutput, 15);
+                    return fullContent;
                 }
                 
-                // Remove loading state
-                cardElement.querySelector('.loading-indicator')?.remove();
+                const data = await response.json();
                 
-                return fullOutput;
+                // Extract response based on provider
+                switch (state.currentProvider) {
+                    case 'huggingface':
+                    case 'openrouter':
+                    case 'groq':
+                    case 'togetherai':
+                        return data.choices?.[0]?.message?.content || JSON.stringify(data);
+                    case 'ollama':
+                        return data.message?.content || data.response || JSON.stringify(data);
+                    default:
+                        return JSON.stringify(data);
+                }
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    return '[Stopped]';
-                }
-                console.error(`Expert ${expert.name} error:`, error);
-                cardElement.querySelector('.loading-indicator')?.remove();
-                cardElement.querySelector('.expert-output').innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>Error: ${error.message}</span>`;
-                return `[Error: ${error.message}]`;
+                console.error('API call failed:', error);
+                throw error;
             }
         }
-        
-        // ==========================================
-        // Word-by-Word Display Helper
-        // ==========================================
-        
-        async function displayWordByWord(element, text, delayMs = 20) {
-            const words = text.split(/(\s+)/);
-            let displayed = '';
-            
-            for (const word of words) {
-                if (state.abortController?.signal.aborted) break;
-                displayed += word;
-                element.innerHTML = parseMarkdown(displayed);
-                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                await new Promise(resolve => setTimeout(resolve, delayMs));
-            }
-            
-            return displayed;
-        }
-        
-        // ==========================================
-        // Aggregator Runner - Enhanced with Thinking & Analysis
-        // ==========================================
-        
-        async function runAggregator(aggregator, userMessage, expertOutputs, toolContext, containerElement) {
-            const provider = state.currentProvider;
-            const settings = getSettings();
-            
-            // Get output element
-            const outputElement = containerElement.querySelector('.aggregator-output');
-            
-            // Phase 1: Reading expert outputs (visual feedback)
-            outputElement.innerHTML = '<div class="text-purple-400 mb-3"><i class="fas fa-book-reader mr-2"></i><em>Reading all expert outputs...</em></div>';
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Build comprehensive aggregator prompt with thinking instructions
-            const systemPrompt = `You are the Final Expert Aggregator named "${aggregator.name}" (Developed by Saksham Intelligence) in the SAHU 1-series Mixture of Experts system.
 
-You have received responses from ${expertOutputs.length} expert AI models. Your task is to:
-
-1. **THINK**: First, internally analyze each expert's response - identify key insights, strengths, weaknesses, and unique perspectives.
-
-2. **ANALYZE/COMPARE**: Compare the expert responses, noting agreements, disagreements, and complementary information.
-
-3. **SYNTHESIZE**: Combine the best elements from all experts into a comprehensive, accurate, and well-structured final answer.
-
-4. **VERIFY**: Ensure your final answer is consistent, factually accurate (based on expert consensus), and directly addresses the user's question.
-
-=== EXPERT OUTPUTS ===
-${expertOutputs.map((exp, i) => `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXPERT ${i + 1}: ${exp.name}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${exp.output}
-`).join('\n')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${toolContext && toolContext.length > 0 ? `
-=== TOOL OUTPUTS ===
-${toolContext.map(t => `[${t.tool.toUpperCase()}]: ${t.output}`).join('\n')}
-` : ''}
-
-IMPORTANT INSTRUCTIONS:
-- Structure your response with clear sections when appropriate
-- If experts disagree, explain the different perspectives and provide the most accurate answer
-- Credit specific insights to experts when relevant (e.g., "As noted by Expert 1...")
-- Be comprehensive but concise
-- Use markdown formatting for clarity`;
-
-            const userPrompt = `Based on all the expert analyses provided above, please:
-
-1. First, briefly share your thinking about what each expert contributed (2-3 sentences)
-2. Then, provide your analysis of where experts agree/disagree (2-3 sentences)  
-3. Finally, give your comprehensive FINAL ANSWER to the user's question:
-
-"${userMessage}"
-
-Begin your response now:`;
-            
-            const messages = [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ];
-            
-            // Phase 2: Thinking indicator
-            outputElement.innerHTML = '<div class="text-purple-400 mb-3"><i class="fas fa-brain mr-2 fa-pulse"></i><em>Thinking and analyzing expert responses...</em></div>';
-            await new Promise(resolve => setTimeout(resolve, 600));
-            
-            const { url, headers, body } = buildApiRequest(provider, aggregator.model, messages, true); // Always stream for aggregator
-            
-            try {
-                state.abortController = new AbortController();
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(body),
-                    signal: state.abortController.signal
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API Error: ${response.status} - ${errorText}`);
-                }
-                
-                // Clear the thinking indicator
-                outputElement.innerHTML = '';
-                
-                let fullOutput = '';
-                let tokenBuffer = '';
-                let lastRenderTime = Date.now();
-                const minRenderInterval = 30; // Minimum ms between renders for smooth word-by-word effect
-                
-                if (response.body) {
-                    // Streaming response with word-by-word effect
-                    for await (const token of streamResponse(response, provider)) {
-                        if (state.abortController?.signal.aborted) break;
-                        
-                        tokenBuffer += token;
-                        fullOutput += token;
-                        
-                        // Render at intervals for smooth word-by-word effect
-                        const now = Date.now();
-                        if (now - lastRenderTime >= minRenderInterval || token.includes(' ') || token.includes('\n')) {
-                            outputElement.innerHTML = parseMarkdown(fullOutput);
-                            containerElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            lastRenderTime = now;
-                            tokenBuffer = '';
-                            
-                            // Small delay for word-by-word effect
-                            await new Promise(resolve => setTimeout(resolve, 10));
-                        }
-                    }
-                    
-                    // Final render
-                    outputElement.innerHTML = parseMarkdown(fullOutput);
-                } else {
-                    // Non-streaming fallback with word-by-word display
-                    const data = await response.json();
-                    
-                    if (provider === 'huggingface') {
-                        fullOutput = data.choices?.[0]?.message?.content || '';
-                    } else if (provider === 'ollama') {
-                        fullOutput = data.message?.content || '';
-                    } else {
-                        fullOutput = data.choices?.[0]?.message?.content || '';
-                    }
-                    
-                    // Display word by word
-                    await displayWordByWord(outputElement, fullOutput);
-                }
-                
-                containerElement.querySelector('.loading-indicator')?.remove();
-                
-                return fullOutput;
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    return '[Stopped]';
-                }
-                console.error('Aggregator error:', error);
-                outputElement.innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>Error: ${error.message}</span>`;
-                return `[Error: ${error.message}]`;
-            }
-        }
-        
         // ==========================================
         // Tool Execution
         // ==========================================
-        
-        async function executeTools(tools, userMessage) {
-            const toolResults = [];
-            
-            for (const tool of tools) {
-                if (tool === 'thinking') {
-                    // Simulate thinking process
-                    toolResults.push({
-                        tool: 'thinking',
-                        output: `Analyzing the query: "${userMessage.substring(0, 100)}..."\nIdentifying key concepts and reasoning steps.\nFormulating approach for comprehensive response.`
-                    });
-                } else if (tool === 'searching') {
-                    // Simulate search (in production, this would call a search API)
-                    await new Promise(resolve => setTimeout(resolve, 1500)); // Research mode delay
-                    toolResults.push({
-                        tool: 'searching',
-                        output: `Searched for: "${userMessage.substring(0, 50)}..."\nGathering relevant information from knowledge base.\nNote: Real-time web search requires additional API integration.`
-                    });
-                } else if (tool === 'planning') {
-                    toolResults.push({
-                        tool: 'planning',
-                        output: `Planning approach for: "${userMessage.substring(0, 50)}..."\nStep 1: Understand requirements\nStep 2: Design solution architecture\nStep 3: Implement with best practices\nStep 4: Review and optimize`
-                    });
-                }
-            }
-            
-            return toolResults;
+        async function executeThinking(prompt) {
+            return {
+                tool: 'thinking',
+                content: `Analyzing: "${prompt.substring(0, 100)}..."\nBreaking down into sub-problems...\nConsidering multiple perspectives...`
+            };
         }
-        
-        // ==========================================
-        // Agent Mode - Intent Detection
-        // ==========================================
-        
-        function detectIntent(message) {
-            const msg = message.toLowerCase();
-            
-            // Code-related keywords
-            if (/\b(code|program|function|class|api|debug|implement|develop|script|algorithm|syntax|compile|runtime|bug|error)\b/.test(msg)) {
-                return 'code';
-            }
-            
-            // Research keywords
-            if (/\b(research|study|analyze|investigate|compare|review|explain in detail|comprehensive|in-depth|sources|evidence)\b/.test(msg)) {
-                return 'research';
-            }
-            
-            // Reasoning keywords
-            if (/\b(think|reason|logic|deduce|infer|conclude|step by step|analyze|evaluate|consider|why|how does)\b/.test(msg)) {
-                return 'deepthink';
-            }
-            
-            // Quick/simple queries
-            if (msg.length < 50 || /\b(quick|fast|briefly|short|simple|what is|who is|when|where)\b/.test(msg)) {
-                return 'fast';
-            }
-            
-            // Default to chat
-            return 'chat';
+
+        async function executeSearching(prompt) {
+            return {
+                tool: 'searching',
+                content: `Searching for: "${prompt.substring(0, 50)}..."\nGathering relevant sources...\nSynthesizing information...`
+            };
         }
-        
+
+        async function executePlanning(prompt) {
+            return {
+                tool: 'planning',
+                content: `Creating plan for: "${prompt.substring(0, 50)}..."\nStep 1: Analyze requirements\nStep 2: Design solution\nStep 3: Implement\nStep 4: Validate`
+            };
+        }
+
         // ==========================================
-        // Main Send Message Function
+        // Main Send Message
         // ==========================================
-        
         async function sendMessage() {
             const input = document.getElementById('userInput');
-            const message = input.value.trim();
+            const content = input.value.trim();
             
-            if (!message || state.isGenerating) return;
+            if (!content || state.isProcessing) return;
             
-            // Check for API key
-            const apiKey = getApiKey(state.currentProvider);
-            if (!apiKey && state.currentProvider !== 'ollama') {
-                showToast('Please configure your API key in Settings');
-                openSettings();
-                return;
-            }
+            state.isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
             
-            // Start new chat if needed
-            if (!state.currentChatId) {
-                state.currentChatId = generateId();
-            }
-            
-            // Hide welcome screen, show messages
+            // Show messages container
             document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('messagesContainer').classList.remove('hidden');
             
-            // Clear input
+            // Add user message
+            appendUserMessage(content);
+            state.messages.push({ role: 'user', content });
             input.value = '';
             input.style.height = 'auto';
             
-            // Show user message
-            appendUserMessage(message);
+            // Clear attachments
+            state.attachments = [];
+            document.getElementById('attachmentPreview').classList.add('hidden');
             
-            // Update UI state
-            state.isGenerating = true;
-            document.getElementById('sendButton').classList.add('hidden');
-            document.getElementById('stopButton').classList.remove('hidden');
-            
-            // Determine mode (handle Agent mode)
-            let activeMode = state.currentMode;
-            if (activeMode === 'agent') {
-                activeMode = detectIntent(message);
-                showToast(`Agent routed to: ${MOE_CONFIGS[activeMode].name}`);
-            }
-            
-            const config = MOE_CONFIGS[activeMode];
-            const container = document.getElementById('messagesContainer');
-            
-            // Create response container
-            const responseDiv = document.createElement('div');
-            responseDiv.className = 'space-y-4';
-            container.appendChild(responseDiv);
-            
-            // Execute tools if any
-            let toolContext = [];
-            if (config.tools && config.tools.length > 0) {
-                // Show tool execution status
-                const toolDiv = document.createElement('div');
-                toolDiv.className = 'flex items-center gap-2 text-sm text-purple-400';
-                toolDiv.innerHTML = config.tools.map(t => `
-                    <span class="px-2 py-1 rounded-full bg-purple-600/20 flex items-center gap-1 tool-active">
-                        <i class="fas fa-${getToolIcon(t)} fa-spin"></i>
-                        ${t}
-                    </span>
-                `).join('');
-                responseDiv.appendChild(toolDiv);
+            try {
+                // Determine which MoE to use
+                let moeKey = state.currentMoE;
+                if (moeKey === 'agent') {
+                    moeKey = classifyTask(content);
+                    showNotification(`Agent routed to: ${MOE_CONFIGS[moeKey].name}`, 'success');
+                }
                 
-                toolContext = await executeTools(config.tools, message);
-                state.toolBuffer = toolContext;
+                const config = MOE_CONFIGS[moeKey];
                 
-                // Update tool display to complete
-                toolDiv.innerHTML = config.tools.map(t => `
-                    <span class="px-2 py-1 rounded-full bg-green-600/20 text-green-400 flex items-center gap-1">
-                        <i class="fas fa-check"></i>
-                        ${t}
-                    </span>
-                `).join('');
-            }
-            
-            // Create expert grid
-            const settings = getSettings();
-            const expertOutputs = [];
-            
-            if (settings.showExperts !== false && config.experts.length > 0) {
-                const expertGrid = document.createElement('div');
-                expertGrid.className = 'expert-grid';
+                // Execute tools
+                const toolLogs = [];
+                for (const tool of config.tools) {
+                    let result;
+                    switch (tool) {
+                        case 'thinking':
+                            result = await executeThinking(content);
+                            break;
+                        case 'searching':
+                            result = await executeSearching(content);
+                            break;
+                        case 'planning':
+                            result = await executePlanning(content);
+                            break;
+                    }
+                    if (result) toolLogs.push(result);
+                }
                 
-                // Create cards for each expert
-                const expertCards = config.experts.map(expert => {
-                    const card = document.createElement('div');
-                    card.className = 'expert-card rounded-xl p-4 border';
-                    card.id = `expert-${expert.id}`;
-                    card.innerHTML = `
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-medium text-sm">${expert.name}</span>
-                            <span class="text-xs px-2 py-0.5 rounded-full ${PROVIDERS[state.currentProvider].badge} text-white">${PROVIDERS[state.currentProvider].name}</span>
-                        </div>
-                        <div class="loading-indicator flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Generating...</span>
-                        </div>
-                        <div class="expert-output text-sm text-[var(--text-secondary)] markdown-content max-h-48 overflow-y-auto"></div>
-                    `;
-                    expertGrid.appendChild(card);
-                    return { expert, card };
+                // Query all experts
+                const expertResults = [];
+                const container = document.getElementById('messagesContainer');
+                
+                // Create placeholder for expert grid
+                const expertPlaceholder = document.createElement('div');
+                expertPlaceholder.id = 'expertPlaceholder';
+                container.appendChild(expertPlaceholder);
+                
+                // Initialize all experts with thinking status
+                config.experts.forEach(expert => {
+                    expertResults.push({
+                        name: expert.name,
+                        id: expert.id,
+                        tools: expert.tools || [],
+                        status: 'thinking',
+                        response: null
+                    });
+                });
+                updateExpertGrid(expertResults);
+                
+                // Process experts in parallel
+                const expertPromises = config.experts.map(async (expert, index) => {
+                    try {
+                        const response = await callModel(expert.id, [
+                            { role: 'system', content: `You are ${expert.name}, an expert AI assistant. Provide a focused, helpful response.` },
+                            { role: 'user', content: content }
+                        ], expert.tools);
+                        
+                        expertResults[index].response = response;
+                        expertResults[index].status = 'complete';
+                    } catch (error) {
+                        expertResults[index].response = `Error: ${error.message}`;
+                        expertResults[index].status = 'error';
+                    }
+                    
+                    updateExpertGrid(expertResults);
+                    return expertResults[index];
                 });
                 
-                responseDiv.appendChild(expertGrid);
+                // Wait for ALL experts to complete before starting aggregation
+                await Promise.allSettled(expertPromises);
                 
-                // Run all experts in parallel
-                const expertPromises = expertCards.map(async ({ expert, card }) => {
-                    const output = await runExpert(expert, message, toolContext, card);
-                    return { name: expert.name, output };
-                });
+                // All experts complete - now show aggregator section
+                const successfulExperts = expertResults.filter(e => e.status === 'complete');
+                const completedCount = successfulExperts.length;
+                const totalCount = expertResults.length;
                 
-                const results = await Promise.all(expertPromises);
-                expertOutputs.push(...results);
-            }
-            
-            // Run aggregator
-            if (config.aggregator) {
+                // Create aggregator response container with phases
                 const aggregatorDiv = document.createElement('div');
-                aggregatorDiv.className = 'final-answer rounded-xl p-4';
+                aggregatorDiv.className = 'aggregator-response rounded-2xl p-4 mt-4';
                 aggregatorDiv.innerHTML = `
                     <div class="flex items-center gap-2 mb-3">
-                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                            <i class="fas fa-brain text-white text-lg"></i>
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-sm"></i>
                         </div>
-                        <div>
-                            <span class="font-bold text-lg">Final Expert</span>
-                            <span class="text-sm text-[var(--text-secondary)]"> · ${config.aggregator.name}</span>
-                            <div class="text-xs text-purple-400">Analyzing ${expertOutputs.length} expert responses</div>
+                        <span class="font-medium">SAHU 1 MoE Aggregator</span>
+                        <span class="text-xs text-[var(--text-secondary)]">(${config.aggregator})</span>
+                    </div>
+                    
+                    <!-- Phase 1: Reading -->
+                    <div id="aggregatorPhase1" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
+                        <div class="flex items-center gap-2 text-blue-400">
+                            <i class="fas fa-book-reader"></i>
+                            <span class="font-medium text-sm">Reading ${completedCount}/${totalCount} expert responses...</span>
+                            <div class="typing-indicator ml-2 flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                            </div>
                         </div>
                     </div>
-                    <div class="loading-indicator flex items-center gap-3 text-sm text-purple-400 mb-3 p-3 rounded-lg bg-purple-600/10">
-                        <div class="flex gap-1">
-                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                    
+                    <!-- Phase 2: Thinking (hidden initially) -->
+                    <div id="aggregatorPhase2" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                        <div class="flex items-center gap-2 text-yellow-400">
+                            <i class="fas fa-lightbulb"></i>
+                            <span class="font-medium text-sm">Thinking & analyzing...</span>
+                            <div class="typing-indicator ml-2 flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                            </div>
                         </div>
-                        <span>Reading expert outputs → Thinking → Analyzing → Synthesizing final answer...</span>
                     </div>
-                    <div class="aggregator-output markdown-content"></div>
+                    
+                    <!-- Phase 3: Synthesizing (hidden initially) -->
+                    <div id="aggregatorPhase3" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                        <div class="flex items-center gap-2 text-purple-400">
+                            <i class="fas fa-project-diagram"></i>
+                            <span class="font-medium text-sm">Synthesizing final answer...</span>
+                            <div class="typing-indicator ml-2 flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Final Response -->
+                    <div id="aggregatorFinalResponse" class="prose prose-invert max-w-none hidden">
+                        <div class="flex items-center gap-2 mb-2 text-green-400">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="font-medium text-sm">Final Synthesized Response</span>
+                        </div>
+                        <div id="streamingContent" class="text-[var(--text-primary)]"></div>
+                    </div>
                 `;
-                responseDiv.appendChild(aggregatorDiv);
+                container.appendChild(aggregatorDiv);
+                container.scrollTop = container.scrollHeight;
                 
-                const finalAnswer = await runAggregator(config.aggregator, message, expertOutputs, toolContext, aggregatorDiv);
+                // Animate through phases
+                await sleep(800); // Reading phase
+                document.getElementById('aggregatorPhase1').innerHTML = `
+                    <div class="flex items-center gap-2 text-blue-400">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium text-sm">Read ${completedCount} expert responses</span>
+                    </div>
+                `;
+                document.getElementById('aggregatorPhase2').classList.remove('hidden');
+                container.scrollTop = container.scrollHeight;
                 
-                // Save to chat history
-                const chat = state.chatHistory.find(c => c.id === state.currentChatId);
-                const messageData = {
-                    role: 'assistant',
-                    tools: config.tools,
-                    experts: expertOutputs,
-                    finalAnswer: finalAnswer,
-                    aggregator: config.aggregator.name
-                };
+                await sleep(600); // Thinking phase
+                document.getElementById('aggregatorPhase2').innerHTML = `
+                    <div class="flex items-center gap-2 text-yellow-400">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium text-sm">Analysis complete</span>
+                    </div>
+                `;
+                document.getElementById('aggregatorPhase3').classList.remove('hidden');
+                container.scrollTop = container.scrollHeight;
                 
-                if (chat) {
-                    chat.messages.push({ role: 'user', content: message });
-                    chat.messages.push(messageData);
+                await sleep(400); // Starting synthesis
+                document.getElementById('aggregatorPhase3').innerHTML = `
+                    <div class="flex items-center gap-2 text-purple-400">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span class="font-medium text-sm">Generating response...</span>
+                    </div>
+                `;
+                document.getElementById('aggregatorFinalResponse').classList.remove('hidden');
+                container.scrollTop = container.scrollHeight;
+                
+                // Build aggregator prompt
+                const aggregatorPrompt = `You are the SAHU 1 MoE aggregator. Multiple AI experts have provided their responses to the user's query.
+
+User Query: ${content}
+
+Expert Responses:
+${expertResults.map(exp => `### ${exp.name}:\n${exp.response || 'No response'}`).join('\n\n')}
+
+Your task: 
+1. Carefully read and understand all expert responses
+2. Analyze the key insights, agreements, and differences between experts
+3. Synthesize these expert responses into a comprehensive, well-structured final answer
+4. Combine the best insights from each expert
+5. Resolve any contradictions
+6. Provide a clear, actionable response
+
+Begin your synthesis now:`;
+
+                let aggregatedResponse = '';
+                const streamingDiv = document.getElementById('streamingContent');
+                const shouldStream = localStorage.getItem('sahu_stream') !== 'false';
+                
+                try {
+                    if (shouldStream) {
+                        // Stream the aggregator response word by word
+                        aggregatedResponse = await callModel(
+                            config.aggregator, 
+                            [
+                                { role: 'system', content: 'You are the SAHU 1 MoE aggregator. Synthesize multiple expert responses into a coherent, comprehensive answer. Think step by step, analyze carefully, then provide your final synthesis.' },
+                                { role: 'user', content: aggregatorPrompt }
+                            ], 
+                            config.aggregatorTools || [],
+                            true, // streaming enabled
+                            (chunk, fullText) => {
+                                // Update streaming content
+                                streamingDiv.innerHTML = formatMarkdown(fullText);
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        );
+                    } else {
+                        // Non-streaming fallback
+                        aggregatedResponse = await callModel(config.aggregator, [
+                            { role: 'system', content: 'You are the SAHU 1 MoE aggregator. Synthesize multiple expert responses into a coherent, comprehensive answer.' },
+                            { role: 'user', content: aggregatorPrompt }
+                        ], config.aggregatorTools || []);
+                        
+                        // Simulate word by word display
+                        const words = aggregatedResponse.split(' ');
+                        let displayedText = '';
+                        for (let i = 0; i < words.length; i++) {
+                            displayedText += (i > 0 ? ' ' : '') + words[i];
+                            streamingDiv.innerHTML = formatMarkdown(displayedText);
+                            container.scrollTop = container.scrollHeight;
+                            await sleep(30); // 30ms per word
+                        }
+                    }
+                } catch (error) {
+                    // Fallback: use best expert response
+                    if (successfulExperts.length > 0) {
+                        aggregatedResponse = `**Synthesized from ${successfulExperts.length} experts:**\n\n${successfulExperts[0].response}`;
+                    } else {
+                        aggregatedResponse = 'Unable to generate a response. Please check your API configuration and try again.';
+                    }
+                    streamingDiv.innerHTML = formatMarkdown(aggregatedResponse);
+                }
+                
+                // Update phase 3 to complete
+                document.getElementById('aggregatorPhase3').innerHTML = `
+                    <div class="flex items-center gap-2 text-green-400">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium text-sm">Synthesis complete</span>
+                    </div>
+                `;
+                
+                // Remove cursor from streaming content
+                streamingDiv.classList.add('complete');
+                
+                // Remove expert placeholder
+                expertPlaceholder.remove();
+                
+                // Re-add expert grid before aggregator
+                const expertGridDiv = document.createElement('div');
+                expertGridDiv.innerHTML = createExpertGrid(expertResults);
+                aggregatorDiv.parentNode.insertBefore(expertGridDiv, aggregatorDiv);
+                
+                // Add tool logs
+                toolLogs.forEach(log => {
+                    const logDiv = document.createElement('div');
+                    logDiv.innerHTML = createToolLog(log.tool, log.content);
+                    expertGridDiv.insertBefore(logDiv, expertGridDiv.firstChild);
+                });
+                
+                // Save to history
+                state.messages.push({ 
+                    role: 'assistant', 
+                    content: aggregatedResponse,
+                    experts: expertResults
+                });
+                
+                // Update chat history
+                if (!state.currentChatId) {
+                    state.currentChatId = Date.now().toString();
+                }
+                
+                const existingChat = state.chatHistory.find(c => c.id === state.currentChatId);
+                if (existingChat) {
+                    existingChat.messages = state.messages;
                 } else {
                     state.chatHistory.unshift({
                         id: state.currentChatId,
-                        title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
-                        messages: [
-                            { role: 'user', content: message },
-                            messageData
-                        ],
-                        createdAt: new Date().toISOString()
+                        title: content.substring(0, 30) + '...',
+                        messages: state.messages,
+                        timestamp: Date.now()
                     });
                 }
-                
                 saveChatHistory();
+                renderChatHistory();
+                
+            } catch (error) {
+                console.error('Error processing message:', error);
+                appendAssistantMessage(`**Error:** ${error.message}\n\nPlease check your API configuration in Settings.`);
+            } finally {
+                state.isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
             }
-            
-            // Reset UI state
-            state.isGenerating = false;
-            state.abortController = null;
-            document.getElementById('sendButton').classList.remove('hidden');
-            document.getElementById('stopButton').classList.add('hidden');
-            
-            // Scroll to bottom
-            container.scrollTop = container.scrollHeight;
         }
         
-        function stopGeneration() {
-            if (state.abortController) {
-                state.abortController.abort();
-                state.abortController = null;
-            }
-            state.isGenerating = false;
-            document.getElementById('sendButton').classList.remove('hidden');
-            document.getElementById('stopButton').classList.add('hidden');
-            showToast('Generation stopped');
+        // Helper function for delays
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
-        
-        // ==========================================
-        // Initialization
-        // ==========================================
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            loadChatHistory();
-            updateModeDisplay();
-            updateToolsIndicator();
-            
-            // Temperature slider
-            document.getElementById('temperature').addEventListener('input', (e) => {
-                document.getElementById('tempValue').textContent = e.target.value;
-            });
-            
-            // Focus input on load
-            document.getElementById('userInput').focus();
-            
-            console.log('%c SAHU 1 MoE System Initialized ', 'background: linear-gradient(135deg, #7c3aed, #ec4899); color: white; font-size: 14px; padding: 10px; border-radius: 5px;');
-            console.log('Developed by Saksham Intelligence');
+
+        function updateExpertGrid(experts) {
+            const placeholder = document.getElementById('expertPlaceholder');
+            if (placeholder) {
+                placeholder.innerHTML = createExpertGrid(experts);
+            }
+        }
+
+        // Close provider menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('providerMenu');
+            const button = e.target.closest('[onclick="toggleProviderMenu()"]');
+            if (!button && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
         });
-        
-        // Handle special queries about the system
-        const originalSendMessage = sendMessage;
-        sendMessage = async function() {
-            const input = document.getElementById('userInput');
-            const message = input.value.trim().toLowerCase();
-            
-            // Check for system queries
-            if (message.includes('who made you') || message.includes('who created you') || message.includes('who developed you')) {
-                input.value = '';
-                appendUserMessage(message);
-                
-                const container = document.getElementById('messagesContainer');
-                document.getElementById('welcomeScreen').classList.add('hidden');
-                container.classList.remove('hidden');
-                
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'final-answer rounded-xl p-4';
-                responseDiv.innerHTML = `
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                            <i class="fas fa-brain text-white text-sm"></i>
-                        </div>
-                        <div>
-                            <span class="font-semibold">SAHU 1 MoE</span>
-                        </div>
-                    </div>
-                    <div class="markdown-content">
-                        <p>I am <strong>SAHU 1</strong>, a Mixture of Experts system. Each Expert in this system was <strong>Developed by Saksham Intelligence</strong>.</p>
-                        <p>I combine multiple AI models to provide comprehensive, well-reasoned responses across different domains including reasoning, research, coding, and general conversation.</p>
-                    </div>
-                `;
-                container.appendChild(responseDiv);
-                return;
-            }
-            
-            if (message.includes('what model') || message.includes('what moe') || message.includes('what system')) {
-                input.value = '';
-                appendUserMessage(message);
-                
-                const container = document.getElementById('messagesContainer');
-                document.getElementById('welcomeScreen').classList.add('hidden');
-                container.classList.remove('hidden');
-                
-                const config = MOE_CONFIGS[state.currentMode];
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'final-answer rounded-xl p-4';
-                responseDiv.innerHTML = `
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                            <i class="fas fa-brain text-white text-sm"></i>
-                        </div>
-                        <div>
-                            <span class="font-semibold">SAHU 1 MoE</span>
-                        </div>
-                    </div>
-                    <div class="markdown-content">
-                        <p>I am the <strong>SAHU 1-series</strong> Mixture of Experts system.</p>
-                        <p>Currently running in <strong>${config.name}</strong> mode with ${config.experts.length} expert models.</p>
-                        <p><strong>Experts:</strong></p>
-                        <ul>
-                            ${config.experts.map(e => `<li>${e.name} (Developed by Saksham Intelligence)</li>`).join('')}
-                        </ul>
-                        ${config.aggregator ? `<p><strong>Aggregator:</strong> ${config.aggregator.name}</p>` : ''}
-                    </div>
-                `;
-                container.appendChild(responseDiv);
-                return;
-            }
-            
-            return originalSendMessage();
-        };
     </script>
 </body>
 </html>
