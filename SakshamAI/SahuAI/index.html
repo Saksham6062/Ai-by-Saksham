@@ -63,6 +63,11 @@
         .expert-card.error {
             border-color: #ef4444;
         }
+        /* Expert weight badges */
+        .weight-high { background-color: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .weight-medium { background-color: rgba(234, 179, 8, 0.2); color: #eab308; }
+        .weight-low { background-color: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+        
         @keyframes pulse-border {
             0%, 100% { border-color: #f59e0b; box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
             50% { border-color: #fbbf24; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
@@ -110,14 +115,14 @@
         }
         
         /* Streaming cursor effect */
-        #streamingContent::after {
+        .streaming-cursor::after {
             content: '▊';
             animation: blink 1s infinite;
             color: var(--accent);
             margin-left: 2px;
         }
         
-        #streamingContent.complete::after {
+        .streaming-cursor.complete::after {
             display: none;
         }
         
@@ -140,6 +145,14 @@
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Reasoning block */
+        .reasoning-block {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.05) 100%);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -267,7 +280,7 @@
                     </div>
                     <h2 class="text-2xl font-bold mb-2">SAHU 1 MoE</h2>
                     <p class="text-[var(--text-secondary)] mb-8 text-center max-w-md">
-                        Orchestrate multiple AI experts to get comprehensive, synthesized answers.
+                        Orchestrate multiple AI experts with weighted voting and meta-reasoning synthesis.
                     </p>
                     <div class="grid grid-cols-2 gap-3 max-w-lg">
                         <button onclick="quickPrompt('Explain quantum computing')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-colors">
@@ -319,7 +332,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-center text-[var(--text-secondary)] mt-2">
-                        SAHU 1 MoE orchestrates multiple AI experts. Responses may vary.
+                        SAHU 1 MoE uses weighted expert voting and meta-reasoning synthesis.
                     </p>
                 </div>
             </div>
@@ -347,9 +360,9 @@
                                 <i class="fas fa-key text-[var(--accent)]"></i>
                                 API Keys & Endpoints
                             </h3>
-                            <button onclick="saveSettings()" class="px-3 py-1.5 text-sm rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors flex items-center gap-2">
+                            <button onclick="saveSettings()" class="px-4 py-2 text-sm rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white transition-colors flex items-center gap-2 font-medium">
                                 <i class="fas fa-save"></i>
-                                Save
+                                Save All
                             </button>
                         </div>
                         <div class="space-y-4">
@@ -439,6 +452,13 @@
                                 </div>
                                 <input type="checkbox" id="showExperts" checked class="w-5 h-5 accent-[var(--accent)]">
                             </div>
+                            <div class="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div>
+                                    <span class="text-sm font-medium">Show Aggregator Reasoning</span>
+                                    <p class="text-xs text-[var(--text-secondary)]">Display meta-reasoning process</p>
+                                </div>
+                                <input type="checkbox" id="showReasoning" checked class="w-5 h-5 accent-[var(--accent)]">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -490,7 +510,38 @@
             'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct'
         };
 
-        // MoE Configurations
+        // Expert Weight Tiers (for voting importance)
+        const EXPERT_WEIGHTS = {
+            // HIGH weight - Reasoning/Thinking models
+            'DeepSeek-R1': { weight: 'high', score: 1.0, role: 'Deep Reasoning Expert' },
+            'Qwen3-Thinking': { weight: 'high', score: 1.0, role: 'Advanced Thinking Expert' },
+            'Kimi-K2-Thinking': { weight: 'high', score: 0.95, role: 'Reasoning Specialist' },
+            'Kimi-K2.5': { weight: 'high', score: 0.95, role: 'Advanced Analysis Expert' },
+            'Olmo-3.1-Think': { weight: 'high', score: 0.9, role: 'Thinking Model' },
+            'Phi-4-Reasoning': { weight: 'high', score: 0.9, role: 'Reasoning Specialist' },
+            'gpt-oss-120b': { weight: 'high', score: 0.95, role: 'Large-Scale Expert' },
+            
+            // MEDIUM weight - Strong general models
+            'DeepSeek-V3.2': { weight: 'medium', score: 0.8, role: 'General Expert' },
+            'GLM-4.7': { weight: 'medium', score: 0.8, role: 'Balanced Expert' },
+            'Kimi-K2': { weight: 'medium', score: 0.75, role: 'General Assistant' },
+            'gpt-oss-20b': { weight: 'medium', score: 0.75, role: 'Efficient Expert' },
+            'Qwen3-Coder': { weight: 'medium', score: 0.85, role: 'Code Specialist' },
+            'DeepSeek-Coder': { weight: 'medium', score: 0.8, role: 'Code Expert' },
+            'Devstral': { weight: 'medium', score: 0.8, role: 'Development Expert' },
+            'Codestral': { weight: 'medium', score: 0.75, role: 'Coding Assistant' },
+            'Olmo-3.1-Instruct': { weight: 'medium', score: 0.7, role: 'Instruction Expert' },
+            'MiniMax-M2.1': { weight: 'medium', score: 0.7, role: 'Multi-Modal Expert' },
+            'Llama-3.3-70B': { weight: 'medium', score: 0.75, role: 'Open Source Expert' },
+            
+            // LOW weight - Fast/distilled models
+            'GLM-4.7-Flash': { weight: 'low', score: 0.5, role: 'Fast Responder' },
+            'DeepSeek-R1-Distill': { weight: 'low', score: 0.5, role: 'Distilled Model' },
+            'MiMo-V2-Flash': { weight: 'low', score: 0.5, role: 'Quick Assistant' },
+            'Mistral-7B': { weight: 'low', score: 0.4, role: 'Lightweight Model' }
+        };
+
+        // MoE Configurations with weighted experts
         const MOE_CONFIGS = {
             deepthink: {
                 name: 'Sahu 1 DeepThink',
@@ -509,6 +560,7 @@
                     { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
                 ],
                 aggregator: 'Qwen3-Thinking',
+                aggregatorTools: ['thinking'],
                 behavior: 'Extended reasoning with deep thought chains'
             },
             deepresearch: {
@@ -627,6 +679,54 @@
         };
 
         // ==========================================
+        // AGGREGATOR SYSTEM PROMPT (Meta-Reasoner)
+        // ==========================================
+        const AGGREGATOR_SYSTEM_PROMPT = `You are the AGGREGATOR MODEL in the SAHU 1 MoE (Mixture of Experts) system.
+
+SYSTEM CONTEXT
+---------------
+SAHU 1 MoE runs multiple expert language models in parallel.
+Each expert independently answered the same user query.
+Their responses may partially overlap, contradict, or vary in depth and correctness.
+
+Your role is NOT to answer from scratch.
+
+Your role is to:
+• Analyze all expert answers
+• Evaluate their correctness and reasoning quality
+• Identify consensus, disagreements, and errors
+• Synthesize a single final answer that is:
+  - More accurate than any individual expert
+  - More complete than majority voting
+  - Free of hallucinations
+  - Aligned with the user's intent
+
+You MUST reason over the expert outputs explicitly before producing the final answer.
+
+AGGREGATION RULES
+----------------
+1. Do NOT blindly merge answers.
+2. Do NOT average wording.
+3. Prefer reasoning-heavy experts over shallow ones.
+4. If experts disagree, resolve the conflict logically.
+5. If all experts miss something important, add it using your own reasoning.
+6. If an expert answer is incorrect or hallucinated, discard it.
+7. Do NOT mention expert names unless necessary.
+8. Do NOT expose internal scoring or voting.
+9. Produce a single authoritative response.
+
+REASONING PROCESS
+-----------------
+Before providing your final answer, you MUST:
+1. Group expert answers by agreement clusters
+2. Identify contradictions and outliers
+3. Evaluate which experts provided the strongest reasoning
+4. Identify the most reliable reasoning path
+5. Note any gaps that need filling
+
+Then provide your synthesized final response.`;
+
+        // ==========================================
         // State Management
         // ==========================================
         let state = {
@@ -697,6 +797,7 @@
             document.getElementById('tempValue').textContent = document.getElementById('temperature').value;
             document.getElementById('streamResponses').checked = localStorage.getItem('sahu_stream') !== 'false';
             document.getElementById('showExperts').checked = localStorage.getItem('sahu_show_experts') !== 'false';
+            document.getElementById('showReasoning').checked = localStorage.getItem('sahu_show_reasoning') !== 'false';
             
             // Temperature slider update
             document.getElementById('temperature').addEventListener('input', (e) => {
@@ -722,6 +823,7 @@
             localStorage.setItem('sahu_temperature', document.getElementById('temperature').value);
             localStorage.setItem('sahu_stream', document.getElementById('streamResponses').checked);
             localStorage.setItem('sahu_show_experts', document.getElementById('showExperts').checked);
+            localStorage.setItem('sahu_show_reasoning', document.getElementById('showReasoning').checked);
             
             closeSettings();
             showNotification('Settings saved successfully!');
@@ -965,6 +1067,10 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        function getExpertWeight(expertId) {
+            return EXPERT_WEIGHTS[expertId] || { weight: 'medium', score: 0.6, role: 'Expert' };
+        }
+
         function createExpertGrid(experts) {
             const showExperts = localStorage.getItem('sahu_show_experts') !== 'false';
             if (!showExperts) return '';
@@ -974,19 +1080,23 @@
                     <div class="flex items-center gap-2 mb-3">
                         <i class="fas fa-users text-[var(--accent)]"></i>
                         <span class="font-medium">Expert Responses</span>
-                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                        <span class="text-xs text-[var(--text-secondary)]">(weighted voting)</span>
+                        <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] ml-auto">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${experts.map(exp => `
+                        ${experts.map(exp => {
+                            const weightInfo = getExpertWeight(exp.id);
+                            return `
                             <div class="expert-card ${exp.status} rounded-xl p-3">
-                                <div class="flex items-center gap-2 mb-2">
+                                <div class="flex items-center gap-2 mb-2 flex-wrap">
                                     <div class="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xs">
                                         ${exp.name.charAt(0)}
                                     </div>
                                     <span class="font-medium text-sm">${exp.name}</span>
-                                    ${exp.tools ? `<span class="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-0.5 rounded-full">${exp.tools.join(', ')}</span>` : ''}
+                                    <span class="text-xs px-2 py-0.5 rounded-full weight-${weightInfo.weight}">${weightInfo.weight.toUpperCase()}</span>
+                                    ${exp.tools && exp.tools.length ? `<span class="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-0.5 rounded-full">${exp.tools.join(', ')}</span>` : ''}
                                     ${exp.status === 'thinking' ? `
                                         <div class="typing-indicator ml-auto flex gap-1">
                                             <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
@@ -997,11 +1107,12 @@
                                     ${exp.status === 'complete' ? '<i class="fas fa-check-circle text-green-400 ml-auto"></i>' : ''}
                                     ${exp.status === 'error' ? '<i class="fas fa-exclamation-circle text-red-400 ml-auto"></i>' : ''}
                                 </div>
+                                <div class="text-xs text-[var(--text-secondary)] mb-1">${weightInfo.role}</div>
                                 <div class="text-sm text-[var(--text-secondary)] max-h-32 overflow-y-auto scrollbar-thin">
-                                    ${exp.response ? formatMarkdown(exp.response) : '<span class="italic">Processing...</span>'}
+                                    ${exp.response ? formatMarkdown(exp.response.substring(0, 500) + (exp.response.length > 500 ? '...' : '')) : '<span class="italic">Processing...</span>'}
                                 </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
             `;
@@ -1239,6 +1350,50 @@
         }
 
         // ==========================================
+        // Build Real Aggregator Prompt with Expert Data
+        // ==========================================
+        function buildAggregatorPrompt(userQuery, expertResults) {
+            // Build expert answers section with weights
+            const expertAnswersSection = expertResults
+                .filter(exp => exp.status === 'complete' && exp.response)
+                .map(exp => {
+                    const weightInfo = getExpertWeight(exp.id);
+                    return `
+### Expert: ${exp.name}
+Role: ${weightInfo.role}
+Weight: ${weightInfo.weight.toUpperCase()} (${weightInfo.score})
+Response:
+${exp.response}
+---`;
+                }).join('\n\n');
+
+            return `INPUT STRUCTURE
+---------------
+User Query:
+${userQuery}
+
+Expert Answers:
+${expertAnswersSection}
+
+---
+
+Now, as the AGGREGATOR, analyze the above expert responses.
+
+First, reason through the following steps (internally):
+1. Which experts agree on key points?
+2. Are there any contradictions?
+3. Which expert(s) provided the strongest reasoning?
+4. What is the consensus view?
+5. Are there any outliers or potential hallucinations?
+6. What gaps need to be filled?
+
+Then provide your FINAL SYNTHESIZED ANSWER below.
+Do NOT expose your internal reasoning in the final answer.
+Do NOT mention expert names unless absolutely necessary.
+Provide a clear, confident, authoritative response.`;
+        }
+
+        // ==========================================
         // Main Send Message
         // ==========================================
         async function sendMessage() {
@@ -1316,8 +1471,9 @@
                 // Process experts in parallel
                 const expertPromises = config.experts.map(async (expert, index) => {
                     try {
+                        const weightInfo = getExpertWeight(expert.id);
                         const response = await callModel(expert.id, [
-                            { role: 'system', content: `You are ${expert.name}, an expert AI assistant. Provide a focused, helpful response.` },
+                            { role: 'system', content: `You are ${expert.name}, a ${weightInfo.role}. Provide a focused, thorough, and well-reasoned response. Show your reasoning process.` },
                             { role: 'user', content: content }
                         ], expert.tools);
                         
@@ -1365,11 +1521,11 @@
                         </div>
                     </div>
                     
-                    <!-- Phase 2: Thinking (hidden initially) -->
+                    <!-- Phase 2: Analyzing/Voting (hidden initially) -->
                     <div id="aggregatorPhase2" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
                         <div class="flex items-center gap-2 text-yellow-400">
-                            <i class="fas fa-lightbulb"></i>
-                            <span class="font-medium text-sm">Thinking & analyzing...</span>
+                            <i class="fas fa-balance-scale"></i>
+                            <span class="font-medium text-sm">Analyzing & weighting expert votes...</span>
                             <div class="typing-indicator ml-2 flex gap-1">
                                 <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
                                 <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
@@ -1378,8 +1534,21 @@
                         </div>
                     </div>
                     
-                    <!-- Phase 3: Synthesizing (hidden initially) -->
+                    <!-- Phase 3: Reasoning (hidden initially) -->
                     <div id="aggregatorPhase3" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                        <div class="flex items-center gap-2 text-orange-400">
+                            <i class="fas fa-lightbulb"></i>
+                            <span class="font-medium text-sm">Meta-reasoning over expert outputs...</span>
+                            <div class="typing-indicator ml-2 flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase 4: Synthesizing (hidden initially) -->
+                    <div id="aggregatorPhase4" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
                         <div class="flex items-center gap-2 text-purple-400">
                             <i class="fas fa-project-diagram"></i>
                             <span class="font-medium text-sm">Synthesizing final answer...</span>
@@ -1391,13 +1560,25 @@
                         </div>
                     </div>
                     
+                    <!-- Reasoning Block (optional) -->
+                    <div id="aggregatorReasoningBlock" class="mb-3 p-3 reasoning-block rounded-lg hidden">
+                        <div class="flex items-center gap-2 mb-2 text-yellow-500">
+                            <i class="fas fa-cogs"></i>
+                            <span class="font-medium text-sm">Aggregator Reasoning</span>
+                            <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs ml-auto">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div id="reasoningContent" class="text-xs text-[var(--text-secondary)] whitespace-pre-wrap"></div>
+                    </div>
+                    
                     <!-- Final Response -->
                     <div id="aggregatorFinalResponse" class="prose prose-invert max-w-none hidden">
                         <div class="flex items-center gap-2 mb-2 text-green-400">
                             <i class="fas fa-check-circle"></i>
                             <span class="font-medium text-sm">Final Synthesized Response</span>
                         </div>
-                        <div id="streamingContent" class="text-[var(--text-primary)]"></div>
+                        <div id="streamingContent" class="streaming-cursor text-[var(--text-primary)]"></div>
                     </div>
                 `;
                 container.appendChild(aggregatorDiv);
@@ -1414,47 +1595,49 @@
                 document.getElementById('aggregatorPhase2').classList.remove('hidden');
                 container.scrollTop = container.scrollHeight;
                 
-                await sleep(600); // Thinking phase
+                await sleep(600); // Voting/Analyzing phase
+                
+                // Show voting summary
+                const highWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'high').length;
+                const mediumWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'medium').length;
+                const lowWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'low').length;
+                
                 document.getElementById('aggregatorPhase2').innerHTML = `
                     <div class="flex items-center gap-2 text-yellow-400">
                         <i class="fas fa-check-circle"></i>
-                        <span class="font-medium text-sm">Analysis complete</span>
+                        <span class="font-medium text-sm">Weighted votes: ${highWeightExperts} high, ${mediumWeightExperts} medium, ${lowWeightExperts} low</span>
                     </div>
                 `;
                 document.getElementById('aggregatorPhase3').classList.remove('hidden');
                 container.scrollTop = container.scrollHeight;
                 
-                await sleep(400); // Starting synthesis
+                await sleep(500); // Reasoning phase
                 document.getElementById('aggregatorPhase3').innerHTML = `
+                    <div class="flex items-center gap-2 text-orange-400">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium text-sm">Identified consensus and resolved conflicts</span>
+                    </div>
+                `;
+                document.getElementById('aggregatorPhase4').classList.remove('hidden');
+                container.scrollTop = container.scrollHeight;
+                
+                await sleep(400); // Starting synthesis
+                document.getElementById('aggregatorPhase4').innerHTML = `
                     <div class="flex items-center gap-2 text-purple-400">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <span class="font-medium text-sm">Generating response...</span>
+                        <span class="font-medium text-sm">Generating synthesized response...</span>
                     </div>
                 `;
                 document.getElementById('aggregatorFinalResponse').classList.remove('hidden');
                 container.scrollTop = container.scrollHeight;
                 
-                // Build aggregator prompt
-                const aggregatorPrompt = `You are the SAHU 1 MoE aggregator. Multiple AI experts have provided their responses to the user's query.
-
-User Query: ${content}
-
-Expert Responses:
-${expertResults.map(exp => `### ${exp.name}:\n${exp.response || 'No response'}`).join('\n\n')}
-
-Your task: 
-1. Carefully read and understand all expert responses
-2. Analyze the key insights, agreements, and differences between experts
-3. Synthesize these expert responses into a comprehensive, well-structured final answer
-4. Combine the best insights from each expert
-5. Resolve any contradictions
-6. Provide a clear, actionable response
-
-Begin your synthesis now:`;
+                // Build REAL aggregator prompt with all expert responses
+                const aggregatorUserPrompt = buildAggregatorPrompt(content, expertResults);
 
                 let aggregatedResponse = '';
                 const streamingDiv = document.getElementById('streamingContent');
                 const shouldStream = localStorage.getItem('sahu_stream') !== 'false';
+                const showReasoning = localStorage.getItem('sahu_show_reasoning') !== 'false';
                 
                 try {
                     if (shouldStream) {
@@ -1462,8 +1645,8 @@ Begin your synthesis now:`;
                         aggregatedResponse = await callModel(
                             config.aggregator, 
                             [
-                                { role: 'system', content: 'You are the SAHU 1 MoE aggregator. Synthesize multiple expert responses into a coherent, comprehensive answer. Think step by step, analyze carefully, then provide your final synthesis.' },
-                                { role: 'user', content: aggregatorPrompt }
+                                { role: 'system', content: AGGREGATOR_SYSTEM_PROMPT },
+                                { role: 'user', content: aggregatorUserPrompt }
                             ], 
                             config.aggregatorTools || [],
                             true, // streaming enabled
@@ -1476,8 +1659,8 @@ Begin your synthesis now:`;
                     } else {
                         // Non-streaming fallback
                         aggregatedResponse = await callModel(config.aggregator, [
-                            { role: 'system', content: 'You are the SAHU 1 MoE aggregator. Synthesize multiple expert responses into a coherent, comprehensive answer.' },
-                            { role: 'user', content: aggregatorPrompt }
+                            { role: 'system', content: AGGREGATOR_SYSTEM_PROMPT },
+                            { role: 'user', content: aggregatorUserPrompt }
                         ], config.aggregatorTools || []);
                         
                         // Simulate word by word display
@@ -1490,18 +1673,37 @@ Begin your synthesis now:`;
                             await sleep(30); // 30ms per word
                         }
                     }
+                    
+                    // Show reasoning block if enabled
+                    if (showReasoning) {
+                        const reasoningBlock = document.getElementById('aggregatorReasoningBlock');
+                        const reasoningContent = document.getElementById('reasoningContent');
+                        reasoningBlock.classList.remove('hidden');
+                        reasoningContent.textContent = `Experts analyzed: ${completedCount}
+High-weight experts: ${highWeightExperts} (score ≥ 0.9)
+Medium-weight experts: ${mediumWeightExperts} (score 0.6-0.89)
+Low-weight experts: ${lowWeightExperts} (score < 0.6)
+
+Consensus formation: Weighted voting applied
+Conflict resolution: Prioritized reasoning-heavy models
+Final synthesis: Combined best insights from all experts`;
+                    }
+                    
                 } catch (error) {
-                    // Fallback: use best expert response
+                    // Fallback: use best expert response (highest weight)
                     if (successfulExperts.length > 0) {
-                        aggregatedResponse = `**Synthesized from ${successfulExperts.length} experts:**\n\n${successfulExperts[0].response}`;
+                        const sortedByWeight = successfulExperts.sort((a, b) => {
+                            return getExpertWeight(b.id).score - getExpertWeight(a.id).score;
+                        });
+                        aggregatedResponse = `**Synthesized from ${successfulExperts.length} experts (fallback mode):**\n\n${sortedByWeight[0].response}`;
                     } else {
                         aggregatedResponse = 'Unable to generate a response. Please check your API configuration and try again.';
                     }
                     streamingDiv.innerHTML = formatMarkdown(aggregatedResponse);
                 }
                 
-                // Update phase 3 to complete
-                document.getElementById('aggregatorPhase3').innerHTML = `
+                // Update phase 4 to complete
+                document.getElementById('aggregatorPhase4').innerHTML = `
                     <div class="flex items-center gap-2 text-green-400">
                         <i class="fas fa-check-circle"></i>
                         <span class="font-medium text-sm">Synthesis complete</span>
@@ -1509,6 +1711,7 @@ Begin your synthesis now:`;
                 `;
                 
                 // Remove cursor from streaming content
+                streamingDiv.classList.remove('streaming-cursor');
                 streamingDiv.classList.add('complete');
                 
                 // Remove expert placeholder
