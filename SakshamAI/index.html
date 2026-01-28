@@ -10,7 +10,6 @@
   <style>
     /* --- CSS Variables for Light/Dark Theme --- */
     :root {
-      /* Dark Theme Defaults */
       --bg-color: #0f172a;
       --card-color: #1e293b;
       --primary-text: #f8fafc;
@@ -19,14 +18,15 @@
       --shadow-color: rgba(0, 0, 0, 0.4);
       --hover-glow: 0 10px 25px rgba(59, 130, 246, 0.2);
       --header-bg: rgba(15, 23, 42, 0.9);
+      --accent-gradient: linear-gradient(90deg, #60a5fa, #c084fc, #fb7185, #60a5fa);
 
       /* Accent Colors */
       --openrouter: #3b82f6;
       --huggingface: #f59e0b;
       --robotics: #10b981;
+      --novit: #ec4899; /* Pink accent for Novit */
     }
 
-    /* Light Theme Overrides */
     [data-theme="light"] {
       --bg-color: #f1f5f9;
       --card-color: #ffffff;
@@ -38,12 +38,10 @@
       --header-bg: rgba(255, 255, 255, 0.9);
     }
 
-    /* --- Global Styles --- */
     * { 
       margin: 0; 
       padding: 0; 
       box-sizing: border-box; 
-      transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; 
     }
 
     html { scroll-behavior: smooth; }
@@ -55,14 +53,12 @@
       min-height: 100vh;
       padding-top: 100px;
       overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* --- Header --- */
     header {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
+        top: 0; left: 0; width: 100%;
         padding: 15px 40px;
         background-color: var(--header-bg);
         backdrop-filter: blur(12px);
@@ -74,8 +70,7 @@
     }
 
     .theme-toggle {
-      width: 56px;
-      height: 28px;
+      width: 56px; height: 28px;
       background-color: var(--border-color);
       border-radius: 20px;
       position: relative;
@@ -84,25 +79,18 @@
     }
 
     .toggle-circle {
-      width: 24px;
-      height: 24px;
+      width: 24px; height: 24px;
       background-color: var(--primary-text);
       border-radius: 50%;
       position: absolute;
-      top: 2px;
-      left: 2px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      top: 2px; left: 2px;
+      display: flex; justify-content: center; align-items: center;
       font-size: 0.9rem;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    [data-theme="light"] .toggle-circle {
-      transform: translateX(28px);
-    }
+    [data-theme="light"] .toggle-circle { transform: translateX(28px); }
 
-    /* --- Hero Section --- */
     .container {
       width: 100%;
       max-width: 1200px;
@@ -112,10 +100,10 @@
     }
 
     h1 {
-      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-size: clamp(2.5rem, 8vw, 4rem);
       font-weight: 800;
       margin-bottom: 15px;
-      background: linear-gradient(90deg, #60a5fa, #c084fc, #fb7185, #60a5fa);
+      background: var(--accent-gradient);
       background-size: 300%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -131,23 +119,23 @@
       font-size: 1.1rem;
       color: var(--secondary-text);
       margin-bottom: 60px;
-      max-width: 600px;
+      max-width: 700px;
       margin-left: auto;
       margin-right: auto;
+      line-height: 1.6;
     }
 
-    /* --- Grid & Cards --- */
     .launcher-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
     }
 
     .model-card {
       background-color: var(--card-color);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 32px;
+      padding: 30px;
       text-align: left;
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
@@ -166,14 +154,17 @@
     }
 
     .model-card:hover {
-      transform: translateY(-12px);
+      transform: translateY(-10px);
       box-shadow: var(--hover-glow);
       border-color: var(--secondary-text);
     }
 
+    /* Card Highlights */
     .model-card[data-model="openrouter"]:hover::after { background: var(--openrouter); }
-    .model-card[data-model="huggingface"]:hover::after { background: var(--huggingface); }
-    .model-card[data-model="robotics"]:hover::after { background: var(--robotics); }
+    .model-card[data-model="sahu"]:hover::after { background: var(--huggingface); }
+    .model-card[data-model="novit"]:hover::after { background: var(--novit); }
+    .model-card[data-model="groq"]:hover::after { background: var(--robotics); }
+    .model-card[data-model="hf"]:hover::after { background: #ffcc00; }
 
     .card-header {
       display: flex;
@@ -183,18 +174,19 @@
     }
 
     .card-icon { 
-        font-size: 2rem; 
+        font-size: 1.8rem; 
         background: var(--bg-color);
         width: 50px; height: 50px;
         display: flex; align-items: center; justify-content: center;
         border-radius: 12px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .card-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+    .card-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
 
     .card-description {
       color: var(--secondary-text);
-      font-size: 1rem;
+      font-size: 0.95rem;
       line-height: 1.6;
       margin-bottom: 24px;
       flex-grow: 1;
@@ -204,12 +196,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 24px;
+      padding: 10px 20px;
       background-color: var(--border-color);
       border-radius: 10px;
       font-weight: 600;
       gap: 8px;
       transition: all 0.3s;
+      font-size: 0.9rem;
     }
 
     .model-card:hover .launch-btn {
@@ -222,8 +215,8 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(2, 6, 23, 0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(2, 6, 23, 0.9);
+      backdrop-filter: blur(10px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -242,13 +235,13 @@
       border: 1px solid var(--border-color);
       width: 100%;
       max-width: 500px;
-      transform: translateY(20px);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: scale(0.9);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .modal-overlay.active .modal-content { transform: translateY(0); }
+    .modal-overlay.active .modal-content { transform: scale(1); }
 
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-title { font-size: 1.8rem; font-weight: 700; }
     
     .modal-close {
@@ -267,28 +260,24 @@
         display: block;
         text-align: center;
         padding: 16px;
-        background: var(--openrouter);
         color: white;
         text-decoration: none;
         border-radius: 12px;
         font-weight: 600;
-        transition: opacity 0.2s;
+        transition: transform 0.2s, filter 0.2s;
     }
-    .modal-link:hover { opacity: 0.9; }
+    .modal-link:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-    /* Modal themes */
-    #gemini-modal .modal-title { color: var(--openrouter); }
-    #gemini-modal .modal-link { background: var(--openrouter); }
-    
-    #gemma-modal .modal-title { color: var(--huggingface); }
-    #gemma-modal .modal-link { background: var(--huggingface); }
-    
-    #robotics-modal .modal-title { color: var(--robotics); }
-    #robotics-modal .modal-link { background: var(--robotics); }
+    /* Modal Branding */
+    .btn-openrouter { background: var(--openrouter); }
+    .btn-sahu { background: var(--huggingface); }
+    .btn-novit { background: var(--novit); }
+    .btn-groq { background: var(--robotics); }
+    .btn-hf { background: #ffcc00; color: #000 !important; }
 
     @media (max-width: 640px) {
         header { padding: 15px 20px; }
-        .container { padding-top: 20px; }
+        .container { padding-top: 10px; }
         .launcher-grid { grid-template-columns: 1fr; }
         .modal-content { padding: 30px 20px; }
     }
@@ -298,8 +287,8 @@
 
   <header>
     <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 32px; height: 32px; background: var(--openrouter); border-radius: 8px;"></div>
-        <h2 style="font-size: 1.2rem; font-weight: 700;">Saksham Intelligence Hub</h2>
+        <div style="width: 32px; height: 32px; background: var(--accent-gradient); border-radius: 8px;"></div>
+        <h2 style="font-size: 1.1rem; font-weight: 700;">Saksham Intelligence Hub</h2>
     </div>
     <div class="theme-toggle" id="themeToggle" role="button" aria-label="Toggle Theme">
         <div class="toggle-circle">🌙</div>
@@ -308,99 +297,129 @@
 
   <div class="container">
     <h1>Saksham's Intelligence</h1>
-    <p class="subtitle">A unified gateway to the world's most powerful AI architectures and experimental robotics controllers.</p>
+    <p class="subtitle">A unified gateway to the world's most powerful AI architectures, open-source communities, and high-speed inference engines.</p>
 
     <div class="launcher-grid">
-      <!-- OpenRouter -->
-      <div class="model-card" data-model="openrouter" id="openrouter-launcher">
+      <!-- 1. OpenRouter -->
+      <div class="model-card" data-model="openrouter" onclick="openModal('openrouter-modal')">
         <div class="card-header">
             <span class="card-icon">🌐</span>
             <h2 class="card-title">OpenRouter</h2>
         </div>
-        <p class="card-description">Access the full spectrum of state-of-the-art models including GPT-4, Claude 3, and Llama 3 via a single API interface.</p>
+        <p class="card-description">Access the full spectrum of state-of-the-art models including GPT-4o, Claude 3.5, and Llama 3 via a single gateway.</p>
         <div class="launch-btn">Enter Gateway <span>→</span></div>
       </div>
 
-      <!-- HuggingFace -->
-      <div class="model-card" data-model="huggingface" id="huggingface-launcher">
+      <!-- 2. SAHU AI -->
+      <div class="model-card" data-model="sahu" onclick="openModal('sahu-modal')">
         <div class="card-header">
             <span class="card-icon">🔥</span>
             <h2 class="card-title">SAHU AI</h2>
         </div>
-        <p class="card-description">The heart of open-source AI. Explore millions of models, datasets, and demo spaces for research and creativity.</p>
-        <div class="launch-btn">Explore Community <span>→</span></div>
+        <p class="card-description">Saksham's specialized AI workspace for tailored intelligence and agentic workflow experiments.</p>
+        <div class="launch-btn">Open Workspace <span>→</span></div>
       </div>
-      
 
-      <!-- Robotics -->
-      <div class="model-card" data-model="robotics" id="robotics-launcher">
+      <!-- 3. NOVIT (NEW) -->
+      <div class="model-card" data-model="novit" onclick="openModal('novit-modal')">
         <div class="card-header">
-            <span class="card-icon">🤖</span>
+            <span class="card-icon">✨</span>
+            <h2 class="card-title">Novit</h2>
+        </div>
+        <p class="card-description">Advanced neural processing and visual intelligence models for future-ready applications.</p>
+        <div class="launch-btn">Initialize Novit <span>→</span></div>
+      </div>
+
+      <!-- 4. Groq -->
+      <div class="model-card" data-model="groq" onclick="openModal('groq-modal')">
+        <div class="card-header">
+            <span class="card-icon">⚡</span>
             <h2 class="card-title">Groq</h2>
         </div>
-        <p class="card-description">Experimental models for testing agentic workflows and real-time machine instructions.</p>
-        <div class="launch-btn">Initialize System <span>→</span></div>
+        <p class="card-description">The world's fastest inference engine. Experience near-instant responses with LPU acceleration technology.</p>
+        <div class="launch-btn">Terminal Access <span>→</span></div>
       </div>
-    </div>
-  </div>
-  <!-- HuggingFace -->
-      <div class="model-card" data-model="huggingface" id="HF-modal">
+
+      <!-- 5. HuggingFace -->
+      <div class="model-card" data-model="hf" onclick="openModal('hf-modal')">
         <div class="card-header">
             <span class="card-icon">🤗</span>
             <h2 class="card-title">Hugging Face</h2>
         </div>
-        <p class="card-description">The heart of open-source AI. Explore millions of models, datasets, and demo spaces for research and creativity.</p>
-        <div class="launch-btn">Explore Community <span>→</span></div>
+        <p class="card-description">The heart of open-source AI. Explore millions of models, datasets, and community-driven innovations.</p>
+        <div class="launch-btn">Explore Models <span>→</span></div>
       </div>
+    </div>
+  </div>
 
-  <!-- Modals -->
-  <div class="modal-overlay" id="gemini-modal">
+  <!-- MODALS -->
+  
+  <!-- OpenRouter -->
+  <div class="modal-overlay" id="openrouter-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">OpenRouter Hub</h2>
-            <button class="modal-close" onclick="closeModal('gemini-modal')">&times;</button>
+            <h2 class="modal-title" style="color: var(--openrouter)">OpenRouter</h2>
+            <button class="modal-close" onclick="closeModal('openrouter-modal')">&times;</button>
         </div>
         <div class="modal-body">
            <p>Accessing the OpenRouter directory for Saksham's Intelligence models.</p>
-           <a href="OpenRuoter/index.html" class="modal-link">Launch OpenRouter Dashboard</a>
+           <a href="OpenRouter/index.html" class="modal-link btn-openrouter">Launch OpenRouter Dashboard</a>
         </div>
     </div>
   </div>
 
-  <div class="modal-overlay" id="gemma-modal">
+  <!-- SAHU AI -->
+  <div class="modal-overlay" id="sahu-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">SAHU AI Chat</h2>
-            <button class="modal-close" onclick="closeModal('gemma-modal')">&times;</button>
+            <h2 class="modal-title" style="color: var(--huggingface)">SAHU AI</h2>
+            <button class="modal-close" onclick="closeModal('sahu-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>Connect to the global open-source community and specialized inference endpoints.</p>
-           <a href="Sahuai/index.html" class="modal-link">Open SAHU AI Workspace</a>
+           <p>Initializing your custom intelligence workspace. Ready for complex reasoning tasks.</p>
+           <a href="SahuAI/index.html" class="modal-link btn-sahu">Open SAHU AI Workspace</a>
         </div>
     </div>
   </div>
 
-  <div class="modal-overlay" id="robotics-modal">
+  <!-- NOVIT -->
+  <div class="modal-overlay" id="novit-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Groq Terminal</h2>
-            <button class="modal-close" onclick="closeModal('robotics-modal')">&times;</button>
+            <h2 class="modal-title" style="color: var(--novit)">Sahu Intelligence</h2>
+            <button class="modal-close" onclick="closeModal('novit-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>Preparing the experimental environment for robotics control and action modeling.</p>
-           <a href="Groq/index.html" class="modal-link">Connect to Groq Lab</a>
+           <p>Accessing Mistral high-performance neural architecture and experimental tools.</p>
+           <a href="Sahuai/index.html" class="modal-link btn-novit">Launch Mistral AI System</a>
         </div>
     </div>
   </div>
-  <div class="modal-overlay" id="HF-modal">
+
+  <!-- GROQ -->
+  <div class="modal-overlay" id="groq-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">HuggingFace Chat</h2>
-            <button class="modal-close" onclick="closeModal('HF-modal')">&times;</button>
+            <h2 class="modal-title" style="color: var(--robotics)">Groq Terminal</h2>
+            <button class="modal-close" onclick="closeModal('groq-modal')">&times;</button>
         </div>
         <div class="modal-body">
-           <p>Connect to the global open-source community and specialized inference endpoints.</p>
-           <a href="HuggingFace/index.html" class="modal-link">Open HuggingFace Workspace</a>
+           <p>Connecting to the LPU™ Inference Engine for real-time robotic and text processing.</p>
+           <a href="Groq/index.html" class="modal-link btn-groq">Connect to Groq Lab</a>
+        </div>
+    </div>
+  </div>
+
+  <!-- HUGGING FACE -->
+  <div class="modal-overlay" id="hf-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" style="color: #ffcc00">Hugging Face</h2>
+            <button class="modal-close" onclick="closeModal('hf-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+           <p>Enter the open-source hub to explore the latest community models and datasets.</p>
+           <a href="HuggingFace/index.html" class="modal-link btn-hf">Launch HF Workspace</a>
         </div>
     </div>
   </div>
@@ -428,19 +447,20 @@
 
     // --- Modal Management ---
     function openModal(id) {
-        document.getElementById(id).classList.add('active');
-        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-        document.body.style.overflow = 'auto';
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
     }
-
-    // Event Listeners for Launchers
-    document.getElementById('openrouter-launcher').onclick = () => openModal('gemini-modal');
-    document.getElementById('huggingface-launcher').onclick = () => openModal('gemma-modal');
-    document.getElementById('robotics-launcher').onclick = () => openModal('robotics-modal');
 
     // Close on overlay click
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
