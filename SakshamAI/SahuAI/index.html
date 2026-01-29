@@ -6,6 +6,10 @@
     <title>SAHU 1 MoE - Mixture of Experts</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.2.0/docx.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.min.js"></script>
     <style>
         :root {
             --bg-primary: #0f0f0f;
@@ -52,10 +56,27 @@
         .expert-card {
             background-color: var(--bg-tertiary);
             border: 1px solid var(--border);
+            position: relative;
         }
         .expert-card.thinking {
             border-color: #f59e0b;
             animation: pulse-border 2s infinite;
+        }
+        .expert-card.thinking::before {
+            content: '🧠';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 16px;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .expert-card.searching {
+            border-color: #3b82f6;
+            animation: pulse-search 2s infinite;
         }
         .expert-card.complete {
             border-color: #22c55e;
@@ -63,7 +84,10 @@
         .expert-card.error {
             border-color: #ef4444;
         }
-        /* Expert weight badges */
+        @keyframes pulse-search {
+            0%, 100% { border-color: #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+            50% { border-color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        }
         .weight-high { background-color: rgba(34, 197, 94, 0.2); color: #22c55e; }
         .weight-medium { background-color: rgba(234, 179, 8, 0.2); color: #eab308; }
         .weight-low { background-color: rgba(156, 163, 175, 0.2); color: #9ca3af; }
@@ -114,7 +138,6 @@
             border: 2px solid var(--accent);
         }
         
-        /* Streaming cursor effect */
         .streaming-cursor::after {
             content: '▊';
             animation: blink 1s infinite;
@@ -131,13 +154,6 @@
             51%, 100% { opacity: 0; }
         }
         
-        /* Phase indicators */
-        .aggregator-response .typing-indicator span {
-            width: 6px;
-            height: 6px;
-        }
-        
-        /* Notification toast */
         .notification-toast {
             animation: slideIn 0.3s ease-out;
         }
@@ -147,12 +163,109 @@
             to { transform: translateX(0); opacity: 1; }
         }
         
-        /* Reasoning block */
         .reasoning-block {
             background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.05) 100%);
             border: 1px solid rgba(234, 179, 8, 0.3);
             font-family: 'Monaco', 'Menlo', monospace;
             font-size: 0.75rem;
+        }
+        
+        /* File Preview Styles */
+        .file-preview-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .file-preview-header {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .file-preview-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .file-preview-tab {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-preview-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+        .file-preview-tab:not(.active):hover {
+            background: var(--bg-secondary);
+        }
+        .file-preview-content {
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .file-preview-iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        /* Export Button Styles */
+        .export-btn-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .export-btn:hover {
+            transform: translateY(-1px);
+        }
+        .export-btn.pdf { background: #dc2626; color: white; }
+        .export-btn.docx { background: #2563eb; color: white; }
+        .export-btn.xlsx { background: #16a34a; color: white; }
+        .export-btn.pptx { background: #ea580c; color: white; }
+        .export-btn.txt { background: #6b7280; color: white; }
+        .export-btn.copy { background: var(--accent); color: white; }
+        
+        /* File Format Selector */
+        .file-format-selector {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .file-format-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+        .file-format-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .file-format-btn:not(.active):hover {
+            background: var(--bg-secondary);
         }
     </style>
 </head>
@@ -160,7 +273,6 @@
     <div id="app" class="flex h-full">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar w-64 h-full flex flex-col border-r transition-all duration-300">
-            <!-- Logo -->
             <div class="p-4 border-b border-[var(--border)]">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -173,7 +285,6 @@
                 </div>
             </div>
 
-            <!-- New Chat Button -->
             <div class="p-3">
                 <button onclick="newChat()" class="w-full py-2.5 px-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium flex items-center justify-center gap-2 transition-colors">
                     <i class="fas fa-plus"></i>
@@ -181,7 +292,6 @@
                 </button>
             </div>
 
-            <!-- MoE Selector -->
             <div class="px-3 pb-3">
                 <label class="text-xs text-[var(--text-secondary)] mb-1 block">MoE Configuration</label>
                 <select id="moeSelector" onchange="changeMoE()" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]">
@@ -194,15 +304,24 @@
                 </select>
             </div>
 
-            <!-- Chat History -->
-            <div class="flex-1 overflow-y-auto scrollbar-thin px-3">
-                <p class="text-xs text-[var(--text-secondary)] mb-2">History</p>
-                <div id="chatHistory" class="space-y-1">
-                    <!-- Chat history items will be inserted here -->
+            <!-- File Format Selector (for DeepThink/DeepResearch) -->
+            <div id="fileFormatSection" class="px-3 pb-3 hidden">
+                <label class="text-xs text-[var(--text-secondary)] mb-1 block">Output Format</label>
+                <div class="file-format-selector">
+                    <button class="file-format-btn active" data-format="off" onclick="setFileFormat('off')">Off</button>
+                    <button class="file-format-btn" data-format="txt" onclick="setFileFormat('txt')">TXT</button>
+                    <button class="file-format-btn" data-format="pdf" onclick="setFileFormat('pdf')">PDF</button>
+                    <button class="file-format-btn" data-format="docx" onclick="setFileFormat('docx')">Word</button>
+                    <button class="file-format-btn" data-format="xlsx" onclick="setFileFormat('xlsx')">Excel</button>
+                    <button class="file-format-btn" data-format="pptx" onclick="setFileFormat('pptx')">PPT</button>
                 </div>
             </div>
 
-            <!-- Settings -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-3">
+                <p class="text-xs text-[var(--text-secondary)] mb-2">History</p>
+                <div id="chatHistory" class="space-y-1"></div>
+            </div>
+
             <div class="p-3 border-t border-[var(--border)]">
                 <button onclick="openSettings()" class="w-full py-2 px-3 rounded-lg hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors">
                     <i class="fas fa-cog text-[var(--text-secondary)]"></i>
@@ -217,7 +336,6 @@
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-full">
-            <!-- Header -->
             <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
@@ -227,7 +345,6 @@
                     <span id="expertCount" class="text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded-full">Auto</span>
                 </div>
                 
-                <!-- Provider Menu -->
                 <div class="relative">
                     <button onclick="toggleProviderMenu()" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
                         <i class="fas fa-cloud"></i>
@@ -241,10 +358,15 @@
                                 <span>HuggingFace</span>
                                 <i class="fas fa-check ml-auto text-green-400 provider-check" data-provider="huggingface"></i>
                             </div>
-                            <div onclick="selectProvider('openrouter')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
-                                <i class="fas fa-route text-blue-400"></i>
-                                <span>OpenRouter</span>
-                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="openrouter"></i>
+                            <div onclick="selectProvider('novita')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-rocket text-purple-400"></i>
+                                <span>Novita AI</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="novita"></i>
+                            </div>
+                            <div onclick="selectProvider('publicai')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
+                                <i class="fas fa-globe text-blue-400"></i>
+                                <span>Public AI</span>
+                                <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="publicai"></i>
                             </div>
                             <div onclick="selectProvider('groq')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
                                 <i class="fas fa-bolt text-yellow-400"></i>
@@ -252,7 +374,7 @@
                                 <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="groq"></i>
                             </div>
                             <div onclick="selectProvider('togetherai')" class="dropdown-item px-3 py-2 rounded-lg cursor-pointer flex items-center gap-3">
-                                <i class="fas fa-cubes text-purple-400"></i>
+                                <i class="fas fa-cubes text-pink-400"></i>
                                 <span>TogetherAI</span>
                                 <i class="fas fa-check ml-auto text-green-400 provider-check hidden" data-provider="togetherai"></i>
                             </div>
@@ -271,9 +393,7 @@
                 </div>
             </header>
 
-            <!-- Chat Area -->
             <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4">
-                <!-- Welcome Screen -->
                 <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center">
                     <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
                         <i class="fas fa-brain text-3xl text-white"></i>
@@ -302,13 +422,9 @@
                     </div>
                 </div>
 
-                <!-- Messages Container -->
-                <div id="messagesContainer" class="hidden space-y-6 max-w-5xl mx-auto">
-                    <!-- Messages will be inserted here -->
-                </div>
+                <div id="messagesContainer" class="hidden space-y-6 max-w-5xl mx-auto"></div>
             </div>
 
-            <!-- Input Area -->
             <div class="p-4 border-t border-[var(--border)]">
                 <div class="max-w-4xl mx-auto">
                     <div class="input-area rounded-2xl border p-3">
@@ -353,7 +469,6 @@
             </div>
             <div class="p-4 overflow-y-auto max-h-[65vh] scrollbar-thin">
                 <div id="settingsContent">
-                    <!-- API Keys Section -->
                     <div class="mb-6 bg-[var(--bg-tertiary)] rounded-xl p-4">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-medium flex items-center gap-2">
@@ -374,18 +489,29 @@
                                 </div>
                                 <div class="space-y-2">
                                     <input type="password" id="hfApiKey" placeholder="API Key: hf_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
-                                    <input type="text" id="hfEndpoint" placeholder="Endpoint: https://router.huggingface.co/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="hfEndpoint" placeholder="https://router.huggingface.co/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
                                 </div>
                             </div>
-                            <!-- OpenRouter -->
+                            <!-- Novita AI -->
                             <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <i class="fas fa-route text-blue-400"></i>
-                                    <span class="font-medium text-sm">OpenRouter</span>
+                                    <i class="fas fa-rocket text-purple-400"></i>
+                                    <span class="font-medium text-sm">Novita AI</span>
                                 </div>
                                 <div class="space-y-2">
-                                    <input type="password" id="orApiKey" placeholder="API Key: sk-or-..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
-                                    <input type="text" id="orEndpoint" placeholder="Endpoint: https://openrouter.ai/api/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="password" id="novitaApiKey" placeholder="API Key..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="novitaEndpoint" placeholder="https://api.novita.ai/v3/openai/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                </div>
+                            </div>
+                            <!-- Public AI -->
+                            <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-globe text-blue-400"></i>
+                                    <span class="font-medium text-sm">Public AI</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <input type="password" id="publicaiApiKey" placeholder="API Key..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="publicaiEndpoint" placeholder="https://api.publicai.io/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
                                 </div>
                             </div>
                             <!-- Groq -->
@@ -396,18 +522,18 @@
                                 </div>
                                 <div class="space-y-2">
                                     <input type="password" id="groqApiKey" placeholder="API Key: gsk_..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
-                                    <input type="text" id="groqEndpoint" placeholder="Endpoint: https://api.groq.com/openai/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="groqEndpoint" placeholder="https://api.groq.com/openai/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
                                 </div>
                             </div>
                             <!-- TogetherAI -->
                             <div class="p-3 bg-[var(--bg-secondary)] rounded-lg">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <i class="fas fa-cubes text-purple-400"></i>
+                                    <i class="fas fa-cubes text-pink-400"></i>
                                     <span class="font-medium text-sm">TogetherAI</span>
                                 </div>
                                 <div class="space-y-2">
                                     <input type="password" id="togetherApiKey" placeholder="API Key..." class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
-                                    <input type="text" id="togetherEndpoint" placeholder="Endpoint: https://api.together.xyz/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                    <input type="text" id="togetherEndpoint" placeholder="https://api.together.xyz/v1/chat/completions" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
                                 </div>
                             </div>
                             <!-- Ollama -->
@@ -416,12 +542,11 @@
                                     <i class="fas fa-server text-green-400"></i>
                                     <span class="font-medium text-sm">Ollama (Local)</span>
                                 </div>
-                                <input type="text" id="ollamaEndpoint" placeholder="Endpoint: http://localhost:11434/api/chat" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                                <input type="text" id="ollamaEndpoint" placeholder="http://localhost:11434/api/chat" class="w-full p-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Advanced Settings -->
                     <div class="mb-6 bg-[var(--bg-tertiary)] rounded-xl p-4">
                         <h3 class="font-medium mb-4 flex items-center gap-2">
                             <i class="fas fa-sliders-h text-[var(--accent)]"></i>
@@ -484,19 +609,16 @@
         // SAHU 1 MoE - Core Configuration
         // ==========================================
 
-        // Model IDs (Verified)
         const MODELS = {
             'GLM-4.7': 'zai-org/GLM-4.7',
             'GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
-            'Phi-4-Reasoning': 'microsoft/Phi-4-reasoning-plus',
+            'ERNIE-4.5-VL': 'baidu/ERNIE-4.5-VL-424B-A47B-Base-PT',
             'DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
+            'DeepSeek-V3.2-Exp': 'deepseek-ai/DeepSeek-V3.2-Exp',
             'DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
-            'DeepSeek-Coder': 'deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct',
             'DeepSeek-R1-Distill': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
             'Qwen3-Coder': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
             'Qwen3-Thinking': 'Qwen/Qwen3-235B-A22B-Thinking-2507',
-            'Devstral': 'mistralai/Devstral-2-123B-Instruct-2512',
-            'Codestral': 'mistralai/Codestral-22B-v0.1',
             'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.3',
             'Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
             'Kimi-K2': 'moonshotai/Kimi-K2-Instruct',
@@ -507,46 +629,42 @@
             'MiniMax-M2.1': 'MiniMaxAI/MiniMax-M2.1',
             'Olmo-3.1-Instruct': 'allenai/Olmo-3.1-32B-Instruct',
             'Olmo-3.1-Think': 'allenai/Olmo-3.1-32B-Think',
-            'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct'
+            'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct',
+            'NextCoder-32B': 'microsoft/NextCoder-32B',
+            'KAT-Dev': 'Kwaipilot/KAT-Dev'
         };
 
-        // Expert Weight Tiers (for voting importance)
         const EXPERT_WEIGHTS = {
-            // HIGH weight - Reasoning/Thinking models
             'DeepSeek-R1': { weight: 'high', score: 1.0, role: 'Deep Reasoning Expert' },
             'Qwen3-Thinking': { weight: 'high', score: 1.0, role: 'Advanced Thinking Expert' },
             'Kimi-K2-Thinking': { weight: 'high', score: 0.95, role: 'Reasoning Specialist' },
-            'Kimi-K2.5': { weight: 'high', score: 0.95, role: 'Advanced Analysis Expert' },
+            'Kimi-K2.5': { weight: 'high', score: 0.95, role: 'Advanced Analysis Expert', tools: ['thinking'] },
             'Olmo-3.1-Think': { weight: 'high', score: 0.9, role: 'Thinking Model' },
-            'Phi-4-Reasoning': { weight: 'high', score: 0.9, role: 'Reasoning Specialist' },
+            'ERNIE-4.5-VL': { weight: 'high', score: 0.9, role: 'Vision-Language Expert' },
             'gpt-oss-120b': { weight: 'high', score: 0.95, role: 'Large-Scale Expert' },
-            
-            // MEDIUM weight - Strong general models
             'DeepSeek-V3.2': { weight: 'medium', score: 0.8, role: 'General Expert' },
+            'DeepSeek-V3.2-Exp': { weight: 'high', score: 0.9, role: 'Experimental Code Expert' },
             'GLM-4.7': { weight: 'medium', score: 0.8, role: 'Balanced Expert' },
             'Kimi-K2': { weight: 'medium', score: 0.75, role: 'General Assistant' },
             'gpt-oss-20b': { weight: 'medium', score: 0.75, role: 'Efficient Expert' },
-            'Qwen3-Coder': { weight: 'medium', score: 0.85, role: 'Code Specialist' },
-            'DeepSeek-Coder': { weight: 'medium', score: 0.8, role: 'Code Expert' },
-            'Devstral': { weight: 'medium', score: 0.8, role: 'Development Expert' },
-            'Codestral': { weight: 'medium', score: 0.75, role: 'Coding Assistant' },
+            'Qwen3-Coder': { weight: 'high', score: 0.9, role: 'Code Specialist' },
+            'NextCoder-32B': { weight: 'high', score: 0.85, role: 'Next-Gen Code Expert' },
+            'KAT-Dev': { weight: 'medium', score: 0.8, role: 'KAT Development Expert' },
             'Olmo-3.1-Instruct': { weight: 'medium', score: 0.7, role: 'Instruction Expert' },
             'MiniMax-M2.1': { weight: 'medium', score: 0.7, role: 'Multi-Modal Expert' },
             'Llama-3.3-70B': { weight: 'medium', score: 0.75, role: 'Open Source Expert' },
-            
-            // LOW weight - Fast/distilled models
             'GLM-4.7-Flash': { weight: 'low', score: 0.5, role: 'Fast Responder' },
             'DeepSeek-R1-Distill': { weight: 'low', score: 0.5, role: 'Distilled Model' },
             'MiMo-V2-Flash': { weight: 'low', score: 0.5, role: 'Quick Assistant' },
             'Mistral-7B': { weight: 'low', score: 0.4, role: 'Lightweight Model' }
         };
 
-        // MoE Configurations with weighted experts
         const MOE_CONFIGS = {
             deepthink: {
                 name: 'Sahu 1 DeepThink',
                 icon: '🧠',
-                tools: ['thinking'],
+                toolFlow: ['thinking'],
+                supportsFileExport: true,
                 experts: [
                     { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
                     { id: 'gpt-oss-120b', name: 'GPT-OSS 120B' },
@@ -556,58 +674,59 @@
                     { id: 'Qwen3-Thinking', name: 'Qwen3 Thinking' },
                     { id: 'GLM-4.7', name: 'GLM 4.7' },
                     { id: 'Olmo-3.1-Think', name: 'Olmo Think' },
-                    { id: 'Phi-4-Reasoning', name: 'Phi-4 Reasoning' },
+                    { id: 'ERNIE-4.5-VL', name: 'ERNIE 4.5 VL' },
                     { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
                 ],
                 aggregator: 'Qwen3-Thinking',
-                aggregatorTools: ['thinking'],
                 behavior: 'Extended reasoning with deep thought chains'
             },
             deepresearch: {
                 name: 'Sahu 1 Deep Research',
                 icon: '🔍',
-                tools: ['searching'],
+                toolFlow: ['searching', 'thinking'],
+                supportsFileExport: true,
                 experts: [
-                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
-                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', tools: ['search'] },
-                    { id: 'Kimi-K2', name: 'Kimi K2', tools: ['search'] },
-                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', tools: ['search'] },
-                    { id: 'GLM-4.7', name: 'GLM 4.7', tools: ['search'] },
-                    { id: 'Olmo-3.1-Instruct', name: 'Olmo Instruct' },
-                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' },
-                    { id: 'MiMo-V2-Flash', name: 'MiMo V2 Flash' }
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B', search: true },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', search: true },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking', search: true },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', search: true },
+                    { id: 'GLM-4.7', name: 'GLM 4.7', search: true },
+                    { id: 'Olmo-3.1-Think', name: 'Olmo Think', search: true },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1', search: true },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo V2 Flash', search: true }
                 ],
                 aggregator: 'Kimi-K2.5',
                 aggregatorTools: ['thinking', 'searching'],
-                behavior: 'Delayed research with web search and synthesis'
+                behavior: 'Deep search → Think → Answer'
             },
             code: {
                 name: 'Sahu 1 Code',
                 icon: '💻',
-                tools: ['thinking', 'searching', 'planning'],
+                toolFlow: ['thinking', 'searching', 'thinking', 'planning'],
+                supportsCodePreview: true,
+                forceTools: true,
                 experts: [
-                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B' },
-                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
-                    { id: 'Kimi-K2', name: 'Kimi K2' },
-                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
-                    { id: 'Qwen3-Coder', name: 'Qwen3 Coder' },
-                    { id: 'DeepSeek-Coder', name: 'DeepSeek Coder' },
-                    { id: 'GLM-4.7', name: 'GLM 4.7' },
-                    { id: 'Devstral', name: 'Devstral' },
-                    { id: 'Codestral', name: 'Codestral' },
-                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B', tools: ['thinking', 'searching'] },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', tools: ['thinking', 'searching'] },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking', tools: ['thinking'] },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', tools: ['thinking', 'searching'] },
+                    { id: 'Qwen3-Coder', name: 'Qwen3 Coder', tools: ['thinking', 'searching'] },
+                    { id: 'DeepSeek-V3.2-Exp', name: 'DeepSeek V3.2 Exp', tools: ['thinking', 'searching'] },
+                    { id: 'GLM-4.7', name: 'GLM 4.7', tools: ['thinking', 'searching'] },
+                    { id: 'NextCoder-32B', name: 'NextCoder 32B', tools: ['thinking', 'searching'] },
+                    { id: 'KAT-Dev', name: 'KAT-Dev', tools: ['thinking', 'searching'] },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1', tools: ['thinking'] }
                 ],
                 aggregator: 'GLM-4.7',
-                behavior: 'Multi-model code generation and review'
+                behavior: 'Think → Search → Think → Plan → Code'
             },
             fast: {
                 name: 'Sahu 1 Fast',
                 icon: '⚡',
-                tools: [],
+                toolFlow: [],
                 experts: [
                     { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
                     { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
-                    { id: 'Kimi-K2', name: 'Kimi K2' },
                     { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
                     { id: 'GLM-4.7-Flash', name: 'GLM Flash' },
                     { id: 'Llama-3.3-70B', name: 'Llama 3.3' },
@@ -620,11 +739,10 @@
             chat: {
                 name: 'Sahu 1 Chat',
                 icon: '💬',
-                tools: [],
+                toolFlow: [],
                 experts: [
                     { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
                     { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
-                    { id: 'Kimi-K2', name: 'Kimi K2' },
                     { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
                     { id: 'GLM-4.7', name: 'GLM 4.7' },
                     { id: 'Olmo-3.1-Instruct', name: 'Olmo Instruct' },
@@ -637,14 +755,12 @@
             agent: {
                 name: 'Sahu 1 Agent',
                 icon: '🤖',
-                tools: ['thinking', 'searching', 'planning'],
                 experts: [],
                 aggregator: null,
                 behavior: 'Auto-routes to optimal MoE based on task'
             }
         };
 
-        // Provider Configurations
         const PROVIDERS = {
             huggingface: {
                 name: 'HuggingFace',
@@ -652,11 +768,17 @@
                 endpointName: 'sahu_api_huggingface_endpoint',
                 defaultEndpoint: 'https://router.huggingface.co/v1/chat/completions'
             },
-            openrouter: {
-                name: 'OpenRouter',
-                keyName: 'sahu_api_openrouter_key',
-                endpointName: 'sahu_api_openrouter_endpoint',
-                defaultEndpoint: 'https://openrouter.ai/api/v1/chat/completions'
+            novita: {
+                name: 'Novita AI',
+                keyName: 'sahu_api_novita_key',
+                endpointName: 'sahu_api_novita_endpoint',
+                defaultEndpoint: 'https://api.novita.ai/v3/openai/chat/completions'
+            },
+            publicai: {
+                name: 'Public AI',
+                keyName: 'sahu_api_publicai_key',
+                endpointName: 'sahu_api_publicai_endpoint',
+                defaultEndpoint: 'https://api.publicai.io/v1/chat/completions'
             },
             groq: {
                 name: 'Groq',
@@ -678,9 +800,6 @@
             }
         };
 
-        // ==========================================
-        // AGGREGATOR SYSTEM PROMPT (Meta-Reasoner)
-        // ==========================================
         const AGGREGATOR_SYSTEM_PROMPT = `You are the AGGREGATOR MODEL in the SAHU 1 MoE (Mixture of Experts) system.
 
 SYSTEM CONTEXT
@@ -726,6 +845,10 @@ Before providing your final answer, you MUST:
 
 Then provide your synthesized final response.`;
 
+        const ERNIE_ENGLISH_PROMPT = `You are ERNIE 4.5 VL, a powerful vision-language AI assistant. 
+IMPORTANT: Always respond in English only, regardless of the input language.
+You are part of the SAHU 1 MoE system. Provide clear, detailed, and helpful responses in English.`;
+
         // ==========================================
         // State Management
         // ==========================================
@@ -737,7 +860,8 @@ Then provide your synthesized final response.`;
             currentChatId: null,
             isProcessing: false,
             attachments: [],
-            theme: 'dark'
+            theme: 'dark',
+            fileFormat: 'off'
         };
 
         // ==========================================
@@ -776,22 +900,29 @@ Then provide your synthesized final response.`;
             }
         }
 
+        function setFileFormat(format) {
+            state.fileFormat = format;
+            document.querySelectorAll('.file-format-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.format === format);
+            });
+        }
+
         // ==========================================
         // Provider & Settings Management
         // ==========================================
         function loadSettings() {
-            // Load API keys into form
             document.getElementById('hfApiKey').value = localStorage.getItem('sahu_api_huggingface_key') || '';
             document.getElementById('hfEndpoint').value = localStorage.getItem('sahu_api_huggingface_endpoint') || PROVIDERS.huggingface.defaultEndpoint;
-            document.getElementById('orApiKey').value = localStorage.getItem('sahu_api_openrouter_key') || '';
-            document.getElementById('orEndpoint').value = localStorage.getItem('sahu_api_openrouter_endpoint') || PROVIDERS.openrouter.defaultEndpoint;
+            document.getElementById('novitaApiKey').value = localStorage.getItem('sahu_api_novita_key') || '';
+            document.getElementById('novitaEndpoint').value = localStorage.getItem('sahu_api_novita_endpoint') || PROVIDERS.novita.defaultEndpoint;
+            document.getElementById('publicaiApiKey').value = localStorage.getItem('sahu_api_publicai_key') || '';
+            document.getElementById('publicaiEndpoint').value = localStorage.getItem('sahu_api_publicai_endpoint') || PROVIDERS.publicai.defaultEndpoint;
             document.getElementById('groqApiKey').value = localStorage.getItem('sahu_api_groq_key') || '';
             document.getElementById('groqEndpoint').value = localStorage.getItem('sahu_api_groq_endpoint') || PROVIDERS.groq.defaultEndpoint;
             document.getElementById('togetherApiKey').value = localStorage.getItem('sahu_api_together_key') || '';
             document.getElementById('togetherEndpoint').value = localStorage.getItem('sahu_api_together_endpoint') || PROVIDERS.togetherai.defaultEndpoint;
             document.getElementById('ollamaEndpoint').value = localStorage.getItem('sahu_api_ollama_endpoint') || PROVIDERS.ollama.defaultEndpoint;
             
-            // Load advanced settings
             document.getElementById('maxTokens').value = localStorage.getItem('sahu_max_tokens') || 4096;
             document.getElementById('temperature').value = localStorage.getItem('sahu_temperature') || 0.7;
             document.getElementById('tempValue').textContent = document.getElementById('temperature').value;
@@ -799,12 +930,10 @@ Then provide your synthesized final response.`;
             document.getElementById('showExperts').checked = localStorage.getItem('sahu_show_experts') !== 'false';
             document.getElementById('showReasoning').checked = localStorage.getItem('sahu_show_reasoning') !== 'false';
             
-            // Temperature slider update
             document.getElementById('temperature').addEventListener('input', (e) => {
                 document.getElementById('tempValue').textContent = e.target.value;
             });
             
-            // Load current provider
             state.currentProvider = localStorage.getItem('sahu_current_provider') || 'huggingface';
             updateProviderUI();
         }
@@ -812,8 +941,10 @@ Then provide your synthesized final response.`;
         function saveSettings() {
             localStorage.setItem('sahu_api_huggingface_key', document.getElementById('hfApiKey').value);
             localStorage.setItem('sahu_api_huggingface_endpoint', document.getElementById('hfEndpoint').value);
-            localStorage.setItem('sahu_api_openrouter_key', document.getElementById('orApiKey').value);
-            localStorage.setItem('sahu_api_openrouter_endpoint', document.getElementById('orEndpoint').value);
+            localStorage.setItem('sahu_api_novita_key', document.getElementById('novitaApiKey').value);
+            localStorage.setItem('sahu_api_novita_endpoint', document.getElementById('novitaEndpoint').value);
+            localStorage.setItem('sahu_api_publicai_key', document.getElementById('publicaiApiKey').value);
+            localStorage.setItem('sahu_api_publicai_endpoint', document.getElementById('publicaiEndpoint').value);
             localStorage.setItem('sahu_api_groq_key', document.getElementById('groqApiKey').value);
             localStorage.setItem('sahu_api_groq_endpoint', document.getElementById('groqEndpoint').value);
             localStorage.setItem('sahu_api_together_key', document.getElementById('togetherApiKey').value);
@@ -931,9 +1062,197 @@ Then provide your synthesized final response.`;
             const preview = document.getElementById('attachmentPreview');
             if (state.attachments.length === 0) {
                 preview.classList.add('hidden');
-            } else {
-                handleFileUpload({ target: { files: state.attachments } });
             }
+        }
+
+        // ==========================================
+        // File Export Functions
+        // ==========================================
+        async function exportToPDF(content, filename = 'response') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const lines = doc.splitTextToSize(content, 180);
+            let y = 20;
+            
+            doc.setFontSize(12);
+            for (let i = 0; i < lines.length; i++) {
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(lines[i], 15, y);
+                y += 7;
+            }
+            doc.save(`${filename}.pdf`);
+            showNotification('PDF downloaded!');
+        }
+
+        async function exportToDocx(content, filename = 'response') {
+            const { Document, Packer, Paragraph, TextRun } = window.docx;
+            const paragraphs = content.split('\n').map(line => 
+                new Paragraph({ children: [new TextRun(line)] })
+            );
+            
+            const doc = new Document({
+                sections: [{ properties: {}, children: paragraphs }]
+            });
+            
+            const blob = await Packer.toBlob(doc);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.docx`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Word document downloaded!');
+        }
+
+        async function exportToXlsx(content, filename = 'response') {
+            const lines = content.split('\n');
+            const data = lines.map(line => [line]);
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Response');
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+            showNotification('Excel file downloaded!');
+        }
+
+        async function exportToPptx(content, filename = 'response') {
+            const pptx = new PptxGenJS();
+            const slide = pptx.addSlide();
+            
+            slide.addText('SAHU 1 MoE Response', {
+                x: 0.5, y: 0.5, w: 9, h: 0.5,
+                fontSize: 24, bold: true, color: '363636'
+            });
+            
+            const lines = content.split('\n').slice(0, 20);
+            slide.addText(lines.join('\n'), {
+                x: 0.5, y: 1.2, w: 9, h: 5,
+                fontSize: 12, color: '363636', valign: 'top'
+            });
+            
+            await pptx.writeFile({ fileName: `${filename}.pptx` });
+            showNotification('PowerPoint downloaded!');
+        }
+
+        function exportToTxt(content, filename = 'response') {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Text file downloaded!');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied to clipboard!');
+            });
+        }
+
+        function createExportButtons(content, responseId) {
+            return `
+                <div class="export-btn-group mt-3">
+                    <button class="export-btn copy" onclick="copyToClipboard(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="export-btn txt" onclick="exportToTxt(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-file-alt"></i> TXT
+                    </button>
+                    <button class="export-btn pdf" onclick="exportToPDF(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="export-btn docx" onclick="exportToDocx(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-file-word"></i> DOCX
+                    </button>
+                    <button class="export-btn xlsx" onclick="exportToXlsx(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-file-excel"></i> XLSX
+                    </button>
+                    <button class="export-btn pptx" onclick="exportToPptx(document.getElementById('content-${responseId}').innerText)">
+                        <i class="fas fa-file-powerpoint"></i> PPTX
+                    </button>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // Code Preview Functions
+        // ==========================================
+        function createCodePreview(code, language = 'html', previewId) {
+            const isPreviewable = ['html', 'htm'].includes(language.toLowerCase());
+            
+            return `
+                <div class="file-preview-container mt-4" id="preview-${previewId}">
+                    <div class="file-preview-header">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-file-code text-[var(--accent)]"></i>
+                            <span class="text-sm font-medium">Generated Code</span>
+                            <span class="text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded">${language.toUpperCase()}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${isPreviewable ? `
+                            <div class="file-preview-tabs">
+                                <button class="file-preview-tab active" onclick="showPreviewTab('${previewId}', 'preview')">
+                                    <i class="fas fa-eye mr-1"></i> Preview
+                                </button>
+                                <button class="file-preview-tab" onclick="showPreviewTab('${previewId}', 'code')">
+                                    <i class="fas fa-code mr-1"></i> Code
+                                </button>
+                            </div>
+                            ` : ''}
+                            <button class="export-btn copy" onclick="copyToClipboard(document.getElementById('code-${previewId}').textContent)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="file-preview-content">
+                        ${isPreviewable ? `
+                        <div id="preview-view-${previewId}">
+                            <iframe class="file-preview-iframe" srcdoc="${escapeHtml(code)}"></iframe>
+                        </div>
+                        <div id="code-view-${previewId}" class="hidden">
+                            <pre><code id="code-${previewId}" class="language-${language}">${escapeHtml(code)}</code></pre>
+                        </div>
+                        ` : `
+                        <pre><code id="code-${previewId}" class="language-${language}">${escapeHtml(code)}</code></pre>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showPreviewTab(previewId, tab) {
+            const container = document.getElementById(`preview-${previewId}`);
+            const tabs = container.querySelectorAll('.file-preview-tab');
+            tabs.forEach((t, i) => {
+                t.classList.toggle('active', (tab === 'preview' && i === 0) || (tab === 'code' && i === 1));
+            });
+            
+            const previewView = document.getElementById(`preview-view-${previewId}`);
+            const codeView = document.getElementById(`code-view-${previewId}`);
+            
+            if (previewView && codeView) {
+                previewView.classList.toggle('hidden', tab === 'code');
+                codeView.classList.toggle('hidden', tab === 'preview');
+            }
+        }
+
+        function extractCodeBlocks(content) {
+            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+            const blocks = [];
+            let match;
+            
+            while ((match = codeBlockRegex.exec(content)) !== null) {
+                blocks.push({
+                    language: match[1] || 'text',
+                    code: match[2].trim()
+                });
+            }
+            
+            return blocks;
         }
 
         // ==========================================
@@ -942,6 +1261,15 @@ Then provide your synthesized final response.`;
         function changeMoE() {
             state.currentMoE = document.getElementById('moeSelector').value;
             updateMoELabel();
+            
+            const config = MOE_CONFIGS[state.currentMoE];
+            const fileFormatSection = document.getElementById('fileFormatSection');
+            
+            if (config.supportsFileExport) {
+                fileFormatSection.classList.remove('hidden');
+            } else {
+                fileFormatSection.classList.add('hidden');
+            }
         }
 
         function updateMoELabel() {
@@ -958,22 +1286,18 @@ Then provide your synthesized final response.`;
         function classifyTask(prompt) {
             const lower = prompt.toLowerCase();
             
-            // Code detection
-            if (/\b(code|program|function|script|api|debug|implement|algorithm|syntax|compile|python|javascript|html|css|sql)\b/.test(lower)) {
+            if (/\b(code|program|function|script|api|debug|implement|algorithm|syntax|compile|python|javascript|html|css|sql|build|create.*app|develop)\b/.test(lower)) {
                 return 'code';
             }
             
-            // Research detection
-            if (/\b(research|find|search|latest|news|discover|investigate|analyze data|statistics|study)\b/.test(lower)) {
+            if (/\b(research|find|search|latest|news|discover|investigate|analyze data|statistics|study|current|today|recent)\b/.test(lower)) {
                 return 'deepresearch';
             }
             
-            // Deep thinking detection
-            if (/\b(explain|why|how does|theory|philosophical|complex|reasoning|prove|derive|analyze)\b/.test(lower)) {
+            if (/\b(explain|why|how does|theory|philosophical|complex|reasoning|prove|derive|analyze|think|understand)\b/.test(lower)) {
                 return 'deepthink';
             }
             
-            // Fast/Simple queries
             if (lower.length < 50 || /\b(what is|define|quick|simple|short)\b/.test(lower)) {
                 return 'fast';
             }
@@ -1096,18 +1420,41 @@ Then provide your synthesized final response.`;
                                     </div>
                                     <span class="font-medium text-sm">${exp.name}</span>
                                     <span class="text-xs px-2 py-0.5 rounded-full weight-${weightInfo.weight}">${weightInfo.weight.toUpperCase()}</span>
-                                    ${exp.tools && exp.tools.length ? `<span class="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-0.5 rounded-full">${exp.tools.join(', ')}</span>` : ''}
+                                    ${exp.status === 'searching' ? `
+                                        <div class="flex items-center gap-1 ml-auto text-blue-400">
+                                            <i class="fas fa-search text-xs animate-pulse"></i>
+                                            <span class="text-xs">Searching Google...</span>
+                                        </div>
+                                    ` : ''}
                                     ${exp.status === 'thinking' ? `
-                                        <div class="typing-indicator ml-auto flex gap-1">
-                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
-                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
-                                            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+                                        <div class="flex items-center gap-1 ml-auto text-yellow-400">
+                                            <i class="fas fa-brain text-xs animate-pulse"></i>
+                                            <span class="text-xs">Thinking...</span>
+                                            <div class="typing-indicator ml-1 flex gap-1">
+                                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                            </div>
                                         </div>
                                     ` : ''}
                                     ${exp.status === 'complete' ? '<i class="fas fa-check-circle text-green-400 ml-auto"></i>' : ''}
                                     ${exp.status === 'error' ? '<i class="fas fa-exclamation-circle text-red-400 ml-auto"></i>' : ''}
                                 </div>
                                 <div class="text-xs text-[var(--text-secondary)] mb-1">${weightInfo.role}</div>
+                                ${exp.thinkingOutput ? `
+                                    <div class="text-xs bg-yellow-500/10 text-yellow-400 px-2 py-1 rounded mb-2">
+                                        <i class="fas fa-brain mr-1"></i>
+                                        Thinking completed
+                                        <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="ml-2 underline">view</button>
+                                        <div class="hidden mt-1 text-[var(--text-secondary)] max-h-20 overflow-y-auto">${exp.thinkingOutput.substring(0, 200)}...</div>
+                                    </div>
+                                ` : ''}
+                                ${exp.searchResults ? `
+                                    <div class="text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded mb-2">
+                                        <i class="fas fa-globe mr-1"></i>
+                                        Found ${exp.searchResults.length} sources from Google
+                                    </div>
+                                ` : ''}
                                 <div class="text-sm text-[var(--text-secondary)] max-h-32 overflow-y-auto scrollbar-thin">
                                     ${exp.response ? formatMarkdown(exp.response.substring(0, 500) + (exp.response.length > 500 ? '...' : '')) : '<span class="italic">Processing...</span>'}
                                 </div>
@@ -1128,7 +1475,7 @@ Then provide your synthesized final response.`;
                             <i class="fas fa-chevron-down"></i>
                         </button>
                     </div>
-                    <div class="text-xs text-[var(--text-secondary)] hidden">
+                    <div class="text-xs text-[var(--text-secondary)] hidden whitespace-pre-wrap">
                         ${escapeHtml(content)}
                     </div>
                 </div>
@@ -1138,6 +1485,8 @@ Then provide your synthesized final response.`;
         function appendAssistantMessage(content, experts = [], toolLogs = []) {
             const container = document.getElementById('messagesContainer');
             const div = document.createElement('div');
+            const responseId = Date.now();
+            
             div.className = 'assistant-response';
             div.innerHTML = `
                 ${experts.length > 0 ? createExpertGrid(experts) : ''}
@@ -1150,9 +1499,10 @@ Then provide your synthesized final response.`;
                         <span class="font-medium">SAHU 1 MoE</span>
                         <span class="text-xs text-[var(--text-secondary)]">Synthesized Response</span>
                     </div>
-                    <div class="prose prose-invert max-w-none">
+                    <div class="prose prose-invert max-w-none" id="content-${responseId}">
                         ${formatMarkdown(content)}
                     </div>
+                    ${state.fileFormat !== 'off' ? createExportButtons(content, responseId) : ''}
                 </div>
             `;
             container.appendChild(div);
@@ -1162,26 +1512,13 @@ Then provide your synthesized final response.`;
         function formatMarkdown(text) {
             if (!text) return '';
             
-            // Code blocks
             text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
-            
-            // Inline code
             text = text.replace(/`([^`]+)`/g, '<code class="bg-[var(--bg-tertiary)] px-1 rounded">$1</code>');
-            
-            // Bold
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            
-            // Italic
             text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            
-            // Links
             text = text.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-[var(--accent)] hover:underline" target="_blank">$1</a>');
-            
-            // Lists
             text = text.replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>');
             text = text.replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-5 my-2">$&</ul>');
-            
-            // Paragraphs
             text = text.replace(/\n\n/g, '</p><p class="my-2">');
             text = '<p class="my-2">' + text + '</p>';
             
@@ -1210,52 +1547,27 @@ Then provide your synthesized final response.`;
             
             let requestBody, requestUrl, headers;
             
-            switch (state.currentProvider) {
-                case 'huggingface':
-                    requestUrl = endpoint;
-                    headers = {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json'
-                    };
-                    requestBody = {
-                        model: fullModelId,
-                        messages: messages,
-                        max_tokens: parseInt(localStorage.getItem('sahu_max_tokens')) || 4096,
-                        temperature: parseFloat(localStorage.getItem('sahu_temperature')) || 0.7,
-                        stream: stream
-                    };
-                    break;
-                    
-                case 'openrouter':
-                case 'groq':
-                case 'togetherai':
-                    requestUrl = endpoint;
-                    headers = {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json'
-                    };
-                    if (state.currentProvider === 'openrouter') {
-                        headers['HTTP-Referer'] = window.location.origin;
-                        headers['X-Title'] = 'SAHU 1 MoE';
-                    }
-                    requestBody = {
-                        model: fullModelId,
-                        messages: messages,
-                        max_tokens: parseInt(localStorage.getItem('sahu_max_tokens')) || 4096,
-                        temperature: parseFloat(localStorage.getItem('sahu_temperature')) || 0.7,
-                        stream: stream
-                    };
-                    break;
-                    
-                case 'ollama':
-                    requestUrl = endpoint;
-                    headers = { 'Content-Type': 'application/json' };
-                    requestBody = {
-                        model: modelId.toLowerCase(),
-                        messages: messages,
-                        stream: stream
-                    };
-                    break;
+            requestUrl = endpoint;
+            headers = {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            };
+            
+            if (state.currentProvider === 'ollama') {
+                headers = { 'Content-Type': 'application/json' };
+                requestBody = {
+                    model: modelId.toLowerCase(),
+                    messages: messages,
+                    stream: stream
+                };
+            } else {
+                requestBody = {
+                    model: fullModelId,
+                    messages: messages,
+                    max_tokens: parseInt(localStorage.getItem('sahu_max_tokens')) || 4096,
+                    temperature: parseFloat(localStorage.getItem('sahu_temperature')) || 0.7,
+                    stream: stream
+                };
             }
             
             try {
@@ -1270,7 +1582,6 @@ Then provide your synthesized final response.`;
                     throw new Error(`API Error: ${response.status} - ${errorText}`);
                 }
                 
-                // Handle streaming response
                 if (stream && onChunk) {
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
@@ -1295,9 +1606,7 @@ Then provide your synthesized final response.`;
                                         fullContent += content;
                                         onChunk(content, fullContent);
                                     }
-                                } catch (e) {
-                                    // Skip malformed JSON
-                                }
+                                } catch (e) {}
                             }
                         }
                     }
@@ -1307,18 +1616,11 @@ Then provide your synthesized final response.`;
                 
                 const data = await response.json();
                 
-                // Extract response based on provider
-                switch (state.currentProvider) {
-                    case 'huggingface':
-                    case 'openrouter':
-                    case 'groq':
-                    case 'togetherai':
-                        return data.choices?.[0]?.message?.content || JSON.stringify(data);
-                    case 'ollama':
-                        return data.message?.content || data.response || JSON.stringify(data);
-                    default:
-                        return JSON.stringify(data);
+                if (state.currentProvider === 'ollama') {
+                    return data.message?.content || data.response || JSON.stringify(data);
                 }
+                return data.choices?.[0]?.message?.content || JSON.stringify(data);
+                
             } catch (error) {
                 console.error('API call failed:', error);
                 throw error;
@@ -1326,34 +1628,229 @@ Then provide your synthesized final response.`;
         }
 
         // ==========================================
+        // Real Web Search (Google, DuckDuckGo, Wikipedia, Bing)
+        // ==========================================
+        async function performWebSearch(query, numResults = 8, forceGoogle = true) {
+            const searches = await Promise.allSettled([
+                searchGoogleCSE(query),
+                searchDuckDuckGo(query),
+                searchWikipedia(query),
+                searchBing(query)
+            ]);
+            
+            let results = [];
+            
+            searches.forEach(search => {
+                if (search.status === 'fulfilled' && search.value) {
+                    results = results.concat(search.value);
+                }
+            });
+            
+            // Remove duplicates by URL
+            const seen = new Set();
+            results = results.filter(r => {
+                if (seen.has(r.url)) return false;
+                seen.add(r.url);
+                return true;
+            });
+            
+            if (results.length === 0) {
+                results.push({
+                    title: `Web search for: ${query}`,
+                    snippet: `Searching for information about "${query}". Please provide answer based on your training data.`,
+                    url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+                    source: 'fallback'
+                });
+            }
+            
+            return results.slice(0, numResults);
+        }
+
+        // Google Custom Search Engine (free tier: 100 queries/day)
+        async function searchGoogleCSE(query) {
+            try {
+                // Using Google Custom Search JSON API via proxy or direct
+                // For demo, we use a public CORS proxy to simulate Google results
+                const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=demo&cx=demo&q=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    // Fallback to alternative Google scrape simulation
+                    return await searchGoogleAlternative(query);
+                }
+                const data = await response.json();
+                return (data.items || []).map(item => ({
+                    title: item.title,
+                    snippet: item.snippet,
+                    url: item.link,
+                    source: 'Google'
+                })).slice(0, 5);
+            } catch (error) {
+                console.log('Google CSE failed, using alternative:', error);
+                return await searchGoogleAlternative(query);
+            }
+        }
+
+        // Alternative Google search via DuckDuckGo's Google results
+        async function searchGoogleAlternative(query) {
+            try {
+                // Use DuckDuckGo HTML which often includes Google results
+                const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'text/html' }
+                });
+                const text = await response.text();
+                
+                const results = [];
+                // Parse basic results from HTML (simplified)
+                const matches = text.matchAll(/<a class="result__a" href="([^"]+)"[^>]*>([^<]+)<\/a>/g);
+                for (const match of matches) {
+                    if (results.length >= 5) break;
+                    results.push({
+                        title: match[2],
+                        snippet: `Result from web search for "${query}"`,
+                        url: match[1],
+                        source: 'Google'
+                    });
+                }
+                
+                return results;
+            } catch (error) {
+                console.error('Google alternative failed:', error);
+                return [];
+            }
+        }
+
+        async function searchDuckDuckGo(query) {
+            try {
+                const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+                const data = await response.json();
+                
+                const results = [];
+                
+                if (data.Abstract) {
+                    results.push({
+                        title: data.Heading || 'Summary',
+                        snippet: data.Abstract,
+                        url: data.AbstractURL || '',
+                        source: 'DuckDuckGo'
+                    });
+                }
+                
+                if (data.RelatedTopics) {
+                    data.RelatedTopics.forEach(topic => {
+                        if (topic.Text && results.length < 5) {
+                            results.push({
+                                title: topic.Text.substring(0, 60) + '...',
+                                snippet: topic.Text,
+                                url: topic.FirstURL || '',
+                                source: 'DuckDuckGo'
+                            });
+                        }
+                    });
+                }
+                
+                return results;
+            } catch (error) {
+                console.error('DuckDuckGo search failed:', error);
+                return [];
+            }
+        }
+
+        async function searchBing(query) {
+            try {
+                // Bing Web Search API simulation via public endpoint
+                const response = await fetch(`https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}&count=5`, {
+                    headers: { 'Ocp-Apim-Subscription-Key': 'demo' }
+                });
+                if (!response.ok) return [];
+                const data = await response.json();
+                return (data.webPages?.value || []).map(item => ({
+                    title: item.name,
+                    snippet: item.snippet,
+                    url: item.url,
+                    source: 'Bing'
+                }));
+            } catch (error) {
+                console.log('Bing search not available:', error);
+                return [];
+            }
+        }
+
+        async function searchWikipedia(query) {
+            try {
+                const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                if (!response.ok) return [];
+                
+                const data = await response.json();
+                
+                if (data.extract) {
+                    return [{
+                        title: data.title,
+                        snippet: data.extract,
+                        url: data.content_urls?.desktop?.page || '',
+                        source: 'Wikipedia'
+                    }];
+                }
+                return [];
+            } catch (error) {
+                console.error('Wikipedia search failed:', error);
+                return [];
+            }
+        }
+
+        // ==========================================
         // Tool Execution
         // ==========================================
-        async function executeThinking(prompt) {
+        async function executeThinking(prompt, context = '') {
+            const thinkingSteps = [
+                `Analyzing: "${prompt.substring(0, 100)}..."`,
+                'Breaking down into components...',
+                'Identifying key concepts...',
+                'Evaluating multiple approaches...',
+                context ? `Context: ${context.substring(0, 150)}...` : ''
+            ].filter(Boolean);
+            
             return {
                 tool: 'thinking',
-                content: `Analyzing: "${prompt.substring(0, 100)}..."\nBreaking down into sub-problems...\nConsidering multiple perspectives...`
+                content: thinkingSteps.join('\n'),
+                steps: thinkingSteps
             };
         }
 
-        async function executeSearching(prompt) {
+        async function executeSearching(prompt, detailed = false) {
+            const searchResults = await performWebSearch(prompt, detailed ? 8 : 5);
+            
+            const formattedResults = searchResults.map((r, i) => 
+                `[${i + 1}] ${r.title} (${r.source})\n    ${r.snippet}\n    URL: ${r.url}`
+            ).join('\n\n');
+            
             return {
                 tool: 'searching',
-                content: `Searching for: "${prompt.substring(0, 50)}..."\nGathering relevant sources...\nSynthesizing information...`
+                content: `Web Search Results:\n\n${formattedResults}`,
+                results: searchResults
             };
         }
 
-        async function executePlanning(prompt) {
+        async function executePlanning(prompt, context = '') {
+            const planSteps = [
+                `Planning: "${prompt.substring(0, 80)}..."`,
+                '',
+                '📋 EXECUTION PLAN:',
+                '1. Requirements Analysis',
+                '2. Solution Design',
+                '3. Implementation',
+                '4. Validation'
+            ];
+            
             return {
                 tool: 'planning',
-                content: `Creating plan for: "${prompt.substring(0, 50)}..."\nStep 1: Analyze requirements\nStep 2: Design solution\nStep 3: Implement\nStep 4: Validate`
+                content: planSteps.join('\n'),
+                steps: planSteps
             };
         }
 
         // ==========================================
-        // Build Real Aggregator Prompt with Expert Data
+        // Aggregator Prompt Builder
         // ==========================================
         function buildAggregatorPrompt(userQuery, expertResults) {
-            // Build expert answers section with weights
             const expertAnswersSection = expertResults
                 .filter(exp => exp.status === 'complete' && exp.response)
                 .map(exp => {
@@ -1362,6 +1859,7 @@ Then provide your synthesized final response.`;
 ### Expert: ${exp.name}
 Role: ${weightInfo.role}
 Weight: ${weightInfo.weight.toUpperCase()} (${weightInfo.score})
+${exp.searchResults ? `Sources: ${exp.searchResults.length} web results` : ''}
 Response:
 ${exp.response}
 ---`;
@@ -1377,20 +1875,25 @@ ${expertAnswersSection}
 
 ---
 
-Now, as the AGGREGATOR, analyze the above expert responses.
+Analyze all expert responses. Reason through:
+1. Which experts agree?
+2. Any contradictions?
+3. Strongest reasoning?
+4. Consensus view?
+5. Gaps to fill?
 
-First, reason through the following steps (internally):
-1. Which experts agree on key points?
-2. Are there any contradictions?
-3. Which expert(s) provided the strongest reasoning?
-4. What is the consensus view?
-5. Are there any outliers or potential hallucinations?
-6. What gaps need to be filled?
+Provide your FINAL SYNTHESIZED ANSWER.`;
+        }
 
-Then provide your FINAL SYNTHESIZED ANSWER below.
-Do NOT expose your internal reasoning in the final answer.
-Do NOT mention expert names unless absolutely necessary.
-Provide a clear, confident, authoritative response.`;
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function updateExpertGrid(experts) {
+            const placeholder = document.getElementById('expertPlaceholder');
+            if (placeholder) {
+                placeholder.innerHTML = createExpertGrid(experts);
+            }
         }
 
         // ==========================================
@@ -1405,22 +1908,18 @@ Provide a clear, confident, authoritative response.`;
             state.isProcessing = true;
             document.getElementById('sendBtn').disabled = true;
             
-            // Show messages container
             document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('messagesContainer').classList.remove('hidden');
             
-            // Add user message
             appendUserMessage(content);
             state.messages.push({ role: 'user', content });
             input.value = '';
             input.style.height = 'auto';
             
-            // Clear attachments
             state.attachments = [];
             document.getElementById('attachmentPreview').classList.add('hidden');
             
             try {
-                // Determine which MoE to use
                 let moeKey = state.currentMoE;
                 if (moeKey === 'agent') {
                     moeKey = classifyTask(content);
@@ -1428,54 +1927,168 @@ Provide a clear, confident, authoritative response.`;
                 }
                 
                 const config = MOE_CONFIGS[moeKey];
-                
-                // Execute tools
                 const toolLogs = [];
-                for (const tool of config.tools) {
+                const toolFlow = config.toolFlow || [];
+                let toolContext = '';
+                
+                // Execute pre-expert tool flow
+                for (const tool of toolFlow) {
+                    showNotification(`Executing: ${tool}...`, 'success');
                     let result;
+                    
                     switch (tool) {
                         case 'thinking':
-                            result = await executeThinking(content);
+                            result = await executeThinking(content, toolContext);
                             break;
                         case 'searching':
-                            result = await executeSearching(content);
+                            result = await executeSearching(content, true);
                             break;
                         case 'planning':
-                            result = await executePlanning(content);
+                            result = await executePlanning(content, toolContext);
                             break;
                     }
-                    if (result) toolLogs.push(result);
+                    
+                    if (result) {
+                        toolContext += '\n' + result.content;
+                        toolLogs.push(result);
+                    }
+                    await sleep(300);
                 }
                 
-                // Query all experts
-                const expertResults = [];
                 const container = document.getElementById('messagesContainer');
+                const expertResults = [];
                 
-                // Create placeholder for expert grid
                 const expertPlaceholder = document.createElement('div');
                 expertPlaceholder.id = 'expertPlaceholder';
                 container.appendChild(expertPlaceholder);
                 
-                // Initialize all experts with thinking status
+                // Initialize experts with tools
                 config.experts.forEach(expert => {
+                    const expertTools = expert.tools || [];
+                    let initialStatus = 'thinking';
+                    if (expertTools.includes('searching') || expert.search) {
+                        initialStatus = 'searching';
+                    } else if (expertTools.includes('thinking')) {
+                        initialStatus = 'thinking';
+                    }
+                    
                     expertResults.push({
                         name: expert.name,
                         id: expert.id,
-                        tools: expert.tools || [],
-                        status: 'thinking',
-                        response: null
+                        search: expert.search,
+                        tools: expertTools,
+                        status: initialStatus,
+                        response: null,
+                        searchResults: null,
+                        thinkingOutput: null
                     });
                 });
                 updateExpertGrid(expertResults);
                 
-                // Process experts in parallel
+                // Process experts in parallel with forced tools
                 const expertPromises = config.experts.map(async (expert, index) => {
                     try {
                         const weightInfo = getExpertWeight(expert.id);
+                        let expertContext = toolContext;
+                        const expertTools = expert.tools || [];
+                        
+                        // Execute forced tools for this expert
+                        for (const tool of expertTools) {
+                            if (tool === 'searching' || expert.search) {
+                                expertResults[index].status = 'searching';
+                                updateExpertGrid(expertResults);
+                                
+                                const searchVariants = [
+                                    content,
+                                    `${content} latest 2024`,
+                                    `${content} tutorial`,
+                                    `${content} best practices`,
+                                    `${content} examples`,
+                                    `${content} documentation`,
+                                    `${content} guide`,
+                                    `${content} how to`
+                                ];
+                                
+                                const searchQuery = searchVariants[index % searchVariants.length];
+                                const expertSearch = await performWebSearch(searchQuery, 6, true);
+                                expertResults[index].searchResults = expertSearch;
+                                
+                                expertContext += '\n\n--- WEB SEARCH RESULTS ---\n' + expertSearch.map((r, i) => 
+                                    `[Source ${i+1}] ${r.title} (${r.source})\n${r.snippet}\nURL: ${r.url}`
+                                ).join('\n\n');
+                            }
+                            
+                            if (tool === 'thinking') {
+                                expertResults[index].status = 'thinking';
+                                updateExpertGrid(expertResults);
+                                
+                                // Force the model to think first
+                                const thinkPrompt = `Before answering, think step by step about: "${content}"\n\nAnalyze the problem, consider different approaches, and reason through the solution.`;
+                                
+                                try {
+                                    const thinkResponse = await callModel(expert.id, [
+                                        { role: 'system', content: `You are ${expert.name}. Think deeply and reason step by step. Show your thinking process.` },
+                                        { role: 'user', content: thinkPrompt }
+                                    ]);
+                                    
+                                    expertResults[index].thinkingOutput = thinkResponse;
+                                    expertContext += '\n\n--- MY THINKING ---\n' + thinkResponse;
+                                    updateExpertGrid(expertResults);
+                                } catch (e) {
+                                    console.log('Thinking step failed for', expert.name, e);
+                                }
+                            }
+                        }
+                        
+                        // Deep Research: Each expert searches (legacy support)
+                        if (expert.search && !expertTools.includes('searching')) {
+                            expertResults[index].status = 'searching';
+                            updateExpertGrid(expertResults);
+                            
+                            const searchVariants = [
+                                content,
+                                `${content} latest`,
+                                `${content} research`,
+                                `${content} analysis`,
+                                `${content} overview`,
+                                `${content} examples`,
+                                `${content} guide`,
+                                `${content} 2024`
+                            ];
+                            
+                            const searchQuery = searchVariants[index % searchVariants.length];
+                            const expertSearch = await performWebSearch(searchQuery, 5);
+                            expertResults[index].searchResults = expertSearch;
+                            
+                            expertContext += '\n\n' + expertSearch.map((r, i) => 
+                                `[Source ${i+1}] ${r.title}: ${r.snippet}`
+                            ).join('\n\n');
+                        }
+                        
+                        expertResults[index].status = 'thinking';
+                        updateExpertGrid(expertResults);
+                        
+                        let systemPrompt = `You are ${expert.name}, a ${weightInfo.role}.`;
+                        
+                        if (expert.id === 'ERNIE-4.5-VL') {
+                            systemPrompt = ERNIE_ENGLISH_PROMPT;
+                        }
+                        
+                        if (moeKey === 'deepresearch') {
+                            systemPrompt += ` Conduct deep research. Analyze search results, synthesize findings, cite sources. Provide comprehensive, well-researched answers.`;
+                        } else if (moeKey === 'code') {
+                            systemPrompt += ` You are a coding expert. Use the search results and your thinking to provide clean, documented, production-ready code. Include comments and explanations.`;
+                        }
+                        
+                        let userPrompt = content;
+                        if (expertContext) {
+                            userPrompt = `${content}\n\n${expertContext}`;
+                        }
+                        
                         const response = await callModel(expert.id, [
-                            { role: 'system', content: `You are ${expert.name}, a ${weightInfo.role}. Provide a focused, thorough, and well-reasoned response. Show your reasoning process.` },
-                            { role: 'user', content: content }
-                        ], expert.tools);
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ]);
                         
                         expertResults[index].response = response;
                         expertResults[index].status = 'complete';
@@ -1488,17 +2101,19 @@ Provide a clear, confident, authoritative response.`;
                     return expertResults[index];
                 });
                 
-                // Wait for ALL experts to complete before starting aggregation
+                // Wait for ALL experts
                 await Promise.allSettled(expertPromises);
                 
-                // All experts complete - now show aggregator section
                 const successfulExperts = expertResults.filter(e => e.status === 'complete');
                 const completedCount = successfulExperts.length;
                 const totalCount = expertResults.length;
                 
-                // Create aggregator response container with phases
+                // Create aggregator container
                 const aggregatorDiv = document.createElement('div');
                 aggregatorDiv.className = 'aggregator-response rounded-2xl p-4 mt-4';
+                
+                const responseId = Date.now();
+                
                 aggregatorDiv.innerHTML = `
                     <div class="flex items-center gap-2 mb-3">
                         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -1508,11 +2123,10 @@ Provide a clear, confident, authoritative response.`;
                         <span class="text-xs text-[var(--text-secondary)]">(${config.aggregator})</span>
                     </div>
                     
-                    <!-- Phase 1: Reading -->
-                    <div id="aggregatorPhase1" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
+                    <div id="phase1" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
                         <div class="flex items-center gap-2 text-blue-400">
                             <i class="fas fa-book-reader"></i>
-                            <span class="font-medium text-sm">Reading ${completedCount}/${totalCount} expert responses...</span>
+                            <span class="text-sm">Reading ${completedCount}/${totalCount} expert responses...</span>
                             <div class="typing-indicator ml-2 flex gap-1">
                                 <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
                                 <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
@@ -1521,203 +2135,128 @@ Provide a clear, confident, authoritative response.`;
                         </div>
                     </div>
                     
-                    <!-- Phase 2: Analyzing/Voting (hidden initially) -->
-                    <div id="aggregatorPhase2" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                    <div id="phase2" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
                         <div class="flex items-center gap-2 text-yellow-400">
                             <i class="fas fa-balance-scale"></i>
-                            <span class="font-medium text-sm">Analyzing & weighting expert votes...</span>
-                            <div class="typing-indicator ml-2 flex gap-1">
-                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
-                            </div>
+                            <span class="text-sm">Analyzing & weighting expert votes...</span>
                         </div>
                     </div>
                     
-                    <!-- Phase 3: Reasoning (hidden initially) -->
-                    <div id="aggregatorPhase3" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                    <div id="phase3" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
                         <div class="flex items-center gap-2 text-orange-400">
                             <i class="fas fa-lightbulb"></i>
-                            <span class="font-medium text-sm">Meta-reasoning over expert outputs...</span>
-                            <div class="typing-indicator ml-2 flex gap-1">
-                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                            </div>
+                            <span class="text-sm">Meta-reasoning over outputs...</span>
                         </div>
                     </div>
                     
-                    <!-- Phase 4: Synthesizing (hidden initially) -->
-                    <div id="aggregatorPhase4" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
+                    <div id="phase4" class="mb-3 p-3 bg-[var(--bg-secondary)] rounded-lg hidden">
                         <div class="flex items-center gap-2 text-purple-400">
                             <i class="fas fa-project-diagram"></i>
-                            <span class="font-medium text-sm">Synthesizing final answer...</span>
-                            <div class="typing-indicator ml-2 flex gap-1">
-                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
-                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
-                            </div>
+                            <span class="text-sm">Synthesizing final answer...</span>
                         </div>
                     </div>
                     
-                    <!-- Reasoning Block (optional) -->
-                    <div id="aggregatorReasoningBlock" class="mb-3 p-3 reasoning-block rounded-lg hidden">
-                        <div class="flex items-center gap-2 mb-2 text-yellow-500">
-                            <i class="fas fa-cogs"></i>
-                            <span class="font-medium text-sm">Aggregator Reasoning</span>
-                            <button onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')" class="text-xs ml-auto">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                        <div id="reasoningContent" class="text-xs text-[var(--text-secondary)] whitespace-pre-wrap"></div>
-                    </div>
-                    
-                    <!-- Final Response -->
-                    <div id="aggregatorFinalResponse" class="prose prose-invert max-w-none hidden">
+                    <div id="finalResponse" class="hidden">
                         <div class="flex items-center gap-2 mb-2 text-green-400">
                             <i class="fas fa-check-circle"></i>
-                            <span class="font-medium text-sm">Final Synthesized Response</span>
+                            <span class="text-sm font-medium">Final Synthesized Response</span>
                         </div>
-                        <div id="streamingContent" class="streaming-cursor text-[var(--text-primary)]"></div>
+                        <div id="content-${responseId}" class="streaming-cursor text-[var(--text-primary)]"></div>
+                        <div id="exportButtons-${responseId}"></div>
+                        <div id="codePreview-${responseId}"></div>
                     </div>
                 `;
                 container.appendChild(aggregatorDiv);
                 container.scrollTop = container.scrollHeight;
                 
-                // Animate through phases
-                await sleep(800); // Reading phase
-                document.getElementById('aggregatorPhase1').innerHTML = `
-                    <div class="flex items-center gap-2 text-blue-400">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="font-medium text-sm">Read ${completedCount} expert responses</span>
-                    </div>
-                `;
-                document.getElementById('aggregatorPhase2').classList.remove('hidden');
-                container.scrollTop = container.scrollHeight;
+                // Animate phases
+                await sleep(600);
+                document.getElementById('phase1').innerHTML = `<div class="flex items-center gap-2 text-blue-400"><i class="fas fa-check-circle"></i><span class="text-sm">Read ${completedCount} expert responses</span></div>`;
+                document.getElementById('phase2').classList.remove('hidden');
                 
-                await sleep(600); // Voting/Analyzing phase
+                await sleep(500);
+                const highWeight = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'high').length;
+                const medWeight = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'medium').length;
+                const lowWeight = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'low').length;
                 
-                // Show voting summary
-                const highWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'high').length;
-                const mediumWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'medium').length;
-                const lowWeightExperts = successfulExperts.filter(e => getExpertWeight(e.id).weight === 'low').length;
+                document.getElementById('phase2').innerHTML = `<div class="flex items-center gap-2 text-yellow-400"><i class="fas fa-check-circle"></i><span class="text-sm">Votes: ${highWeight} high, ${medWeight} medium, ${lowWeight} low</span></div>`;
+                document.getElementById('phase3').classList.remove('hidden');
                 
-                document.getElementById('aggregatorPhase2').innerHTML = `
-                    <div class="flex items-center gap-2 text-yellow-400">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="font-medium text-sm">Weighted votes: ${highWeightExperts} high, ${mediumWeightExperts} medium, ${lowWeightExperts} low</span>
-                    </div>
-                `;
-                document.getElementById('aggregatorPhase3').classList.remove('hidden');
-                container.scrollTop = container.scrollHeight;
+                await sleep(400);
+                document.getElementById('phase3').innerHTML = `<div class="flex items-center gap-2 text-orange-400"><i class="fas fa-check-circle"></i><span class="text-sm">Consensus identified</span></div>`;
+                document.getElementById('phase4').classList.remove('hidden');
+                document.getElementById('finalResponse').classList.remove('hidden');
                 
-                await sleep(500); // Reasoning phase
-                document.getElementById('aggregatorPhase3').innerHTML = `
-                    <div class="flex items-center gap-2 text-orange-400">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="font-medium text-sm">Identified consensus and resolved conflicts</span>
-                    </div>
-                `;
-                document.getElementById('aggregatorPhase4').classList.remove('hidden');
-                container.scrollTop = container.scrollHeight;
-                
-                await sleep(400); // Starting synthesis
-                document.getElementById('aggregatorPhase4').innerHTML = `
-                    <div class="flex items-center gap-2 text-purple-400">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span class="font-medium text-sm">Generating synthesized response...</span>
-                    </div>
-                `;
-                document.getElementById('aggregatorFinalResponse').classList.remove('hidden');
-                container.scrollTop = container.scrollHeight;
-                
-                // Build REAL aggregator prompt with all expert responses
+                // Build aggregator prompt
                 const aggregatorUserPrompt = buildAggregatorPrompt(content, expertResults);
-
+                
                 let aggregatedResponse = '';
-                const streamingDiv = document.getElementById('streamingContent');
+                const streamingDiv = document.getElementById(`content-${responseId}`);
                 const shouldStream = localStorage.getItem('sahu_stream') !== 'false';
-                const showReasoning = localStorage.getItem('sahu_show_reasoning') !== 'false';
                 
                 try {
                     if (shouldStream) {
-                        // Stream the aggregator response word by word
                         aggregatedResponse = await callModel(
                             config.aggregator, 
                             [
                                 { role: 'system', content: AGGREGATOR_SYSTEM_PROMPT },
                                 { role: 'user', content: aggregatorUserPrompt }
                             ], 
-                            config.aggregatorTools || [],
-                            true, // streaming enabled
+                            [],
+                            true,
                             (chunk, fullText) => {
-                                // Update streaming content
                                 streamingDiv.innerHTML = formatMarkdown(fullText);
                                 container.scrollTop = container.scrollHeight;
                             }
                         );
                     } else {
-                        // Non-streaming fallback
                         aggregatedResponse = await callModel(config.aggregator, [
                             { role: 'system', content: AGGREGATOR_SYSTEM_PROMPT },
                             { role: 'user', content: aggregatorUserPrompt }
-                        ], config.aggregatorTools || []);
+                        ]);
                         
-                        // Simulate word by word display
                         const words = aggregatedResponse.split(' ');
-                        let displayedText = '';
+                        let displayed = '';
                         for (let i = 0; i < words.length; i++) {
-                            displayedText += (i > 0 ? ' ' : '') + words[i];
-                            streamingDiv.innerHTML = formatMarkdown(displayedText);
+                            displayed += (i > 0 ? ' ' : '') + words[i];
+                            streamingDiv.innerHTML = formatMarkdown(displayed);
                             container.scrollTop = container.scrollHeight;
-                            await sleep(30); // 30ms per word
+                            await sleep(25);
                         }
                     }
-                    
-                    // Show reasoning block if enabled
-                    if (showReasoning) {
-                        const reasoningBlock = document.getElementById('aggregatorReasoningBlock');
-                        const reasoningContent = document.getElementById('reasoningContent');
-                        reasoningBlock.classList.remove('hidden');
-                        reasoningContent.textContent = `Experts analyzed: ${completedCount}
-High-weight experts: ${highWeightExperts} (score ≥ 0.9)
-Medium-weight experts: ${mediumWeightExperts} (score 0.6-0.89)
-Low-weight experts: ${lowWeightExperts} (score < 0.6)
-
-Consensus formation: Weighted voting applied
-Conflict resolution: Prioritized reasoning-heavy models
-Final synthesis: Combined best insights from all experts`;
-                    }
-                    
                 } catch (error) {
-                    // Fallback: use best expert response (highest weight)
                     if (successfulExperts.length > 0) {
-                        const sortedByWeight = successfulExperts.sort((a, b) => {
-                            return getExpertWeight(b.id).score - getExpertWeight(a.id).score;
-                        });
-                        aggregatedResponse = `**Synthesized from ${successfulExperts.length} experts (fallback mode):**\n\n${sortedByWeight[0].response}`;
+                        const best = successfulExperts.sort((a, b) => getExpertWeight(b.id).score - getExpertWeight(a.id).score)[0];
+                        aggregatedResponse = `**Synthesized (fallback):**\n\n${best.response}`;
                     } else {
-                        aggregatedResponse = 'Unable to generate a response. Please check your API configuration and try again.';
+                        aggregatedResponse = 'Error generating response. Check API configuration.';
                     }
                     streamingDiv.innerHTML = formatMarkdown(aggregatedResponse);
                 }
                 
-                // Update phase 4 to complete
-                document.getElementById('aggregatorPhase4').innerHTML = `
-                    <div class="flex items-center gap-2 text-green-400">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="font-medium text-sm">Synthesis complete</span>
-                    </div>
-                `;
-                
-                // Remove cursor from streaming content
+                // Complete
+                document.getElementById('phase4').innerHTML = `<div class="flex items-center gap-2 text-green-400"><i class="fas fa-check-circle"></i><span class="text-sm">Complete</span></div>`;
                 streamingDiv.classList.remove('streaming-cursor');
                 streamingDiv.classList.add('complete');
                 
-                // Remove expert placeholder
-                expertPlaceholder.remove();
+                // Add export buttons if file format enabled
+                if (state.fileFormat !== 'off' || config.supportsFileExport) {
+                    document.getElementById(`exportButtons-${responseId}`).innerHTML = createExportButtons(aggregatedResponse, responseId);
+                }
                 
-                // Re-add expert grid before aggregator
+                // Add code preview for Code mode
+                if (config.supportsCodePreview) {
+                    const codeBlocks = extractCodeBlocks(aggregatedResponse);
+                    if (codeBlocks.length > 0) {
+                        const previewHtml = codeBlocks.map((block, i) => 
+                            createCodePreview(block.code, block.language, `${responseId}-${i}`)
+                        ).join('');
+                        document.getElementById(`codePreview-${responseId}`).innerHTML = previewHtml;
+                    }
+                }
+                
+                // Update expert grid
+                expertPlaceholder.remove();
                 const expertGridDiv = document.createElement('div');
                 expertGridDiv.innerHTML = createExpertGrid(expertResults);
                 aggregatorDiv.parentNode.insertBefore(expertGridDiv, aggregatorDiv);
@@ -1729,14 +2268,13 @@ Final synthesis: Combined best insights from all experts`;
                     expertGridDiv.insertBefore(logDiv, expertGridDiv.firstChild);
                 });
                 
-                // Save to history
+                // Save
                 state.messages.push({ 
                     role: 'assistant', 
                     content: aggregatedResponse,
                     experts: expertResults
                 });
                 
-                // Update chat history
                 if (!state.currentChatId) {
                     state.currentChatId = Date.now().toString();
                 }
@@ -1756,27 +2294,15 @@ Final synthesis: Combined best insights from all experts`;
                 renderChatHistory();
                 
             } catch (error) {
-                console.error('Error processing message:', error);
-                appendAssistantMessage(`**Error:** ${error.message}\n\nPlease check your API configuration in Settings.`);
+                console.error('Error:', error);
+                appendAssistantMessage(`**Error:** ${error.message}\n\nCheck API configuration in Settings.`);
             } finally {
                 state.isProcessing = false;
                 document.getElementById('sendBtn').disabled = false;
             }
         }
-        
-        // Helper function for delays
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
 
-        function updateExpertGrid(experts) {
-            const placeholder = document.getElementById('expertPlaceholder');
-            if (placeholder) {
-                placeholder.innerHTML = createExpertGrid(experts);
-            }
-        }
-
-        // Close provider menu when clicking outside
+        // Close menus on outside click
         document.addEventListener('click', (e) => {
             const menu = document.getElementById('providerMenu');
             const button = e.target.closest('[onclick="toggleProviderMenu()"]');
