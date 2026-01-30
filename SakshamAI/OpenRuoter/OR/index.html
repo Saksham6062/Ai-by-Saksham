@@ -449,13 +449,34 @@
             </div>
 
             <div class="px-4 pb-4">
-                <label class="text-xs text-[var(--text-secondary)] mb-2 block font-medium">Expert Count</label>
-                <select id="expertCountSelector" class="w-full p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors">
-                    <option value="5">5 Experts (Fast)</option>
-                    <option value="10">10 Experts (Balanced)</option>
-                    <option value="15">15 Experts (Thorough)</option>
-                    <option value="22" selected>22 Experts (All Models)</option>
+                <label class="text-xs text-[var(--text-secondary)] mb-2 block font-medium">MoE Mode</label>
+                <select id="moeSelector" class="w-full p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors mb-3">
+                    <option value="preset">Preset Expert Pools</option>
+                    <option value="custom">Custom MoE</option>
                 </select>
+                
+                <div id="presetSelector">
+                    <label class="text-xs text-[var(--text-secondary)] mb-2 block font-medium">Expert Count</label>
+                    <select id="expertCountSelector" class="w-full p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors">
+                        <option value="5">5 Experts (Fast)</option>
+                        <option value="10">10 Experts (Balanced)</option>
+                        <option value="15">15 Experts (Thorough)</option>
+                        <option value="22" selected>22 Experts (All Models)</option>
+                    </select>
+                </div>
+                
+                <div id="customMoeSelector" class="hidden">
+                    <button onclick="openCustomMoeModal()" class="w-full py-3 px-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] hover:border-[var(--accent)] text-sm flex items-center justify-between transition-colors">
+                        <span class="flex items-center gap-2">
+                            <i class="fas fa-sliders text-[var(--accent)]"></i>
+                            Configure Custom MoE
+                        </span>
+                        <i class="fas fa-chevron-right text-[var(--text-secondary)]"></i>
+                    </button>
+                    <div id="customMoeSummary" class="mt-2 text-xs text-[var(--text-secondary)] hidden">
+                        <span id="customExpertCount">0</span> experts selected
+                    </div>
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto scrollbar-thin px-4">
@@ -648,6 +669,90 @@
         </div>
     </div>
 
+    <!-- Custom MoE Modal -->
+    <div id="customMoeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between p-4 md:p-5 border-b border-[var(--border)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-sliders text-[var(--accent)]"></i>
+                    Custom MoE Configuration
+                </h2>
+                <button onclick="closeCustomMoeModal()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-5 space-y-5 overflow-y-auto flex-1">
+                <!-- Aggregator Selection -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <h3 class="font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-[var(--accent)]"></i>
+                        3-Stage Aggregators
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-1-badge mr-2">1st Stage</span>
+                                Initial Synthesis
+                            </label>
+                            <select id="customAggregator1" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-2-badge mr-2">2nd Stage</span>
+                                Deep Reasoning
+                            </label>
+                            <select id="customAggregator2" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-3-badge mr-2">3rd Stage</span>
+                                Final Answer
+                            </label>
+                            <select id="customAggregator3" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Expert Selection -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold flex items-center gap-2">
+                            <i class="fas fa-users text-[var(--accent)]"></i>
+                            Select Experts
+                            <span id="selectedExpertCount" class="text-xs bg-[var(--accent)] text-white px-2 py-1 rounded-full">0 selected</span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="selectAllExperts()" class="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity">
+                                Select All
+                            </button>
+                            <button onclick="deselectAllExperts()" class="text-xs px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="expertCheckboxes">
+                        <!-- Checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 md:p-5 border-t border-[var(--border)] flex justify-between items-center gap-3">
+                <span class="text-xs text-[var(--text-secondary)]">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Select at least 1 expert and all 3 aggregators
+                </span>
+                <div class="flex gap-3">
+                    <button onclick="closeCustomMoeModal()" class="px-4 md:px-5 py-2.5 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-sm">Cancel</button>
+                    <button onclick="saveCustomMoe()" class="px-5 md:px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-medium transition-all hover:shadow-lg text-sm">
+                        <i class="fas fa-save mr-2"></i>Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // SAHU 1 Agents - Configuration
@@ -783,7 +888,16 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
             isProcessing: false,
             theme: 'dark',
             uploadedFile: null,
-            uploadedFileContent: null
+            uploadedFileContent: null,
+            customMoe: {
+                enabled: false,
+                experts: [],
+                aggregators: {
+                    stage1: 'zai-glm',
+                    stage2: 'liquid-lfm-thinking',
+                    stage3: 'nvidia-nemotron-30b'
+                }
+            }
         };
 
         // ==========================================
@@ -794,6 +908,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
             loadChatHistory();
             initTheme();
             updateExpertCount();
+            initMoeSelector();
             
             document.getElementById('expertCountSelector').addEventListener('change', updateExpertCount);
         });
@@ -827,6 +942,147 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
         function updateExpertCount() {
             const count = document.getElementById('expertCountSelector').value;
             document.getElementById('expertCount').textContent = `${count} experts`;
+        }
+
+        // ==========================================
+        // Custom MoE Functions
+        // ==========================================
+        function initMoeSelector() {
+            const moeSelector = document.getElementById('moeSelector');
+            moeSelector.addEventListener('change', () => {
+                const isCustom = moeSelector.value === 'custom';
+                document.getElementById('presetSelector').classList.toggle('hidden', isCustom);
+                document.getElementById('customMoeSelector').classList.toggle('hidden', !isCustom);
+                state.customMoe.enabled = isCustom;
+                
+                if (isCustom && state.customMoe.experts.length > 0) {
+                    document.getElementById('expertCount').textContent = `${state.customMoe.experts.length} experts (custom)`;
+                }
+            });
+            
+            // Load saved custom MoE config
+            const savedConfig = localStorage.getItem('sahu_custom_moe');
+            if (savedConfig) {
+                state.customMoe = JSON.parse(savedConfig);
+                if (state.customMoe.experts.length > 0) {
+                    document.getElementById('customMoeSummary').classList.remove('hidden');
+                    document.getElementById('customExpertCount').textContent = state.customMoe.experts.length;
+                }
+            }
+        }
+
+        function openCustomMoeModal() {
+            const modal = document.getElementById('customMoeModal');
+            modal.classList.remove('hidden');
+            populateCustomMoeModal();
+        }
+
+        function closeCustomMoeModal() {
+            document.getElementById('customMoeModal').classList.add('hidden');
+        }
+
+        function populateCustomMoeModal() {
+            // Populate aggregator dropdowns
+            const modelOptions = Object.entries(MODELS).map(([id, fullId]) => {
+                const info = EXPERT_WEIGHTS[id] || {};
+                const name = id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                return `<option value="${id}">${name} (${info.weight || 'medium'})</option>`;
+            }).join('');
+            
+            document.getElementById('customAggregator1').innerHTML = modelOptions;
+            document.getElementById('customAggregator2').innerHTML = modelOptions;
+            document.getElementById('customAggregator3').innerHTML = modelOptions;
+            
+            // Set saved values
+            document.getElementById('customAggregator1').value = state.customMoe.aggregators.stage1 || 'zai-glm';
+            document.getElementById('customAggregator2').value = state.customMoe.aggregators.stage2 || 'liquid-lfm-thinking';
+            document.getElementById('customAggregator3').value = state.customMoe.aggregators.stage3 || 'nvidia-nemotron-30b';
+            
+            // Populate expert checkboxes
+            const container = document.getElementById('expertCheckboxes');
+            container.innerHTML = Object.entries(MODELS).map(([id, fullId]) => {
+                const info = EXPERT_WEIGHTS[id] || { weight: 'medium', role: 'Expert' };
+                const name = id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const isChecked = state.customMoe.experts.includes(id);
+                const weightClass = `weight-${info.weight}`;
+                
+                return `
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--border)] cursor-pointer transition-colors border border-transparent hover:border-[var(--accent)]">
+                        <input type="checkbox" class="expert-checkbox w-4 h-4 accent-[var(--accent)]" value="${id}" ${isChecked ? 'checked' : ''} onchange="updateSelectedCount()">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium truncate">${name}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full ${weightClass}">${info.weight.toUpperCase()}</span>
+                            </div>
+                            <p class="text-[10px] text-[var(--text-secondary)] truncate">${info.role}</p>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+            
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.expert-checkbox:checked');
+            document.getElementById('selectedExpertCount').textContent = `${checkboxes.length} selected`;
+        }
+
+        function selectAllExperts() {
+            document.querySelectorAll('.expert-checkbox').forEach(cb => cb.checked = true);
+            updateSelectedCount();
+        }
+
+        function deselectAllExperts() {
+            document.querySelectorAll('.expert-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        function saveCustomMoe() {
+            const selectedExperts = Array.from(document.querySelectorAll('.expert-checkbox:checked')).map(cb => cb.value);
+            
+            if (selectedExperts.length === 0) {
+                showToast('Please select at least 1 expert', 'error');
+                return;
+            }
+            
+            state.customMoe = {
+                enabled: true,
+                experts: selectedExperts,
+                aggregators: {
+                    stage1: document.getElementById('customAggregator1').value,
+                    stage2: document.getElementById('customAggregator2').value,
+                    stage3: document.getElementById('customAggregator3').value
+                }
+            };
+            
+            localStorage.setItem('sahu_custom_moe', JSON.stringify(state.customMoe));
+            
+            document.getElementById('customMoeSummary').classList.remove('hidden');
+            document.getElementById('customExpertCount').textContent = selectedExperts.length;
+            document.getElementById('expertCount').textContent = `${selectedExperts.length} experts (custom)`;
+            
+            closeCustomMoeModal();
+            showToast(`Custom MoE saved: ${selectedExperts.length} experts, 3 aggregators`, 'success');
+        }
+        
+        function getActiveAggregators() {
+            if (state.customMoe.enabled) {
+                return state.customMoe.aggregators;
+            }
+            return AGGREGATORS;
+        }
+        
+        function getActiveExperts() {
+            if (state.customMoe.enabled && state.customMoe.experts.length > 0) {
+                return state.customMoe.experts;
+            }
+            const expertCount = parseInt(document.getElementById('expertCountSelector').value);
+            return EXPERT_POOLS[expertCount] || EXPERT_POOLS[22];
+        }
+        
+        function getModelDisplayName(modelId) {
+            return modelId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         }
 
         // ==========================================
@@ -1423,8 +1679,8 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
             const container = document.getElementById('messagesContainer');
             
             try {
-                const expertCount = parseInt(document.getElementById('expertCountSelector').value);
-                const selectedExperts = EXPERT_POOLS[expertCount] || EXPERT_POOLS[33];
+                const selectedExperts = getActiveExperts();
+                const activeAggregators = getActiveAggregators();
                 const showThinking = localStorage.getItem('sahu_show_thinking') !== 'false';
                 
                 // Create expert grid
@@ -1495,7 +1751,9 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                     return `### ${e.name} (Weight: ${info.weight?.toUpperCase() || 'MEDIUM'})\nRole: ${info.role || 'Expert'}\n\n${e.response}`;
                 }).join('\n\n---\n\n');
                 
-                // Stage 1 - GLM-4.5-Air
+                // Stage 1 - Dynamic Aggregator
+                const stage1Model = activeAggregators.stage1;
+                const stage1Name = getModelDisplayName(stage1Model);
                 const stage1Div = document.createElement('div');
                 stage1Div.className = 'aggregator-response aggregator-stage-1 rounded-2xl p-4 md:p-5 mt-4 md:mt-6';
                 stage1Div.innerHTML = `
@@ -1506,7 +1764,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                         <div class="flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-semibold text-sm md:text-base">Stage 1: Initial Synthesis</span>
-                                <span class="stage-badge stage-1-badge">GLM-4.5-Air</span>
+                                <span class="stage-badge stage-1-badge">${stage1Name}</span>
                             </div>
                             <p class="text-xs text-[var(--text-secondary)]">Analyzing ${completedExperts.length} expert responses...</p>
                         </div>
@@ -1531,7 +1789,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                 let stage1Result;
                 try {
                     stage1Result = await callModel(
-                        AGGREGATORS.stage1,
+                        stage1Model,
                         [
                             { role: 'system', content: AGGREGATOR_PROMPTS.stage1 + '\n\nThink step by step before providing your synthesis.' },
                             { role: 'user', content: `User Query:\n${content}\n\n---\n\nExpert Answers:\n${expertAnswers}` }
@@ -1551,7 +1809,9 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                 }
                 document.getElementById('stage1Status').innerHTML = '<i class="fas fa-check-circle text-green-400"></i>';
                 
-                // Stage 2 - LFM-2.5-Thinking
+                // Stage 2 - Dynamic Aggregator
+                const stage2Model = activeAggregators.stage2;
+                const stage2Name = getModelDisplayName(stage2Model);
                 const stage2Div = document.createElement('div');
                 stage2Div.className = 'aggregator-response aggregator-stage-2 rounded-2xl p-4 md:p-5 mt-3 md:mt-4';
                 stage2Div.innerHTML = `
@@ -1562,7 +1822,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                         <div class="flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-semibold text-sm md:text-base">Stage 2: Deep Reasoning</span>
-                                <span class="stage-badge stage-2-badge">LFM-Thinking</span>
+                                <span class="stage-badge stage-2-badge">${stage2Name}</span>
                             </div>
                             <p class="text-xs text-[var(--text-secondary)]">Applying deep reasoning...</p>
                         </div>
@@ -1587,7 +1847,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                 let stage2Result;
                 try {
                     stage2Result = await callModel(
-                        AGGREGATORS.stage2,
+                        stage2Model,
                         [
                             { role: 'system', content: AGGREGATOR_PROMPTS.stage2 + '\n\nThink deeply and show your reasoning process.' },
                             { role: 'user', content: `Stage 1 Synthesis:\n${stage1Result.content}` }
@@ -1607,7 +1867,9 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                 }
                 document.getElementById('stage2Status').innerHTML = '<i class="fas fa-check-circle text-green-400"></i>';
                 
-                // Stage 3 - Final with streaming - Nemotron-30B
+                // Stage 3 - Final with streaming - Dynamic Aggregator
+                const stage3Model = activeAggregators.stage3;
+                const stage3Name = getModelDisplayName(stage3Model);
                 const stage3Div = document.createElement('div');
                 stage3Div.className = 'aggregator-response aggregator-stage-3 rounded-2xl p-4 md:p-5 mt-3 md:mt-4';
                 stage3Div.innerHTML = `
@@ -1618,7 +1880,7 @@ Provide ONLY the final answer. Clean, complete, and ready to use.`
                         <div class="flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-semibold text-sm md:text-base">Stage 3: Final Answer</span>
-                                <span class="stage-badge stage-3-badge">Nemotron-30B</span>
+                                <span class="stage-badge stage-3-badge">${stage3Name}</span>
                             </div>
                             <p class="text-xs text-[var(--text-secondary)]">Generating final response...</p>
                         </div>
