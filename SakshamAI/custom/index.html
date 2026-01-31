@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAHU 1 Agents - AI Multi-Expert System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/docx@8.2.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1e1e1e;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --accent: #8b5cf6;
+            --accent-hover: #a78bfa;
+            --border: #2a2a2a;
+        }
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f8f8;
+            --bg-tertiary: #efefef;
+            --text-primary: #1a1a1a;
+            --text-secondary: #525252;
+            --accent: #7c3aed;
+            --accent-hover: #8b5cf6;
+            --border: #e0e0e0;
+        }
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overscroll-behavior: none;
+        }
+        .sidebar { background-color: var(--bg-secondary); border-color: var(--border); }
+        .message-user { background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%); }
+        .message-assistant { background-color: var(--bg-tertiary); }
+        .input-area { background-color: var(--bg-secondary); border-color: var(--border); }
+        .expert-card {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .expert-card.thinking { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
+        .expert-card.thinking::before {
+            content: '🧠';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 18px;
+            animation: pulse-emoji 1s infinite;
+        }
+        @keyframes pulse-emoji {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .expert-card.complete { border-color: #22c55e; }
+        .expert-card.error { border-color: #ef4444; }
+        .weight-high { background-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .weight-medium { background-color: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .weight-low { background-color: rgba(156, 163, 175, 0.15); color: #9ca3af; }
+        .typing-indicator span { animation: typing 1.4s infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        pre code {
+            display: block;
+            padding: 1rem;
+            background: #0d0d0d;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .aggregator-response {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 2px solid var(--accent);
+        }
+        .aggregator-stage-1 { border-color: #f59e0b; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(245, 158, 11, 0.1) 100%); }
+        .aggregator-stage-2 { border-color: #06b6d4; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(6, 182, 212, 0.1) 100%); }
+        .aggregator-stage-3 { border-color: #22c55e; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(34, 197, 94, 0.1) 100%); }
+        .streaming-cursor::after {
+            content: '▊';
+            animation: blink 0.8s infinite;
+            color: var(--accent);
+            margin-left: 2px;
+        }
+        .streaming-cursor.complete::after { display: none; }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        .thinking-block {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .thinking-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .file-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .file-preview-header {
+            background: var(--bg-tertiary);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .file-preview-tabs { display: flex; gap: 4px; }
+        .file-preview-tab {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        .file-preview-tab.active { background: var(--accent); color: white; }
+        .file-preview-tab:not(.active):hover { background: var(--bg-secondary); }
+        .file-preview-content { padding: 0; }
+        .file-preview-iframe { width: 100%; height: 450px; border: none; background: white; }
+        .file-preview-code { padding: 16px; max-height: 450px; overflow-y: auto; }
+        .copy-btn, .download-btn {
+            background: var(--accent);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+        }
+        .copy-btn:hover, .download-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .download-btn { background: #22c55e; }
+        .download-btn:hover { background: #16a34a; }
+        .export-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+        }
+        .export-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .export-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .export-btn.pdf { color: #ef4444; }
+        .export-btn.docx { color: #3b82f6; }
+        .export-btn.txt { color: #22c55e; }
+        .export-btn.copy { color: var(--accent); }
+        .toast { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stage-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .stage-1-badge { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .stage-2-badge { background: rgba(6, 182, 212, 0.2); color: #06b6d4; }
+        .stage-3-badge { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .file-upload-preview {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .file-upload-preview .file-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .file-upload-preview .file-info { flex: 1; min-width: 0; }
+        .file-upload-preview .file-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-upload-preview .file-size { font-size: 12px; color: var(--text-secondary); }
+        .file-upload-preview .remove-file { padding: 8px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+        .file-upload-preview .remove-file:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .provider-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+        .provider-huggingface { background: rgba(255, 213, 0, 0.2); color: #fbbf24; }
+        .provider-cerebras { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .provider-together { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .provider-groq { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+        .provider-publicai { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+        .provider-sambanova { background: rgba(14, 165, 233, 0.2); color: #0ea5e9; }
+        .provider-fireworks { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .provider-openrouter { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        .moe-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+        .moe-deepthink { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+        .moe-deepresearch { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .moe-code { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .moe-fast { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .moe-chat { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .moe-agent { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 100; width: 85%; max-width: 320px; transition: left 0.3s ease; }
+            .sidebar.open { left: 0; }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+            .sidebar-overlay.show { display: block; }
+            .expert-card { padding: 12px !important; }
+            .file-preview-iframe { height: 300px; }
+            .file-preview-header { flex-direction: column; align-items: flex-start; }
+            .export-buttons { justify-content: center; }
+            .export-btn { flex: 1; min-width: 70px; justify-content: center; padding: 8px 10px; }
+            .input-area { padding: 12px !important; }
+            #userInput { font-size: 16px !important; }
+            .aggregator-response { padding: 16px !important; }
+            .stage-badge { font-size: 9px; padding: 2px 6px; }
+        }
+        @media (max-width: 480px) {
+            .file-preview-tabs { width: 100%; }
+            .file-preview-tab { flex: 1; text-align: center; padding: 8px 10px; }
+            .export-btn span { display: none; }
+            .export-btn i { margin: 0; }
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div id="app" class="flex h-full">
+        <aside id="sidebar" class="sidebar w-72 h-full flex flex-col border-r transition-all duration-300">
+            <div class="p-5 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                        <i class="fas fa-robot text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl gradient-text">SAHU 1 Agents</h1>
+                        <p class="text-xs text-[var(--text-secondary)]">Multi-Expert MoE System</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <button onclick="newChat()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus"></i>
+                    New Chat
+                </button>
+            </div>
+
+            <!-- MoE Mode Selector -->
+            <div class="px-4 pb-2">
+                <label class="text-xs text-[var(--text-secondary)] mb-2 block font-medium">MoE Mode</label>
+                <select id="moeModeSelector" onchange="switchMoeMode()" class="w-full p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)] transition-colors">
+                    <option value="deepthink">🧠 Sahu 1 DeepThink</option>
+                    <option value="deepresearch">🔍 Sahu 1 Deep Research</option>
+                    <option value="code" selected>💻 Sahu 1 Code</option>
+                    <option value="fast">⚡ Sahu 1 Fast</option>
+                    <option value="chat">💬 Sahu 1 Chat</option>
+                    <option value="agent">🤖 Sahu 1 Agent</option>
+                    <option value="custom">⚙️ Custom MoE</option>
+                </select>
+            </div>
+
+            <div class="px-4 pb-4">
+                <div id="presetMoeInfo" class="p-3 bg-[var(--bg-tertiary)] rounded-xl text-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span id="moeIcon" class="text-lg">💻</span>
+                        <span id="moeName" class="font-semibold">Sahu 1 Code</span>
+                    </div>
+                    <p id="moeBehavior" class="text-[var(--text-secondary)]">Think → Search → Think → Plan → Code</p>
+                    <div id="moeTools" class="flex flex-wrap gap-1 mt-2"></div>
+                </div>
+                
+                <div id="customMoeSelector" class="hidden mt-3">
+                    <button onclick="openCustomMoeModal()" class="w-full py-3 px-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] hover:border-[var(--accent)] text-sm flex items-center justify-between transition-colors">
+                        <span class="flex items-center gap-2">
+                            <i class="fas fa-sliders text-[var(--accent)]"></i>
+                            Configure Custom MoE
+                        </span>
+                        <i class="fas fa-chevron-right text-[var(--text-secondary)]"></i>
+                    </button>
+                    <div id="customMoeSummary" class="mt-2 text-xs text-[var(--text-secondary)] hidden">
+                        <span id="customExpertCount">0</span> experts selected
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-4">
+                <p class="text-xs text-[var(--text-secondary)] mb-2 font-medium">Recent Chats</p>
+                <div id="chatHistory" class="space-y-1"></div>
+            </div>
+
+            <div class="p-4 border-t border-[var(--border)] space-y-1">
+                <button onclick="openSettings()" class="w-full py-2.5 px-4 rounded-xl hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors">
+                    <i class="fas fa-cog text-[var(--text-secondary)]"></i>
+                    <span class="text-sm">Settings</span>
+                </button>
+                <button onclick="toggleTheme()" class="w-full py-2.5 px-4 rounded-xl hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors">
+                    <i id="themeIcon" class="fas fa-moon text-[var(--text-secondary)]"></i>
+                    <span class="text-sm" id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full min-w-0">
+            <header class="h-14 md:h-16 border-b border-[var(--border)] flex items-center justify-between px-4 md:px-6 bg-[var(--bg-secondary)]">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span id="headerMoeIcon" class="text-lg">💻</span>
+                        <span id="headerMoeName" class="font-semibold text-sm md:text-base">Sahu 1 Code</span>
+                        <span id="expertCount" class="text-xs bg-[var(--accent)] text-white px-2 py-1 rounded-full font-medium hidden md:inline">10 experts</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 md:gap-3">
+                    <select id="providerSelect" onchange="switchProvider()" class="px-2 md:px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs md:text-sm focus:outline-none focus:border-[var(--accent)]">
+                        <option value="huggingface">HuggingFace</option>
+                        <option value="openrouter">OpenRouter</option>
+                        <option value="groq">Groq</option>
+                        <option value="together">Together AI</option>
+                        <option value="cerebras">Cerebras</option>
+                        <option value="sambanova">SambaNova</option>
+                        <option value="fireworks">Fireworks AI</option>
+                        <option value="publicai">Public AI</option>
+                    </select>
+                    <div id="providerStatus" class="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)]">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-xs md:text-sm hidden md:inline">Ready</span>
+                    </div>
+                </div>
+            </header>
+
+            <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-6">
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center px-4">
+                    <div class="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center mb-6 md:mb-8 shadow-2xl">
+                        <i class="fas fa-robot text-3xl md:text-4xl text-white"></i>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold mb-3 gradient-text text-center">SAHU 1 Agents</h2>
+                    <p class="text-[var(--text-secondary)] mb-4 text-center max-w-lg text-sm md:text-base">
+                        Powered by <strong>8 providers, 100+ models</strong> with extended thinking and <strong>3-stage aggregation</strong>.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2 mb-6 md:mb-8">
+                        <span class="moe-badge moe-deepthink">🧠 DeepThink</span>
+                        <span class="moe-badge moe-deepresearch">🔍 Research</span>
+                        <span class="moe-badge moe-code">💻 Code</span>
+                        <span class="moe-badge moe-fast">⚡ Fast</span>
+                        <span class="moe-badge moe-chat">💬 Chat</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 max-w-2xl w-full">
+                        <button onclick="quickPrompt('Build a modern landing page with hero section, features, and footer')" class="p-4 md:p-5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all hover:scale-[1.02]">
+                            <i class="fas fa-globe text-violet-400 mb-2 md:mb-3 text-lg"></i>
+                            <p class="text-sm font-medium">Landing Page</p>
+                            <p class="text-xs text-[var(--text-secondary)] mt-1">Hero, features, footer</p>
+                        </button>
+                        <button onclick="quickPrompt('Write a comprehensive analysis of machine learning trends in 2024')" class="p-4 md:p-5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all hover:scale-[1.02]">
+                            <i class="fas fa-chart-line text-green-400 mb-2 md:mb-3 text-lg"></i>
+                            <p class="text-sm font-medium">Research Analysis</p>
+                            <p class="text-xs text-[var(--text-secondary)] mt-1">ML trends report</p>
+                        </button>
+                        <button onclick="quickPrompt('Explain quantum computing in simple terms')" class="p-4 md:p-5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all hover:scale-[1.02]">
+                            <i class="fas fa-atom text-yellow-400 mb-2 md:mb-3 text-lg"></i>
+                            <p class="text-sm font-medium">Explanation</p>
+                            <p class="text-xs text-[var(--text-secondary)] mt-1">Quantum computing basics</p>
+                        </button>
+                        <button onclick="quickPrompt('Create a REST API with Express.js and MongoDB')" class="p-4 md:p-5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all hover:scale-[1.02]">
+                            <i class="fab fa-node-js text-emerald-400 mb-2 md:mb-3 text-lg"></i>
+                            <p class="text-sm font-medium">REST API</p>
+                            <p class="text-xs text-[var(--text-secondary)] mt-1">Express + MongoDB</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="messagesContainer" class="hidden space-y-4 md:space-y-6 max-w-5xl mx-auto"></div>
+            </div>
+
+            <div class="p-3 md:p-5 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+                <div class="max-w-4xl mx-auto">
+                    <div id="fileUploadPreview" class="hidden"></div>
+                    <div class="input-area rounded-2xl border p-3 md:p-4 shadow-lg">
+                        <div class="flex items-end gap-2 md:gap-4">
+                            <button onclick="triggerFileUpload()" class="p-2 md:p-3 rounded-xl hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors" title="Upload file">
+                                <i class="fas fa-paperclip text-lg"></i>
+                            </button>
+                            <input type="file" id="fileInput" class="hidden" accept=".txt,.pdf,.doc,.docx,.md,.json,.csv,.js,.py,.html,.css" onchange="handleFileUpload(event)">
+                            <textarea 
+                                id="userInput" 
+                                placeholder="Ask anything - code, text, analysis..." 
+                                class="flex-1 bg-transparent resize-none outline-none max-h-40 text-sm leading-relaxed"
+                                rows="1"
+                                onkeydown="handleKeyDown(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                            <button onclick="sendMessage()" id="sendBtn" class="p-2 md:p-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-[var(--text-secondary)] mt-2 md:mt-3">
+                        8 Providers: HuggingFace • OpenRouter • Groq • Together AI • Cerebras • SambaNova • Fireworks • Public AI
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between p-4 md:p-5 border-b border-[var(--border)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-cog text-[var(--accent)]"></i>
+                    Settings
+                </h2>
+                <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-5 space-y-4 md:space-y-5 overflow-y-auto flex-1">
+                <!-- HuggingFace -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                            <i class="fas fa-face-smile text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">HuggingFace</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Router API</p>
+                        </div>
+                    </div>
+                    <input type="password" id="huggingfaceKey" placeholder="Your HuggingFace API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://huggingface.co/settings/tokens" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- OpenRouter -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <i class="fas fa-route text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">OpenRouter</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Free models gateway</p>
+                        </div>
+                    </div>
+                    <input type="password" id="openrouterKey" placeholder="Your OpenRouter API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://openrouter.ai/keys" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- Groq -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                            <i class="fas fa-bolt text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Groq</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">LPU inference engine</p>
+                        </div>
+                    </div>
+                    <input type="password" id="groqKey" placeholder="Your Groq API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://groq.com" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- Together AI -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
+                            <i class="fas fa-cubes text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Together AI</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Open-source models</p>
+                        </div>
+                    </div>
+                    <input type="password" id="togetherKey" placeholder="Your Together AI API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://together.ai" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- Cerebras -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                            <i class="fas fa-microchip text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Cerebras</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Wafer-scale AI</p>
+                        </div>
+                    </div>
+                    <input type="password" id="cerebrasKey" placeholder="Your Cerebras API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://cerebras.ai" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- SambaNova -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-server text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">SambaNova</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Reconfigurable dataflow</p>
+                        </div>
+                    </div>
+                    <input type="password" id="sambanovaKey" placeholder="Your SambaNova API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://sambanova.ai" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- Fireworks AI -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                            <i class="fas fa-fire text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Fireworks AI</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Fast inference</p>
+                        </div>
+                    </div>
+                    <input type="password" id="fireworksKey" placeholder="Your Fireworks AI API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://fireworks.ai" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <!-- Public AI -->
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                            <i class="fas fa-globe text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Public AI</h3>
+                            <p class="text-xs text-[var(--text-secondary)]">Community models</p>
+                        </div>
+                    </div>
+                    <input type="password" id="publicaiKey" placeholder="Your Public AI API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none transition-colors mb-2">
+                    <a href="https://publicai.io" target="_blank" class="text-xs text-[var(--accent)] hover:underline">Get API key →</a>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-brain text-yellow-400"></i>
+                        <div>
+                            <span class="text-sm font-medium">Show Thinking</span>
+                            <p class="text-xs text-[var(--text-secondary)]">Display expert reasoning</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="showThinking" checked class="w-5 h-5 accent-[var(--accent)]">
+                </div>
+            </div>
+            <div class="p-4 md:p-5 border-t border-[var(--border)] flex justify-end gap-3">
+                <button onclick="closeSettings()" class="px-4 md:px-5 py-2.5 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-sm">Cancel</button>
+                <button onclick="saveSettings()" class="px-5 md:px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-medium transition-all hover:shadow-lg text-sm">
+                    <i class="fas fa-save mr-2"></i>Save All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom MoE Modal -->
+    <div id="customMoeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between p-4 md:p-5 border-b border-[var(--border)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-sliders text-[var(--accent)]"></i>
+                    Custom MoE Configuration
+                </h2>
+                <button onclick="closeCustomMoeModal()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-5 space-y-5 overflow-y-auto flex-1">
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <h3 class="font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-[var(--accent)]"></i>
+                        3-Stage Aggregators
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-1-badge mr-2">1st Stage</span>
+                                Initial Synthesis
+                            </label>
+                            <select id="customAggregator1" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]"></select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-2-badge mr-2">2nd Stage</span>
+                                Deep Reasoning
+                            </label>
+                            <select id="customAggregator2" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]"></select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-[var(--text-secondary)] mb-2 block">
+                                <span class="stage-badge stage-3-badge mr-2">3rd Stage</span>
+                                Final Answer
+                            </label>
+                            <select id="customAggregator3" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--accent)]"></select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold flex items-center gap-2">
+                            <i class="fas fa-users text-[var(--accent)]"></i>
+                            Select Experts
+                            <span id="selectedExpertCount" class="text-xs bg-[var(--accent)] text-white px-2 py-1 rounded-full">0 selected</span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="selectAllExperts()" class="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity">Select All</button>
+                            <button onclick="deselectAllExperts()" class="text-xs px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">Clear All</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="expertCheckboxes"></div>
+                </div>
+            </div>
+            <div class="p-4 md:p-5 border-t border-[var(--border)] flex justify-between items-center gap-3">
+                <span class="text-xs text-[var(--text-secondary)]">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Select at least 1 expert and all 3 aggregators
+                </span>
+                <div class="flex gap-3">
+                    <button onclick="closeCustomMoeModal()" class="px-4 md:px-5 py-2.5 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-sm">Cancel</button>
+                    <button onclick="saveCustomMoe()" class="px-5 md:px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-medium transition-all hover:shadow-lg text-sm">
+                        <i class="fas fa-save mr-2"></i>Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SAHU 1 Agents - HuggingFace MoE System
+        // Complete Model Configuration
+        // ==========================================
+
+        // Model IDs for HuggingFace
+        const MODEL_IDS = {
+            'GLM-4.7': 'zai-org/GLM-4.7',
+            'GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
+            'ERNIE-4.5-VL': 'baidu/ERNIE-4.5-VL-424B-A47B-Base-PT',
+            'DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
+            'DeepSeek-V3.2-Exp': 'deepseek-ai/DeepSeek-V3.2-Exp',
+            'DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
+            'DeepSeek-R1-Distill': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'Qwen3-Coder': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+            'Qwen3-Thinking': 'Qwen/Qwen3-235B-A22B-Thinking-2507',
+            'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.3',
+            'Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
+            'Kimi-K2': 'moonshotai/Kimi-K2-Instruct',
+            'Kimi-K2.5': 'moonshotai/Kimi-K2.5',
+            'gpt-oss-120b': 'openai/gpt-oss-120b',
+            'gpt-oss-20b': 'openai/gpt-oss-20b',
+            'MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
+            'MiniMax-M2.1': 'MiniMaxAI/MiniMax-M2.1',
+            'Olmo-3.1-Instruct': 'allenai/Olmo-3.1-32B-Instruct',
+            'Olmo-3.1-Think': 'allenai/Olmo-3.1-32B-Think',
+            'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct',
+            'NextCoder-32B': 'microsoft/NextCoder-32B',
+            'KAT-Dev': 'Kwaipilot/KAT-Dev'
+        };
+
+        // Expert weights and roles
+        const EXPERT_WEIGHTS = {
+            'DeepSeek-R1': { weight: 'high', score: 1.0, role: 'Deep Reasoning Expert' },
+            'Qwen3-Thinking': { weight: 'high', score: 1.0, role: 'Advanced Thinking Expert' },
+            'Kimi-K2-Thinking': { weight: 'high', score: 0.95, role: 'Reasoning Specialist' },
+            'Kimi-K2.5': { weight: 'high', score: 0.95, role: 'Advanced Analysis Expert', tools: ['thinking'] },
+            'Olmo-3.1-Think': { weight: 'high', score: 0.9, role: 'Thinking Model' },
+            'ERNIE-4.5-VL': { weight: 'high', score: 0.9, role: 'Vision-Language Expert' },
+            'gpt-oss-120b': { weight: 'high', score: 0.95, role: 'Large-Scale Expert' },
+            'DeepSeek-V3.2': { weight: 'medium', score: 0.8, role: 'General Expert' },
+            'DeepSeek-V3.2-Exp': { weight: 'high', score: 0.9, role: 'Experimental Code Expert' },
+            'GLM-4.7': { weight: 'high', score: 0.9, role: 'Balanced Expert' },
+            'Kimi-K2': { weight: 'medium', score: 0.75, role: 'General Assistant' },
+            'gpt-oss-20b': { weight: 'medium', score: 0.75, role: 'Efficient Expert' },
+            'Qwen3-Coder': { weight: 'high', score: 0.9, role: 'Code Specialist' },
+            'NextCoder-32B': { weight: 'high', score: 0.85, role: 'Next-Gen Code Expert' },
+            'KAT-Dev': { weight: 'medium', score: 0.8, role: 'KAT Development Expert' },
+            'Olmo-3.1-Instruct': { weight: 'medium', score: 0.7, role: 'Instruction Expert' },
+            'MiniMax-M2.1': { weight: 'medium', score: 0.7, role: 'Multi-Modal Expert' },
+            'Llama-3.3-70B': { weight: 'medium', score: 0.75, role: 'Open Source Expert' },
+            'GLM-4.7-Flash': { weight: 'low', score: 0.5, role: 'Fast Responder' },
+            'DeepSeek-R1-Distill': { weight: 'low', score: 0.5, role: 'Distilled Model' },
+            'MiMo-V2-Flash': { weight: 'low', score: 0.5, role: 'Quick Assistant' },
+            'Mistral-7B': { weight: 'low', score: 0.4, role: 'Lightweight Model' },
+            // Cerebras models
+            'qwen-3-32b': { weight: 'high', score: 0.9, role: 'Qwen Reasoning Expert' },
+            'qwen-3-235b': { weight: 'high', score: 1.0, role: 'Qwen Large Scale Expert' },
+            'llama-3.1-8b': { weight: 'medium', score: 0.7, role: 'Llama Fast Expert' },
+            'zai-glm-4.7': { weight: 'high', score: 0.9, role: 'GLM Expert' },
+            // OpenRouter models
+            'trinity-large': { weight: 'high', score: 0.9, role: 'Trinity Expert' },
+            'solar-pro-3': { weight: 'high', score: 0.85, role: 'Upstage Expert' },
+            'lfm-thinking': { weight: 'medium', score: 0.75, role: 'Thinking Expert' },
+            'lfm-instruct': { weight: 'medium', score: 0.7, role: 'Liquid Expert' },
+            'molmo-2-8b': { weight: 'medium', score: 0.75, role: 'Allen AI Expert' },
+            'nemotron-30b': { weight: 'high', score: 0.85, role: 'NVIDIA Expert' },
+            'trinity-mini': { weight: 'low', score: 0.5, role: 'Fast Expert' },
+            'tng-r1t-chimera': { weight: 'high', score: 0.9, role: 'Chimera Expert' },
+            'nemotron-12b-vl': { weight: 'medium', score: 0.75, role: 'Vision Expert' },
+            'qwen3-next-80b': { weight: 'high', score: 0.95, role: 'Qwen Expert' },
+            'nemotron-9b': { weight: 'medium', score: 0.7, role: 'NVIDIA Fast' },
+            'glm-4.5-air': { weight: 'high', score: 0.85, role: 'GLM Expert' },
+            'qwen3-coder': { weight: 'high', score: 0.9, role: 'Code Expert' },
+            'deepseek-r1t2-chimera': { weight: 'high', score: 0.9, role: 'Reasoning Chimera' },
+            'deepseek-r1': { weight: 'high', score: 1.0, role: 'Deep Reasoning' },
+            'qwen3-4b': { weight: 'low', score: 0.5, role: 'Fast Qwen' },
+            'deepseek-r1t-chimera': { weight: 'high', score: 0.9, role: 'Chimera Reasoning' },
+            'mistral-small': { weight: 'medium', score: 0.75, role: 'Mistral Expert' },
+            'qwen-2.5-vl': { weight: 'medium', score: 0.75, role: 'Vision Expert' },
+            'hermes-3-405b': { weight: 'high', score: 1.0, role: 'Giant Expert' },
+            'llama-3.1-405b': { weight: 'high', score: 1.0, role: 'Llama Giant' },
+            'nova-2-lite': { weight: 'medium', score: 0.7, role: 'Amazon Expert' },
+            // Groq models
+            'kimi-k2-instruct': { weight: 'high', score: 0.9, role: 'Moonshot Expert' },
+            'kimi-k2-instruct-0905': { weight: 'high', score: 0.9, role: 'Moonshot Expert' },
+            'groq-compound': { weight: 'medium', score: 0.8, role: 'Compound Expert' },
+            'llama-4-maverick': { weight: 'high', score: 0.9, role: 'Maverick Expert' },
+            'llama-4-scout': { weight: 'high', score: 0.85, role: 'Scout Expert' },
+            // Together AI models
+            'glm-4.7': { weight: 'high', score: 0.9, role: 'GLM Expert' },
+            'ministral-14b': { weight: 'medium', score: 0.75, role: 'Ministral Expert' },
+            'cogito-671b': { weight: 'high', score: 1.0, role: 'Cogito Giant' },
+            'cogito-405b': { weight: 'high', score: 0.95, role: 'Cogito Expert' },
+            'cogito-109b': { weight: 'high', score: 0.9, role: 'Cogito MoE' },
+            'gemma-3n': { weight: 'medium', score: 0.75, role: 'Gemma Expert' },
+            // SambaNova models
+            'allam-7b': { weight: 'medium', score: 0.7, role: 'ALLaM Expert' },
+            'deepseek-r1-distill-70b': { weight: 'high', score: 0.85, role: 'Distill Expert' },
+            'deepseek-v3.1': { weight: 'high', score: 0.9, role: 'DeepSeek Expert' },
+            'deepseek-v3.1-terminus': { weight: 'high', score: 0.9, role: 'Terminus Expert' },
+            'deepseek-v3.2': { weight: 'high', score: 0.9, role: 'DeepSeek Expert' },
+            'llama-swallow-70b': { weight: 'high', score: 0.85, role: 'Swallow Expert' },
+            'qwen3-235b': { weight: 'high', score: 1.0, role: 'Qwen Giant' },
+            'qwen3-32b': { weight: 'high', score: 0.9, role: 'Qwen Expert' },
+            // Fireworks models
+            'kimi-k2p5': { weight: 'high', score: 0.95, role: 'Kimi K2.5 Expert' },
+            'minimax-m2p1': { weight: 'high', score: 0.9, role: 'MiniMax Expert' },
+            'glm-4p7': { weight: 'high', score: 0.9, role: 'GLM Expert' },
+            'deepseek-v3p2': { weight: 'high', score: 0.9, role: 'DeepSeek Expert' },
+            'qwen3-vl-235b-thinking': { weight: 'high', score: 1.0, role: 'Qwen VL Thinking' },
+            'deepseek-r1-0528': { weight: 'high', score: 1.0, role: 'DeepSeek R1' },
+            'qwen3-235b-thinking': { weight: 'high', score: 1.0, role: 'Qwen Thinking' },
+            'deepseek-v3p1': { weight: 'high', score: 0.85, role: 'DeepSeek V3.1' },
+            'glm-4p6': { weight: 'high', score: 0.85, role: 'GLM 4.6' },
+            'minimax-m2': { weight: 'high', score: 0.85, role: 'MiniMax M2' },
+            'qwen3-coder-480b': { weight: 'high', score: 1.0, role: 'Qwen Coder Giant' },
+            // Public AI models
+            'llama-3.2-3b': { weight: 'medium', score: 0.65, role: 'Llama Fast' },
+            'cohere-embed': { weight: 'medium', score: 0.7, role: 'Embed Expert' },
+            'cohere-rerank': { weight: 'medium', score: 0.7, role: 'Rerank Expert' },
+            'dictalm-24b': { weight: 'high', score: 0.85, role: 'Thinking Expert' },
+            'olmo-3.1-32b': { weight: 'high', score: 0.85, role: 'Olmo Expert' },
+            'olmo-3-7b': { weight: 'medium', score: 0.7, role: 'Olmo Fast' },
+            'mistral-small-3-1': { weight: 'medium', score: 0.75, role: 'Mistral Expert' },
+            'gemma-sea-lion-27b': { weight: 'high', score: 0.8, role: 'SEA-LION Expert' },
+            'qwen-sea-lion-32b': { weight: 'high', score: 0.85, role: 'Qwen SEA-LION' },
+            'apertus-70b': { weight: 'high', score: 0.9, role: 'Swiss AI Expert' },
+            'apertus-8b': { weight: 'medium', score: 0.7, role: 'Swiss AI Fast' }
+        };
+
+        // MoE Configurations
+        const MOE_CONFIGS = {
+            deepthink: {
+                name: 'Sahu 1 DeepThink',
+                icon: '🧠',
+                toolFlow: ['thinking'],
+                supportsFileExport: true,
+                experts: [
+                    { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'Qwen3-Thinking', name: 'Qwen3 Thinking' },
+                    { id: 'GLM-4.7', name: 'GLM 4.7' },
+                    { id: 'Olmo-3.1-Think', name: 'Olmo Think' },
+                    { id: 'ERNIE-4.5-VL', name: 'ERNIE 4.5 VL' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' }
+                ],
+                aggregator: 'Qwen3-Thinking',
+                behavior: 'Extended reasoning with deep thought chains'
+            },
+            deepresearch: {
+                name: 'Sahu 1 Deep Research',
+                icon: '🔍',
+                toolFlow: ['searching', 'thinking'],
+                supportsFileExport: true,
+                experts: [
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B', search: true },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', search: true },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking', search: true },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', search: true },
+                    { id: 'GLM-4.7', name: 'GLM 4.7', search: true },
+                    { id: 'Olmo-3.1-Think', name: 'Olmo Think', search: true },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1', search: true },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo V2 Flash', search: true }
+                ],
+                aggregator: 'Kimi-K2.5',
+                aggregatorTools: ['thinking', 'searching'],
+                behavior: 'Deep search → Think → Answer'
+            },
+            code: {
+                name: 'Sahu 1 Code',
+                icon: '💻',
+                toolFlow: ['thinking', 'searching', 'thinking', 'planning'],
+                supportsCodePreview: true,
+                forceTools: true,
+                experts: [
+                    { id: 'gpt-oss-120b', name: 'GPT-OSS 120B', tools: ['thinking', 'searching'] },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2', tools: ['thinking', 'searching'] },
+                    { id: 'Kimi-K2-Thinking', name: 'Kimi K2 Thinking', tools: ['thinking'] },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5', tools: ['thinking', 'searching'] },
+                    { id: 'Qwen3-Coder', name: 'Qwen3 Coder', tools: ['thinking', 'searching'] },
+                    { id: 'DeepSeek-V3.2-Exp', name: 'DeepSeek V3.2 Exp', tools: ['thinking', 'searching'] },
+                    { id: 'GLM-4.7', name: 'GLM 4.7', tools: ['thinking', 'searching'] },
+                    { id: 'NextCoder-32B', name: 'NextCoder 32B', tools: ['thinking', 'searching'] },
+                    { id: 'KAT-Dev', name: 'KAT-Dev', tools: ['thinking', 'searching'] },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1', tools: ['thinking'] }
+                ],
+                aggregator: 'GLM-4.7',
+                behavior: 'Think → Search → Think → Plan → Code'
+            },
+            fast: {
+                name: 'Sahu 1 Fast',
+                icon: '⚡',
+                toolFlow: [],
+                experts: [
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'GLM-4.7-Flash', name: 'GLM Flash' },
+                    { id: 'Llama-3.3-70B', name: 'Llama 3.3' },
+                    { id: 'DeepSeek-R1-Distill', name: 'DeepSeek Distill' },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo Flash' }
+                ],
+                aggregator: 'MiMo-V2-Flash',
+                behavior: 'Quick responses, no tools'
+            },
+            chat: {
+                name: 'Sahu 1 Chat',
+                icon: '💬',
+                toolFlow: [],
+                experts: [
+                    { id: 'gpt-oss-20b', name: 'GPT-OSS 20B' },
+                    { id: 'DeepSeek-V3.2', name: 'DeepSeek V3.2' },
+                    { id: 'Kimi-K2.5', name: 'Kimi K2.5' },
+                    { id: 'GLM-4.7', name: 'GLM 4.7' },
+                    { id: 'Olmo-3.1-Instruct', name: 'Olmo Instruct' },
+                    { id: 'MiniMax-M2.1', name: 'MiniMax M2.1' },
+                    { id: 'MiMo-V2-Flash', name: 'MiMo Flash' }
+                ],
+                aggregator: 'gpt-oss-20b',
+                behavior: 'Balanced conversational responses'
+            },
+            agent: {
+                name: 'Sahu 1 Agent',
+                icon: '🤖',
+                experts: [],
+                aggregator: null,
+                behavior: 'Auto-routes to optimal MoE based on task'
+            }
+        };
+
+        // ==========================================
+        // PROVIDER-SPECIFIC MODELS (NOT MERGED)
+        // ==========================================
+        
+        // HuggingFace Models
+        const HUGGINGFACE_MODELS = {
+            'GLM-4.7': 'zai-org/GLM-4.7',
+            'GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
+            'ERNIE-4.5-VL': 'baidu/ERNIE-4.5-VL-424B-A47B-Base-PT',
+            'DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
+            'DeepSeek-V3.2-Exp': 'deepseek-ai/DeepSeek-V3.2-Exp',
+            'DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
+            'DeepSeek-R1-Distill': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'Qwen3-Coder': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+            'Qwen3-Thinking': 'Qwen/Qwen3-235B-A22B-Thinking-2507',
+            'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.3',
+            'Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
+            'Kimi-K2': 'moonshotai/Kimi-K2-Instruct',
+            'Kimi-K2.5': 'moonshotai/Kimi-K2.5',
+            'gpt-oss-120b': 'openai/gpt-oss-120b',
+            'gpt-oss-20b': 'openai/gpt-oss-20b',
+            'MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
+            'MiniMax-M2.1': 'MiniMaxAI/MiniMax-M2.1',
+            'Olmo-3.1-Instruct': 'allenai/Olmo-3.1-32B-Instruct',
+            'Olmo-3.1-Think': 'allenai/Olmo-3.1-32B-Think',
+            'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct',
+            'NextCoder-32B': 'microsoft/NextCoder-32B',
+            'KAT-Dev': 'Kwaipilot/KAT-Dev'
+        };
+
+        // OpenRouter Models (FREE - exact IDs)
+        const OPENROUTER_MODELS = {
+            'trinity-large': 'arcee-ai/trinity-large-preview:free',
+            'solar-pro-3': 'upstage/solar-pro-3:free',
+            'lfm-thinking': 'liquid/lfm-2.5-1.2b-thinking:free',
+            'lfm-instruct': 'liquid/lfm-2.5-1.2b-instruct:free',
+            'molmo-2-8b': 'allenai/molmo-2-8b:free',
+            'nemotron-30b': 'nvidia/nemotron-3-nano-30b-a3b:free',
+            'trinity-mini': 'arcee-ai/trinity-mini:free',
+            'tng-r1t-chimera': 'tngtech/tng-r1t-chimera:free',
+            'nemotron-12b-vl': 'nvidia/nemotron-nano-12b-v2-vl:free',
+            'qwen3-next-80b': 'qwen/qwen3-next-80b-a3b-instruct:free',
+            'nemotron-9b': 'nvidia/nemotron-nano-9b-v2:free',
+            'glm-4.5-air': 'z-ai/glm-4.5-air:free',
+            'qwen3-coder': 'qwen/qwen3-coder:free',
+            'deepseek-r1t2-chimera': 'tngtech/deepseek-r1t2-chimera:free',
+            'deepseek-r1': 'deepseek/deepseek-r1-0528:free',
+            'qwen3-4b': 'qwen/qwen3-4b:free',
+            'deepseek-r1t-chimera': 'tngtech/deepseek-r1t-chimera:free',
+            'mistral-small': 'mistralai/mistral-small-3.1-24b-instruct:free',
+            'qwen-2.5-vl': 'qwen/qwen-2.5-vl-7b-instruct:free',
+            'hermes-3-405b': 'nousresearch/hermes-3-llama-3.1-405b:free',
+            'llama-3.1-405b': 'meta-llama/llama-3.1-405b-instruct:free',
+            'nova-2-lite': 'amazon/nova-2-lite-v1'
+        };
+
+        // Groq Models (exact IDs)
+        const GROQ_MODELS = {
+            'gpt-oss-120b': 'openai/gpt-oss-120b',
+            'gpt-oss-20b': 'openai/gpt-oss-20b',
+            'qwen3-32b': 'qwen/qwen3-32b',
+            'llama-3.1-8b': 'llama-3.1-8b-instant',
+            'llama-3.3-70b': 'llama-3.3-70b-versatile',
+            'llama-4-maverick': 'meta-llama/llama-4-maverick-17b-128e-instruct',
+            'llama-4-scout': 'meta-llama/llama-4-scout-17b-16e-instruct',
+            'kimi-k2-instruct': 'moonshotai/kimi-k2-instruct',
+            'kimi-k2-instruct-0905': 'moonshotai/kimi-k2-instruct-0905',
+            'groq-compound': 'groq/compound'
+        };
+
+        // Together AI Models (exact IDs)
+        const TOGETHER_MODELS = {
+            'glm-4.7': 'zai-org/GLM-4.7',
+            'llama-4-maverick': 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
+            'deepseek-r1': 'deepseek-ai/DeepSeek-R1-0528-tput',
+            'ministral-14b': 'mistralai/Ministral-3-14B-Instruct-2512',
+            'trinity-mini': 'arcee-ai/trinity-mini',
+            'cogito-671b': 'deepcogito/cogito-v2-1-671b',
+            'glm-4.5-air': 'zai-org/GLM-4.5-Air-FP8',
+            'qwen3-next-80b': 'Qwen/Qwen3-Next-80B-A3B-Thinking',
+            'gemma-3n': 'google/gemma-3n-E4B-it',
+            'nemotron-9b': 'nvidia/NVIDIA-Nemotron-Nano-9B-v2',
+            'llama-4-scout': 'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+            'cogito-405b': 'deepcogito/cogito-v2-preview-llama-405B',
+            'cogito-109b': 'deepcogito/cogito-v2-preview-llama-109B-MoE'
+        };
+
+        // Cerebras Models (exact IDs)
+        const CEREBRAS_MODELS = {
+            'qwen-3-32b': 'qwen-3-32b',
+            'qwen-3-235b': 'qwen-3-235b-a22b-instruct-2507',
+            'gpt-oss-120b': 'gpt-oss-120b',
+            'llama-3.3-70b': 'llama-3.3-70b',
+            'llama-3.1-8b': 'llama3.1-8b',
+            'zai-glm-4.7': 'zai-glm-4.7'
+        };
+
+        // SambaNova Models (exact IDs)
+        const SAMBANOVA_MODELS = {
+            'allam-7b': 'ALLaM-7B-Instruct-preview',
+            'deepseek-r1': 'DeepSeek-R1-0528',
+            'deepseek-r1-distill-70b': 'DeepSeek-R1-Distill-Llama-70B',
+            'deepseek-v3.1': 'DeepSeek-V3.1',
+            'deepseek-v3.1-terminus': 'DeepSeek-V3.1-Terminus',
+            'deepseek-v3.2': 'DeepSeek-V3.2',
+            'llama-swallow-70b': 'Llama-3.3-Swallow-70B-Instruct-v0.4',
+            'llama-4-maverick': 'Llama-4-Maverick-17B-128E-Instruct',
+            'llama-3.1-8b': 'Meta-Llama-3.1-8B-Instruct',
+            'llama-3.3-70b': 'Meta-Llama-3.3-70B-Instruct',
+            'gpt-oss-120b': 'gpt-oss-120b',
+            'qwen3-235b': 'Qwen3-235B',
+            'qwen3-32b': 'Qwen3-32B'
+        };
+
+        // Fireworks AI Models (exact IDs)
+        const FIREWORKS_MODELS = {
+            'kimi-k2p5': 'accounts/fireworks/models/kimi-k2p5',
+            'minimax-m2p1': 'accounts/fireworks/models/minimax-m2p1',
+            'glm-4p7': 'accounts/fireworks/models/glm-4p7',
+            'deepseek-v3p2': 'accounts/fireworks/models/deepseek-v3p2',
+            'qwen3-vl-235b-thinking': 'accounts/fireworks/models/qwen3-vl-235b-a22b-thinking',
+            'deepseek-r1-0528': 'accounts/fireworks/models/deepseek-r1-0528',
+            'qwen3-235b-thinking': 'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507',
+            'deepseek-v3p1': 'accounts/fireworks/models/deepseek-v3p1',
+            'glm-4p6': 'accounts/fireworks/models/glm-4p6',
+            'minimax-m2': 'accounts/fireworks/models/minimax-m2',
+            'qwen3-coder-480b': 'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct'
+        };
+
+        // Public AI Models (exact IDs)
+        const PUBLICAI_MODELS = {
+            'llama-3.2-3b': 'meta-llama/Llama-3.2-3B-Instruct',
+            'cohere-embed': 'Cohere/Cohere-embed-multilingual-v3.0',
+            'cohere-rerank': 'Cohere/rerank-v3.5',
+            'dictalm-24b': 'dicta-il/DictaLM-3.0-24B-Thinking',
+            'molmo-2-8b': 'allenai/Molmo2-8B',
+            'olmo-3.1-32b': 'allenai/Olmo-3.1-32B-Instruct',
+            'olmo-3-7b': 'allenai/Olmo-3-7B-Instruct',
+            'mistral-small-3-1': 'mistralai/mistral-small-3-1',
+            'gemma-sea-lion-27b': 'aisingapore/Gemma-SEA-LION-v4-27B-IT',
+            'qwen-sea-lion-32b': 'aisingapore/Qwen-SEA-LION-v4-32B-IT',
+            'apertus-70b': 'swiss-ai/apertus-70b-instruct',
+            'apertus-8b': 'swiss-ai/apertus-8b-instruct'
+        };
+
+        // Provider configurations with SEPARATE models
+        const PROVIDERS = {
+            huggingface: {
+                name: 'HuggingFace',
+                endpoint: 'https://router.huggingface.co/v1/chat/completions',
+                keyName: 'sahu_huggingface_key',
+                models: HUGGINGFACE_MODELS,
+                aggregators: { stage1: 'Qwen3-Thinking', stage2: 'DeepSeek-R1', stage3: 'GLM-4.7' }
+            },
+            openrouter: {
+                name: 'OpenRouter',
+                endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+                keyName: 'sahu_openrouter_key',
+                models: OPENROUTER_MODELS,
+                aggregators: { stage1: 'hermes-3-405b', stage2: 'deepseek-r1', stage3: 'qwen3-next-80b' }
+            },
+            groq: {
+                name: 'Groq',
+                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+                keyName: 'sahu_groq_key',
+                models: GROQ_MODELS,
+                aggregators: { stage1: 'kimi-k2-instruct', stage2: 'gpt-oss-120b', stage3: 'llama-4-maverick' }
+            },
+            together: {
+                name: 'Together AI',
+                endpoint: 'https://api.together.xyz/v1/chat/completions',
+                keyName: 'sahu_together_key',
+                models: TOGETHER_MODELS,
+                aggregators: { stage1: 'glm-4.7', stage2: 'cogito-671b', stage3: 'deepseek-r1' }
+            },
+            cerebras: {
+                name: 'Cerebras',
+                endpoint: 'https://api.cerebras.ai/v1/chat/completions',
+                keyName: 'sahu_cerebras_key',
+                models: CEREBRAS_MODELS,
+                aggregators: { stage1: 'qwen-3-235b', stage2: 'gpt-oss-120b', stage3: 'zai-glm-4.7' }
+            },
+            sambanova: {
+                name: 'SambaNova',
+                endpoint: 'https://api.sambanova.ai/v1/chat/completions',
+                keyName: 'sahu_sambanova_key',
+                models: SAMBANOVA_MODELS,
+                aggregators: { stage1: 'deepseek-v3.2', stage2: 'qwen3-235b', stage3: 'gpt-oss-120b' }
+            },
+            fireworks: {
+                name: 'Fireworks AI',
+                endpoint: 'https://api.fireworks.ai/inference/v1/chat/completions',
+                keyName: 'sahu_fireworks_key',
+                models: FIREWORKS_MODELS,
+                aggregators: { stage1: 'minimax-m2p1', stage2: 'glm-4p7', stage3: 'kimi-k2p5' }
+            },
+            publicai: {
+                name: 'Public AI',
+                endpoint: 'https://api.publicai.io/v1/chat/completions',
+                keyName: 'sahu_publicai_key',
+                models: PUBLICAI_MODELS,
+                aggregators: { stage1: 'molmo-2-8b', stage2: 'llama-3.2-3b', stage3: 'mistral-small-3-1' }
+            }
+        };
+
+        // Aggregator prompts for 3-stage synthesis
+        const AGGREGATOR_PROMPTS = {
+            stage1: `You are the FIRST STAGE AGGREGATOR in the SAHU 1 Agents system.
+
+Multiple expert AI models have independently answered the same user query.
+Their responses may partially overlap, contradict, or vary in depth and correctness.
+
+Your role is to:
+• Analyze all expert answers carefully
+• Evaluate their correctness and reasoning quality
+• Identify consensus, disagreements, and potential errors
+• Create an INITIAL SYNTHESIS combining the best elements
+
+Consider expert weights when evaluating (HIGH weight = more reliable).
+
+Think step by step inside <think></think> tags before providing your synthesis.
+
+OUTPUT FORMAT:
+## Expert Analysis
+[Brief analysis of each expert's contribution]
+
+## Consensus Points
+[What most experts agree on]
+
+## Disagreements
+[Where experts differ and why]
+
+## Synthesized Draft
+[Your combined draft answer]`,
+
+            stage2: `You are the SECOND STAGE AGGREGATOR (Deep Reasoning) in the SAHU 1 Agents system.
+
+You receive a synthesis from the Stage 1 Aggregator.
+Your role is to apply DEEP REASONING to:
+• Verify logical correctness of the synthesis
+• Resolve any remaining contradictions
+• Fill gaps using your own reasoning
+• Improve code quality if applicable
+• Ensure best practices are followed
+
+Think deeply inside <think></think> tags before providing your refined answer.
+
+OUTPUT FORMAT:
+## Reasoning Process
+[Your step-by-step analysis]
+
+## Corrections
+[Any errors found and fixed]
+
+## Improvements
+[Enhancements made]
+
+## Refined Answer
+[Your improved synthesis for the final stage]`,
+
+            stage3: `You are the FINAL STAGE AGGREGATOR in the SAHU 1 Agents system.
+
+You receive refined content from Stage 2.
+Your role is to produce the FINAL, AUTHORITATIVE answer.
+
+Think carefully inside <think></think> tags before producing the final answer.
+
+Rules:
+• Produce a clean, polished final answer
+• Do NOT include meta-commentary about the aggregation process
+• Do NOT explain the synthesis steps
+• Provide COMPLETE, WORKING content (if code, ensure it's runnable)
+• Be clear, structured, and confident
+• Format nicely with proper markdown
+
+Provide ONLY the final answer - clean, complete, and ready to use.`
+        };
+
+        // ==========================================
+        // State Management
+        // ==========================================
+        let state = {
+            messages: [],
+            chatHistory: [],
+            currentChatId: null,
+            isProcessing: false,
+            theme: 'dark',
+            uploadedFile: null,
+            uploadedFileContent: null,
+            currentProvider: 'huggingface',
+            currentMoeMode: 'code',
+            customMoe: {
+                enabled: false,
+                experts: [],
+                aggregators: { stage1: '', stage2: '', stage3: '' }
+            }
+        };
+
+        // ==========================================
+        // Initialization
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadChatHistory();
+            initTheme();
+            updateMoeInfo();
+            
+            const savedProvider = localStorage.getItem('sahu_provider') || 'huggingface';
+            state.currentProvider = savedProvider;
+            document.getElementById('providerSelect').value = savedProvider;
+            
+            const savedMoe = localStorage.getItem('sahu_moe_mode') || 'code';
+            state.currentMoeMode = savedMoe;
+            document.getElementById('moeModeSelector').value = savedMoe;
+            updateMoeInfo();
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('sahu_theme') || 'dark';
+            state.theme = savedTheme;
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun text-[var(--text-secondary)]';
+                document.getElementById('themeText').textContent = 'Light Mode';
+            }
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('sahu_theme', state.theme);
+            
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (state.theme === 'light') {
+                icon.className = 'fas fa-sun text-[var(--text-secondary)]';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.className = 'fas fa-moon text-[var(--text-secondary)]';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        function switchMoeMode() {
+            state.currentMoeMode = document.getElementById('moeModeSelector').value;
+            localStorage.setItem('sahu_moe_mode', state.currentMoeMode);
+            
+            if (state.currentMoeMode === 'custom') {
+                document.getElementById('presetMoeInfo').classList.add('hidden');
+                document.getElementById('customMoeSelector').classList.remove('hidden');
+                state.customMoe.enabled = true;
+            } else {
+                document.getElementById('presetMoeInfo').classList.remove('hidden');
+                document.getElementById('customMoeSelector').classList.add('hidden');
+                state.customMoe.enabled = false;
+            }
+            
+            updateMoeInfo();
+            showToast(`Switched to ${getMoeConfig().name}`, 'success');
+        }
+
+        function updateMoeInfo() {
+            const config = getMoeConfig();
+            document.getElementById('moeIcon').textContent = config.icon;
+            document.getElementById('moeName').textContent = config.name;
+            document.getElementById('moeBehavior').textContent = config.behavior;
+            document.getElementById('headerMoeIcon').textContent = config.icon;
+            document.getElementById('headerMoeName').textContent = config.name;
+            document.getElementById('expertCount').textContent = `${config.experts.length} experts`;
+            
+            // Update tools display
+            const toolsDiv = document.getElementById('moeTools');
+            if (config.toolFlow && config.toolFlow.length > 0) {
+                toolsDiv.innerHTML = config.toolFlow.map(tool => `
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent)] text-white">${tool}</span>
+                `).join('');
+            } else {
+                toolsDiv.innerHTML = '<span class="text-[10px] text-[var(--text-secondary)]">No tools</span>';
+            }
+        }
+
+        function getMoeConfig() {
+            if (state.currentMoeMode === 'custom' && state.customMoe.enabled) {
+                return {
+                    name: 'Custom MoE',
+                    icon: '⚙️',
+                    toolFlow: [],
+                    experts: state.customMoe.experts.map(id => ({ id, name: id })),
+                    aggregator: state.customMoe.aggregators.stage3,
+                    behavior: 'Custom expert configuration'
+                };
+            }
+            return MOE_CONFIGS[state.currentMoeMode] || MOE_CONFIGS.code;
+        }
+
+        function switchProvider() {
+            state.currentProvider = document.getElementById('providerSelect').value;
+            localStorage.setItem('sahu_provider', state.currentProvider);
+            showToast(`Switched to ${PROVIDERS[state.currentProvider].name}`, 'success');
+        }
+
+        // ==========================================
+        // Custom MoE Functions
+        // ==========================================
+        function openCustomMoeModal() {
+            document.getElementById('customMoeModal').classList.remove('hidden');
+            populateCustomMoeModal();
+        }
+
+        function closeCustomMoeModal() {
+            document.getElementById('customMoeModal').classList.add('hidden');
+        }
+
+        function populateCustomMoeModal() {
+            const provider = PROVIDERS[state.currentProvider];
+            const providerModels = provider.models;
+            
+            // Populate aggregator dropdowns with current provider's models
+            const modelOptions = Object.keys(providerModels).map(key => {
+                const weight = EXPERT_WEIGHTS[key]?.weight || 'medium';
+                return `<option value="${key}">${key} (${weight})</option>`;
+            }).join('');
+            
+            document.getElementById('customAggregator1').innerHTML = modelOptions;
+            document.getElementById('customAggregator2').innerHTML = modelOptions;
+            document.getElementById('customAggregator3').innerHTML = modelOptions;
+            
+            // Set default values from provider's aggregators
+            const defaultAggs = provider.aggregators;
+            document.getElementById('customAggregator1').value = state.customMoe.aggregators.stage1 || defaultAggs.stage1;
+            document.getElementById('customAggregator2').value = state.customMoe.aggregators.stage2 || defaultAggs.stage2;
+            document.getElementById('customAggregator3').value = state.customMoe.aggregators.stage3 || defaultAggs.stage3;
+            
+            // Populate expert checkboxes with current provider's models
+            const container = document.getElementById('expertCheckboxes');
+            container.innerHTML = Object.keys(providerModels).map(key => {
+                const info = EXPERT_WEIGHTS[key] || { weight: 'medium', role: 'Expert' };
+                const isChecked = state.customMoe.experts.includes(key);
+                const weightClass = `weight-${info.weight}`;
+                return `
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--border)] cursor-pointer transition-colors border border-transparent hover:border-[var(--accent)]">
+                        <input type="checkbox" class="expert-checkbox w-4 h-4 accent-[var(--accent)]" value="${key}" ${isChecked ? 'checked' : ''} onchange="updateSelectedCount()">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1 flex-wrap">
+                                <span class="text-sm font-medium truncate">${key}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full ${weightClass}">${info.weight.toUpperCase()}</span>
+                            </div>
+                            <span class="text-[10px] text-[var(--text-secondary)]">${info.role}</span>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+            
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.expert-checkbox:checked');
+            document.getElementById('selectedExpertCount').textContent = `${checkboxes.length} selected`;
+        }
+
+        function selectAllExperts() {
+            document.querySelectorAll('.expert-checkbox').forEach(cb => cb.checked = true);
+            updateSelectedCount();
+        }
+
+        function deselectAllExperts() {
+            document.querySelectorAll('.expert-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        function saveCustomMoe() {
+            const selectedExperts = Array.from(document.querySelectorAll('.expert-checkbox:checked')).map(cb => cb.value);
+            
+            if (selectedExperts.length === 0) {
+                showToast('Please select at least 1 expert', 'error');
+                return;
+            }
+            
+            state.customMoe = {
+                enabled: true,
+                experts: selectedExperts,
+                aggregators: {
+                    stage1: document.getElementById('customAggregator1').value,
+                    stage2: document.getElementById('customAggregator2').value,
+                    stage3: document.getElementById('customAggregator3').value
+                }
+            };
+            
+            document.getElementById('customMoeSummary').classList.remove('hidden');
+            document.getElementById('customExpertCount').textContent = selectedExperts.length;
+            document.getElementById('expertCount').textContent = `${selectedExperts.length} experts (custom)`;
+            
+            closeCustomMoeModal();
+            showToast(`Custom MoE saved: ${selectedExperts.length} experts`, 'success');
+        }
+
+        // ==========================================
+        // Settings
+        // ==========================================
+        function loadSettings() {
+            document.getElementById('huggingfaceKey').value = localStorage.getItem('sahu_huggingface_key') || '';
+            document.getElementById('openrouterKey').value = localStorage.getItem('sahu_openrouter_key') || '';
+            document.getElementById('groqKey').value = localStorage.getItem('sahu_groq_key') || '';
+            document.getElementById('togetherKey').value = localStorage.getItem('sahu_together_key') || '';
+            document.getElementById('cerebrasKey').value = localStorage.getItem('sahu_cerebras_key') || '';
+            document.getElementById('sambanovaKey').value = localStorage.getItem('sahu_sambanova_key') || '';
+            document.getElementById('fireworksKey').value = localStorage.getItem('sahu_fireworks_key') || '';
+            document.getElementById('publicaiKey').value = localStorage.getItem('sahu_publicai_key') || '';
+            document.getElementById('showThinking').checked = localStorage.getItem('sahu_show_thinking') !== 'false';
+        }
+
+        function saveSettings() {
+            localStorage.setItem('sahu_huggingface_key', document.getElementById('huggingfaceKey').value);
+            localStorage.setItem('sahu_openrouter_key', document.getElementById('openrouterKey').value);
+            localStorage.setItem('sahu_groq_key', document.getElementById('groqKey').value);
+            localStorage.setItem('sahu_together_key', document.getElementById('togetherKey').value);
+            localStorage.setItem('sahu_cerebras_key', document.getElementById('cerebrasKey').value);
+            localStorage.setItem('sahu_sambanova_key', document.getElementById('sambanovaKey').value);
+            localStorage.setItem('sahu_fireworks_key', document.getElementById('fireworksKey').value);
+            localStorage.setItem('sahu_publicai_key', document.getElementById('publicaiKey').value);
+            localStorage.setItem('sahu_show_thinking', document.getElementById('showThinking').checked);
+            closeSettings();
+            showToast('Settings saved successfully!', 'success');
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        // ==========================================
+        // File Upload
+        // ==========================================
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File too large. Maximum 10MB.', 'error');
+                return;
+            }
+            
+            try {
+                const content = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                    reader.readAsText(file);
+                });
+                
+                state.uploadedFile = file;
+                state.uploadedFileContent = content;
+                
+                document.getElementById('fileUploadPreview').innerHTML = `
+                    <div class="file-upload-preview">
+                        <div class="file-icon"><i class="fas fa-file-alt"></i></div>
+                        <div class="file-info">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-size">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                        <button class="remove-file" onclick="removeUploadedFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('fileUploadPreview').classList.remove('hidden');
+                showToast('File uploaded successfully!', 'success');
+            } catch (error) {
+                showToast('Error reading file', 'error');
+            }
+        }
+
+        function removeUploadedFile() {
+            state.uploadedFile = null;
+            state.uploadedFileContent = null;
+            document.getElementById('fileUploadPreview').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+        }
+
+        // ==========================================
+        // UI Helpers
+        // ==========================================
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px';
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast fixed bottom-20 md:bottom-6 right-4 md:right-6 px-4 md:px-5 py-3 rounded-xl text-white z-50 flex items-center gap-3 shadow-xl text-sm ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function quickPrompt(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==========================================
+        // Export Functions
+        // ==========================================
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+        }
+
+        function copyCode(id) {
+            const code = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(code).then(() => showToast('Code copied!'));
+        }
+
+        function copyFinalAnswer(id) {
+            const el = document.getElementById(id);
+            navigator.clipboard.writeText(el.innerText || el.textContent).then(() => showToast('Answer copied!'));
+        }
+
+        function downloadAsTxt(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, filename + '.txt');
+            showToast('Downloaded as TXT!');
+        }
+
+        function downloadAsPdf(content, filename) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const lines = doc.splitTextToSize(content, 180);
+            let y = 20;
+            lines.forEach(line => {
+                if (y > 280) { doc.addPage(); y = 20; }
+                doc.text(line, 15, y);
+                y += 7;
+            });
+            doc.save(filename + '.pdf');
+            showToast('Downloaded as PDF!');
+        }
+
+        async function downloadAsDocx(content, filename) {
+            const { Document, Packer, Paragraph, TextRun } = docx;
+            const paragraphs = content.split('\n').map(line => 
+                new Paragraph({ children: [new TextRun(line)] })
+            );
+            const doc = new Document({ sections: [{ children: paragraphs }] });
+            const blob = await Packer.toBlob(doc);
+            saveAs(blob, filename + '.docx');
+            showToast('Downloaded as DOCX!');
+        }
+
+        // ==========================================
+        // Chat History
+        // ==========================================
+        function loadChatHistory() {
+            const saved = localStorage.getItem('sahu_chat_history');
+            if (saved) {
+                state.chatHistory = JSON.parse(saved);
+                renderChatHistory();
+            }
+        }
+
+        function saveChatHistory() {
+            localStorage.setItem('sahu_chat_history', JSON.stringify(state.chatHistory));
+        }
+
+        function renderChatHistory() {
+            document.getElementById('chatHistory').innerHTML = state.chatHistory.slice(0, 10).map(chat => `
+                <div onclick="loadChat('${chat.id}')" class="p-3 rounded-xl hover:bg-[var(--bg-tertiary)] cursor-pointer flex items-center gap-3 group transition-colors">
+                    <i class="fas fa-message text-[var(--accent)] text-sm"></i>
+                    <span class="text-sm truncate flex-1">${chat.title}</span>
+                    <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-[var(--text-secondary)] hover:text-red-400 transition-opacity">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function newChat() {
+            state.currentChatId = Date.now().toString();
+            state.messages = [];
+            removeUploadedFile();
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('messagesContainer').classList.add('hidden');
+            document.getElementById('messagesContainer').innerHTML = '';
+            document.getElementById('userInput').value = '';
+            toggleSidebar();
+        }
+
+        function loadChat(chatId) {
+            const chat = state.chatHistory.find(c => c.id === chatId);
+            if (chat) {
+                state.currentChatId = chatId;
+                state.messages = chat.messages;
+                renderMessages();
+            }
+            toggleSidebar();
+        }
+
+        function deleteChat(chatId) {
+            state.chatHistory = state.chatHistory.filter(c => c.id !== chatId);
+            saveChatHistory();
+            renderChatHistory();
+            if (state.currentChatId === chatId) {
+                newChat();
+            }
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            state.messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    appendUserMessage(msg.content);
+                } else {
+                    appendFinalResponse(msg.content);
+                }
+            });
+        }
+
+        function appendUserMessage(content) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = 'flex justify-end';
+            div.innerHTML = `
+                <div class="message-user px-4 md:px-5 py-3 rounded-2xl max-w-[85%] md:max-w-2xl shadow-lg">
+                    <p class="text-white whitespace-pre-wrap text-sm md:text-base">${escapeHtml(content)}</p>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function createExpertCard(expert) {
+            const info = EXPERT_WEIGHTS[expert.id] || { weight: 'medium', role: 'Expert', score: 0.7 };
+            const showThinking = localStorage.getItem('sahu_show_thinking') !== 'false';
+            const responseId = `response-${expert.id}-${Date.now()}`;
+            
+            return `
+                <div class="expert-card ${expert.status} rounded-xl p-3 md:p-4" id="expert-${expert.id.replace(/[^a-zA-Z0-9]/g, '-')}">
+                    <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            ${expert.name.charAt(0)}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1 md:gap-2 flex-wrap">
+                                <span class="font-medium text-xs md:text-sm truncate">${expert.name}</span>
+                                <span class="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full weight-${info.weight}">${info.weight.toUpperCase()}</span>
+                            </div>
+                            <p class="text-[10px] md:text-xs text-[var(--text-secondary)] truncate">${info.role}</p>
+                        </div>
+                        <div class="status-indicator flex-shrink-0">
+                            ${expert.status === 'thinking' ? `
+                                <div class="typing-indicator flex gap-1">
+                                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full"></span>
+                                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full"></span>
+                                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full"></span>
+                                </div>
+                            ` : expert.status === 'complete' ? `
+                                <i class="fas fa-check-circle text-green-400"></i>
+                            ` : expert.status === 'error' ? `
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${showThinking && expert.thinking ? `
+                        <div class="thinking-block text-[10px] md:text-xs mb-3">
+                            <div class="thinking-header cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                                <i class="fas fa-brain"></i>
+                                <span>Thinking Process</span>
+                                <i class="fas fa-chevron-down ml-auto text-[var(--text-secondary)]"></i>
+                            </div>
+                            <div class="text-[var(--text-secondary)] whitespace-pre-wrap mt-2 max-h-[300px] overflow-y-auto scrollbar-thin">${escapeHtml(expert.thinking)}</div>
+                        </div>
+                    ` : expert.status === 'thinking' ? `
+                        <div class="thinking-block text-[10px] md:text-xs mb-3">
+                            <div class="thinking-header">
+                                <i class="fas fa-brain animate-pulse"></i>
+                                <span>Thinking...</span>
+                            </div>
+                            <div class="text-[var(--text-secondary)]">Processing with extended reasoning...</div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="response-content text-xs md:text-sm">
+                        ${expert.response ? `
+                            <div class="border-t border-[var(--border)] pt-3 mt-2">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] md:text-xs font-medium text-[var(--accent)]">Full Response</span>
+                                    <button onclick="copyToClipboard(document.getElementById('${responseId}').innerText)" class="text-[10px] px-2 py-1 rounded bg-[var(--bg-secondary)] hover:bg-[var(--accent)] hover:text-white transition-colors">
+                                        <i class="fas fa-copy mr-1"></i>Copy
+                                    </button>
+                                </div>
+                                <div id="${responseId}" class="prose prose-sm max-w-none text-[var(--text-primary)] max-h-[400px] overflow-y-auto scrollbar-thin">${formatMarkdown(expert.response)}</div>
+                            </div>
+                        ` : `<div class="text-[var(--text-secondary)] italic">Processing...</div>`}
+                    </div>
+                </div>
+            `;
+        }
+
+        function appendFinalResponse(content) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            const responseId = Date.now();
+            const escapedContent = btoa(unescape(encodeURIComponent(content)));
+            
+            div.className = 'aggregator-response aggregator-stage-3 rounded-2xl p-4 md:p-5';
+            div.innerHTML = `
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                        <i class="fas fa-check text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <span class="font-semibold text-sm md:text-base">Final Answer</span>
+                        <p class="text-xs text-[var(--text-secondary)]">3-Stage Aggregation Complete</p>
+                    </div>
+                </div>
+                <div class="prose max-w-none text-sm md:text-base" id="response-${responseId}">${formatMarkdown(content)}</div>
+                ${renderCodePreviews(content, responseId)}
+                ${renderExportButtons(content, responseId)}
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function formatMarkdown(text) {
+            if (!text) return '';
+            
+            // Code blocks
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                const id = 'code-' + Math.random().toString(36).substr(2, 9);
+                return `
+                    <div class="relative my-4">
+                        <div class="flex items-center justify-between bg-[#1a1a1a] px-3 md:px-4 py-2 rounded-t-lg border-b border-[var(--border)]">
+                            <span class="text-xs text-[var(--text-secondary)]">${lang || 'code'}</span>
+                            <button onclick="copyCode('${id}')" class="copy-btn text-xs">
+                                <i class="fas fa-copy"></i>
+                                <span class="hidden md:inline ml-1">Copy</span>
+                            </button>
+                        </div>
+                        <pre><code id="${id}" class="language-${lang || 'text'}">${escapeHtml(code)}</code></pre>
+                    </div>
+                `;
+            });
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code class="bg-[var(--bg-tertiary)] px-1.5 py-0.5 rounded text-xs md:text-sm">$1</code>');
+            
+            // Bold and italic
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Paragraphs
+            text = text.replace(/\n\n/g, '</p><p class="my-2 md:my-3">');
+            
+            return '<p class="my-2 md:my-3">' + text + '</p>';
+        }
+
+        function renderCodePreviews(content, responseId) {
+            const htmlMatch = content.match(/```(?:html?)\n([\s\S]*?)```/i);
+            if (!htmlMatch) return '';
+            
+            const code = htmlMatch[1];
+            const previewId = `preview-${responseId}`;
+            
+            return `
+                <div class="file-preview" id="${previewId}">
+                    <div class="file-preview-header">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-file-code text-[var(--accent)]"></i>
+                            <span class="font-medium text-xs md:text-sm">Generated File</span>
+                        </div>
+                        <div class="file-preview-tabs">
+                            <button class="file-preview-tab active" onclick="showTab('${previewId}', 'preview')">
+                                <i class="fas fa-eye"></i>
+                                <span class="hidden md:inline ml-1">Preview</span>
+                            </button>
+                            <button class="file-preview-tab" onclick="showTab('${previewId}', 'code')">
+                                <i class="fas fa-code"></i>
+                                <span class="hidden md:inline ml-1">Code</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="file-preview-content">
+                        <div id="${previewId}-preview">
+                            <iframe class="file-preview-iframe" srcdoc="${escapeHtml(code)}"></iframe>
+                        </div>
+                        <div id="${previewId}-code" class="file-preview-code hidden">
+                            <pre><code>${escapeHtml(code)}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExportButtons(content, responseId) {
+            const escapedContent = btoa(unescape(encodeURIComponent(content)));
+            return `
+                <div class="export-buttons">
+                    <button class="export-btn copy" onclick="copyFinalAnswer('response-${responseId}')">
+                        <i class="fas fa-copy"></i>
+                        <span>Copy</span>
+                    </button>
+                    <button class="export-btn txt" onclick="downloadAsTxt(decodeURIComponent(escape(atob('${escapedContent}'))), 'sahu-response')">
+                        <i class="fas fa-file-alt"></i>
+                        <span>TXT</span>
+                    </button>
+                    <button class="export-btn pdf" onclick="downloadAsPdf(decodeURIComponent(escape(atob('${escapedContent}'))), 'sahu-response')">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                    </button>
+                    <button class="export-btn docx" onclick="downloadAsDocx(decodeURIComponent(escape(atob('${escapedContent}'))), 'sahu-response')">
+                        <i class="fas fa-file-word"></i>
+                        <span>DOCX</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        function showTab(previewId, tab) {
+            const container = document.getElementById(previewId);
+            container.querySelectorAll('.file-preview-tab').forEach((t, i) => {
+                t.classList.toggle('active', (tab === 'preview' && i === 0) || (tab === 'code' && i === 1));
+            });
+            document.getElementById(`${previewId}-preview`).classList.toggle('hidden', tab !== 'preview');
+            document.getElementById(`${previewId}-code`).classList.toggle('hidden', tab !== 'code');
+        }
+
+        // ==========================================
+        // API Communication
+        // ==========================================
+        async function callModel(modelId, messages) {
+            const provider = PROVIDERS[state.currentProvider];
+            const apiKey = localStorage.getItem(provider.keyName);
+            if (!apiKey) throw new Error(`No API key for ${provider.name}`);
+            
+            // Get model ID from provider's specific model list
+            const fullModelId = provider.models[modelId] || modelId;
+            
+            // Add thinking instruction
+            const enhancedMessages = messages.map((msg, idx) => {
+                if (idx === 0 && msg.role === 'system') {
+                    return {
+                        ...msg,
+                        content: msg.content + '\n\nIMPORTANT: Think step by step inside <think>...</think> tags before providing your answer.'
+                    };
+                }
+                return msg;
+            });
+            
+            const headers = {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            };
+            
+            // Add provider-specific headers
+            if (state.currentProvider === 'openrouter') {
+                headers['HTTP-Referer'] = window.location.href;
+                headers['X-Title'] = 'SAHU 1 Agents';
+            }
+            
+            const response = await fetch(provider.endpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    model: fullModelId,
+                    messages: enhancedMessages,
+                    max_tokens: 4096,
+                    temperature: 0.7,
+                    stream: false
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`API Error: ${response.status} - ${error}`);
+            }
+            
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content || '';
+            const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
+            
+            // Extract thinking
+            let thinking = reasoningContent;
+            let cleanContent = content;
+            
+            const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+            if (thinkMatch) {
+                thinking = thinkMatch[1];
+                cleanContent = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+            }
+            
+            return { content: cleanContent, thinking };
+        }
+        
+        // Get active experts based on current provider
+        function getActiveExperts() {
+            const provider = PROVIDERS[state.currentProvider];
+            const moeConfig = getMoeConfig();
+            
+            // For custom MoE, filter to only models available in current provider
+            if (state.customMoe.enabled) {
+                return state.customMoe.experts
+                    .filter(id => provider.models[id])
+                    .map(id => ({ id, name: id }));
+            }
+            
+            // For preset MoE, filter to models available in current provider
+            return moeConfig.experts.filter(exp => provider.models[exp.id]);
+        }
+        
+        // Get aggregators for current provider
+        function getActiveAggregators() {
+            const provider = PROVIDERS[state.currentProvider];
+            
+            if (state.customMoe.enabled && state.customMoe.aggregators.stage1) {
+                return state.customMoe.aggregators;
+            }
+            
+            return provider.aggregators;
+        }
+
+        // ==========================================
+        // Main Send Message
+        // ==========================================
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            let content = input.value.trim();
+            
+            if (!content && !state.uploadedFile) return;
+            if (state.isProcessing) return;
+            
+            const provider = PROVIDERS[state.currentProvider];
+            const apiKey = localStorage.getItem(provider.keyName);
+            
+            if (!apiKey) {
+                showToast(`Please configure ${provider.name} API key in Settings`, 'error');
+                openSettings();
+                return;
+            }
+            
+            // Add file content if uploaded
+            if (state.uploadedFile && state.uploadedFileContent) {
+                const fileInfo = `\n\n[Attached File: ${state.uploadedFile.name}]\n\`\`\`\n${state.uploadedFileContent.substring(0, 10000)}\n\`\`\``;
+                content = content ? content + fileInfo : `Please analyze this file: ${state.uploadedFile.name}${fileInfo}`;
+            }
+            
+            state.isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            // Show chat area
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
+            
+            // Add user message
+            appendUserMessage(content);
+            state.messages.push({ role: 'user', content });
+            
+            input.value = '';
+            input.style.height = 'auto';
+            removeUploadedFile();
+            
+            const container = document.getElementById('messagesContainer');
+            const moeConfig = getMoeConfig();
+            const provider = PROVIDERS[state.currentProvider];
+            
+            // Get provider-specific experts
+            const activeExperts = getActiveExperts();
+            
+            if (activeExperts.length === 0) {
+                showToast(`No experts available for ${provider.name}. Try a different provider or configure Custom MoE.`, 'error');
+                state.isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                return;
+            }
+            
+            try {
+                // Create expert grid
+                const expertGridDiv = document.createElement('div');
+                expertGridDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3 md:mb-4">
+                        <span class="text-lg">${moeConfig.icon}</span>
+                        <span class="font-semibold text-sm md:text-base">${moeConfig.name}</span>
+                        <span class="text-xs text-[var(--text-secondary)]">(${activeExperts.length} experts via ${provider.name})</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" id="expertCards"></div>
+                `;
+                container.appendChild(expertGridDiv);
+                
+                // Initialize expert results using active experts
+                const expertResults = activeExperts.map(exp => ({
+                    id: exp.id,
+                    name: exp.name,
+                    status: 'thinking',
+                    response: null,
+                    thinking: null
+                }));
+                
+                // Render initial cards
+                document.getElementById('expertCards').innerHTML = expertResults.map(exp => createExpertCard(exp)).join('');
+                
+                // Process all experts in parallel
+                const expertPromises = expertResults.map(async (expert, index) => {
+                    try {
+                        const result = await callModel(expert.id, [
+                            { role: 'system', content: 'You are an expert AI assistant. Provide detailed, accurate, and helpful responses. Always think step by step.' },
+                            { role: 'user', content }
+                        ]);
+                        
+                        expertResults[index].response = result.content;
+                        expertResults[index].thinking = result.thinking;
+                        expertResults[index].status = 'complete';
+                    } catch (error) {
+                        console.error(`Expert ${expert.name} error:`, error);
+                        expertResults[index].response = `Error: ${error.message}`;
+                        expertResults[index].status = 'error';
+                    }
+                    
+                    // Update card
+                    const cardId = `expert-${expert.id.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                    const cardEl = document.getElementById(cardId);
+                    if (cardEl) {
+                        cardEl.outerHTML = createExpertCard(expertResults[index]);
+                    }
+                    return expertResults[index];
+                });
+                
+                // Wait for ALL experts
+                await Promise.allSettled(expertPromises);
+                
+                // Prepare expert answers for aggregation
+                const completedExperts = expertResults.filter(e => e.status === 'complete' && e.response);
+                const expertAnswersText = completedExperts.map(exp => {
+                    const info = EXPERT_WEIGHTS[exp.id] || { weight: 'medium', score: 0.7 };
+                    return `### ${exp.name} (Weight: ${info.weight.toUpperCase()}, Score: ${info.score})\n${exp.response}`;
+                }).join('\n\n---\n\n');
+                
+                // Get aggregator models (provider-specific)
+                const aggregators = getActiveAggregators();
+                
+                // ==========================================
+                // 3-STAGE AGGREGATION
+                // ==========================================
+                
+                // Stage 1
+                const stage1Div = document.createElement('div');
+                stage1Div.className = 'aggregator-response aggregator-stage-1 rounded-2xl p-4 md:p-5 mt-4';
+                stage1Div.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold">1</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-semibold text-sm md:text-base">Stage 1: Initial Synthesis</span>
+                                <span class="stage-badge stage-1-badge">${aggregators.stage1}</span>
+                            </div>
+                            <p class="text-xs text-[var(--text-secondary)]">Analyzing ${completedExperts.length} expert responses...</p>
+                        </div>
+                        <div id="stage1Status" class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                        </div>
+                    </div>
+                    <div id="stage1Thinking" class="thinking-block hidden">
+                        <div class="thinking-header"><i class="fas fa-brain"></i><span>Thinking</span></div>
+                        <div class="thinking-content text-[var(--text-secondary)] whitespace-pre-wrap"></div>
+                    </div>
+                    <div id="stage1Response" class="prose prose-sm max-w-none"></div>
+                `;
+                container.appendChild(stage1Div);
+                container.scrollTop = container.scrollHeight;
+                
+                let stage1Result;
+                try {
+                    stage1Result = await callModel(aggregators.stage1, [
+                        { role: 'system', content: AGGREGATOR_PROMPTS.stage1 },
+                        { role: 'user', content: `User Query:\n${content}\n\n---\n\nExpert Answers:\n${expertAnswersText}` }
+                    ]);
+                    
+                    if (stage1Result.thinking) {
+                        document.getElementById('stage1Thinking').classList.remove('hidden');
+                        document.getElementById('stage1Thinking').querySelector('.thinking-content').textContent = stage1Result.thinking;
+                    }
+                    document.getElementById('stage1Response').innerHTML = formatMarkdown(stage1Result.content);
+                } catch (error) {
+                    stage1Result = { content: expertAnswersText };
+                    document.getElementById('stage1Response').innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`;
+                }
+                document.getElementById('stage1Status').innerHTML = '<i class="fas fa-check-circle text-green-400"></i>';
+                
+                // Stage 2
+                const stage2Div = document.createElement('div');
+                stage2Div.className = 'aggregator-response aggregator-stage-2 rounded-2xl p-4 md:p-5 mt-3';
+                stage2Div.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold">2</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-semibold text-sm md:text-base">Stage 2: Deep Reasoning</span>
+                                <span class="stage-badge stage-2-badge">${aggregators.stage2}</span>
+                            </div>
+                            <p class="text-xs text-[var(--text-secondary)]">Verifying and improving...</p>
+                        </div>
+                        <div id="stage2Status" class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                        </div>
+                    </div>
+                    <div id="stage2Thinking" class="thinking-block hidden">
+                        <div class="thinking-header"><i class="fas fa-brain"></i><span>Deep Reasoning</span></div>
+                        <div class="thinking-content text-[var(--text-secondary)] whitespace-pre-wrap"></div>
+                    </div>
+                    <div id="stage2Response" class="prose prose-sm max-w-none"></div>
+                `;
+                container.appendChild(stage2Div);
+                container.scrollTop = container.scrollHeight;
+                
+                let stage2Result;
+                try {
+                    stage2Result = await callModel(aggregators.stage2, [
+                        { role: 'system', content: AGGREGATOR_PROMPTS.stage2 },
+                        { role: 'user', content: `Stage 1 Synthesis:\n${stage1Result.content}` }
+                    ]);
+                    
+                    if (stage2Result.thinking) {
+                        document.getElementById('stage2Thinking').classList.remove('hidden');
+                        document.getElementById('stage2Thinking').querySelector('.thinking-content').textContent = stage2Result.thinking;
+                    }
+                    document.getElementById('stage2Response').innerHTML = formatMarkdown(stage2Result.content);
+                } catch (error) {
+                    stage2Result = stage1Result;
+                    document.getElementById('stage2Response').innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`;
+                }
+                document.getElementById('stage2Status').innerHTML = '<i class="fas fa-check-circle text-green-400"></i>';
+                
+                // Stage 3
+                const stage3Div = document.createElement('div');
+                stage3Div.className = 'aggregator-response aggregator-stage-3 rounded-2xl p-4 md:p-5 mt-3';
+                stage3Div.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold">3</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-semibold text-sm md:text-base">Stage 3: Final Answer</span>
+                                <span class="stage-badge stage-3-badge">${aggregators.stage3}</span>
+                            </div>
+                            <p class="text-xs text-[var(--text-secondary)]">Generating final response...</p>
+                        </div>
+                        <div id="stage3Status" class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                        </div>
+                    </div>
+                    <div id="stage3Thinking" class="thinking-block hidden">
+                        <div class="thinking-header"><i class="fas fa-brain"></i><span>Final Reasoning</span></div>
+                        <div class="thinking-content text-[var(--text-secondary)] whitespace-pre-wrap"></div>
+                    </div>
+                    <div id="stage3Response" class="streaming-cursor prose max-w-none text-sm md:text-base"></div>
+                `;
+                container.appendChild(stage3Div);
+                container.scrollTop = container.scrollHeight;
+                
+                let finalResponse = '';
+                const responseDiv = document.getElementById('stage3Response');
+                
+                try {
+                    const result = await callModel(aggregators.stage3, [
+                        { role: 'system', content: AGGREGATOR_PROMPTS.stage3 },
+                        { role: 'user', content: `Original Query:\n${content}\n\n---\n\nRefined Synthesis:\n${stage2Result.content}` }
+                    ]);
+                    
+                    if (result.thinking) {
+                        document.getElementById('stage3Thinking').classList.remove('hidden');
+                        document.getElementById('stage3Thinking').querySelector('.thinking-content').textContent = result.thinking;
+                    }
+                    
+                    finalResponse = result.content;
+                    
+                    // Stream word by word
+                    const words = finalResponse.split(' ');
+                    let displayedContent = '';
+                    for (let i = 0; i < words.length; i++) {
+                        displayedContent += (i > 0 ? ' ' : '') + words[i];
+                        responseDiv.innerHTML = formatMarkdown(displayedContent);
+                        container.scrollTop = container.scrollHeight;
+                        await new Promise(r => setTimeout(r, 20));
+                    }
+                } catch (error) {
+                    finalResponse = stage2Result.content || `Error: ${error.message}`;
+                    responseDiv.innerHTML = formatMarkdown(finalResponse);
+                }
+                
+                responseDiv.classList.remove('streaming-cursor');
+                responseDiv.classList.add('complete');
+                document.getElementById('stage3Status').innerHTML = '<i class="fas fa-check-circle text-green-400 text-lg"></i>';
+                
+                // Add code preview and export buttons
+                const previewHtml = renderCodePreviews(finalResponse, Date.now());
+                const exportHtml = renderExportButtons(finalResponse, Date.now());
+                responseDiv.insertAdjacentHTML('afterend', previewHtml + exportHtml);
+                
+                // Save to chat history
+                state.messages.push({ role: 'assistant', content: finalResponse });
+                
+                if (!state.currentChatId) {
+                    state.currentChatId = Date.now().toString();
+                }
+                
+                const existingChat = state.chatHistory.find(c => c.id === state.currentChatId);
+                if (existingChat) {
+                    existingChat.messages = state.messages;
+                } else {
+                    state.chatHistory.unshift({
+                        id: state.currentChatId,
+                        title: content.substring(0, 40) + '...',
+                        messages: state.messages
+                    });
+                }
+                saveChatHistory();
+                renderChatHistory();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message, 'error');
+            } finally {
+                state.isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
