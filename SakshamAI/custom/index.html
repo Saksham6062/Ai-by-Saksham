@@ -2016,13 +2016,13 @@ Provide ONLY the final answer - clean, complete, and ready to use.`
             
             const container = document.getElementById('messagesContainer');
             const moeConfig = getMoeConfig();
-            const provider = PROVIDERS[state.currentProvider];
+            const currentProviderConfig = PROVIDERS[state.currentProvider];
             
             // Get provider-specific experts
             const activeExperts = getActiveExperts();
             
             if (activeExperts.length === 0) {
-                showToast(`No experts available for ${provider.name}. Try a different provider or configure Custom MoE.`, 'error');
+                showToast(`No experts available for ${currentProviderConfig.name}. Try a different provider or configure Custom MoE.`, 'error');
                 state.isProcessing = false;
                 document.getElementById('sendBtn').disabled = false;
                 return;
@@ -2035,7 +2035,7 @@ Provide ONLY the final answer - clean, complete, and ready to use.`
                     <div class="flex items-center gap-2 mb-3 md:mb-4">
                         <span class="text-lg">${moeConfig.icon}</span>
                         <span class="font-semibold text-sm md:text-base">${moeConfig.name}</span>
-                        <span class="text-xs text-[var(--text-secondary)]">(${activeExperts.length} experts via ${provider.name})</span>
+                        <span class="text-xs text-[var(--text-secondary)]">(${activeExperts.length} experts via ${currentProviderConfig.name})</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" id="expertCards"></div>
                 `;
