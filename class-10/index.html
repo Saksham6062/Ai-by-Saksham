@@ -1,1 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>SAHU 1 Agents - AI Multi-Expert System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/docx@8.2.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f8f8;
+            --bg-tertiary: #efefef;
+            --text-primary: #1a1a1a;
+            --text-secondary: #525252;
+            --accent: #667eea;
+            --accent-hover: #5a6fd6;
+            --border: #e0e0e0;
+        }
+        .dark-mode {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1e1e1e;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --accent: #667eea;
+            --accent-hover: #7c8ff0;
+            --border: #2a2a2a;
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overscroll-behavior: none;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar { background-color: var(--bg-secondary); border-color: var(--border); }
+        .message-user { background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%); }
+        .message-assistant { background-color: var(--bg-tertiary); }
+        .input-area { background-color: var(--bg-secondary); border-color: var(--border); }
+        .expert-card {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .expert-card.thinking { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); }
+        .expert-card.complete { border-color: #22c55e; }
+        .expert-card.error { border-color: #ef4444; }
+        .typing-indicator span { animation: typing 1.4s infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .scrollbar-thin::-webkit-scrollbar { width: 5px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        pre code {
+            display: block;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #e5e5e5;
+        }
+        .thinking-block {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .thinking-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #d97706;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .aggregator-response {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(102, 126, 234, 0.1) 100%);
+            border: 2px solid var(--accent);
+        }
+        .stage-1 { border-color: #f59e0b; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(245, 158, 11, 0.1) 100%); }
+        .stage-2 { border-color: #06b6d4; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(6, 182, 212, 0.1) 100%); }
+        .stage-3 { border-color: #22c55e; background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(34, 197, 94, 0.1) 100%); }
+        
+        .file-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .export-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+        .export-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            min-height: 40px;
+        }
+        .export-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .export-btn.sparkle-btn {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15));
+            border-color: rgba(236, 72, 153, 0.3);
+            color: #db2777;
+        }
+        .export-btn.sparkle-btn:hover {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: white;
+            border-color: transparent;
+        }
+        .magic-btn {
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEEF 99%, #FECFEEF 100%); 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .toast { 
+            animation: slideIn 0.3s ease-out;
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            z-index: 1000;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .provider-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 600; margin-bottom: 4px; display: inline-block; }
+        .provider-huggingface { background: rgba(255, 213, 0, 0.2); color: #ca8a04; }
+        .provider-openrouter { background: rgba(168, 85, 247, 0.2); color: #9333ea; }
+        .provider-groq { background: rgba(249, 115, 22, 0.2); color: #ea580c; }
+        .provider-together { background: rgba(34, 197, 94, 0.2); color: #16a34a; }
+        .provider-cerebras { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+        .provider-sambanova { background: rgba(14, 165, 233, 0.2); color: #0284c7; }
+        .provider-fireworks { background: rgba(239, 68, 68, 0.2); color: #dc2626; }
+        .provider-routeway { background: rgba(16, 185, 129, 0.2); color: #059669; }
+        .provider-mistral { background: rgba(251, 146, 60, 0.2); color: #ea580c; }
+        .provider-gemini { background: rgba(59, 130, 246, 0.2); color: #2563eb; }
+        .provider-longcat { background: rgba(139, 92, 246, 0.2); color: #7c3aed; }
+        .provider-ollama { background: rgba(75, 85, 99, 0.2); color: #374151; }
+        .provider-zenmusk { background: rgba(236, 72, 153, 0.2); color: #be185d; }
+        .provider-ionet { background: rgba(6, 182, 212, 0.2); color: #0891b2; }
+        
+        .stage-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            min-width: 32px;
+            text-align: center;
+        }
+        .stage-btn:hover { border-color: var(--accent); }
+        .stage-btn.active-1 { background: #f59e0b; color: white; border-color: #f59e0b; }
+        .stage-btn.active-2 { background: #06b6d4; color: white; border-color: #06b6d4; }
+        .stage-btn.active-3 { background: #22c55e; color: white; border-color: #22c55e; }
+        .fallback-indicator {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(249, 115, 22, 0.2);
+            color: #ea580c;
+        }
+        .model-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-secondary);
+        }
+        .model-card:hover { border-color: var(--accent); }
+        .model-card.selected { border-color: var(--accent); background: rgba(102, 126, 234, 0.1); }
+        
+        .sidebar { 
+            position: fixed; 
+            left: -100%; 
+            top: 0; 
+            bottom: 0; 
+            z-index: 100; 
+            width: 85%; 
+            max-width: 300px; 
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 99; 
+        }
+        .sidebar-overlay.show { display: block; }
+        
+        @media (min-width: 768px) {
+            .sidebar { 
+                position: relative; 
+                left: 0; 
+                width: 280px; 
+            }
+            .sidebar-overlay { display: none !important; }
+        }
+        @media (max-width: 480px) {
+            .export-btn span { display: none; }
+            .export-btn { padding: 10px 12px; }
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <div id="app" class="flex h-full">
+        <aside id="sidebar" class="sidebar flex flex-col border-r border-[var(--border)]">
+            <div class="p-4 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center shadow-lg">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg gradient-text">SAHU 1 Agents</h1>
+                        <p class="text-xs text-[var(--text-secondary)]">Multi-Provider MoE</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3">
+                <button onclick="newChat()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-semibold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+                    <i class="fas fa-plus"></i>
+                    New Chat
+                </button>
+            </div>
+
+            <div class="px-3 pb-2">
+                <label class="text-xs text-[var(--text-secondary)] mb-2 block font-medium">Active Providers</label>
+                <div id="providerCheckboxes" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="px-3 pb-3">
+                <button onclick="openModelSelector()" class="w-full py-3 px-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm flex items-center justify-between active:scale-95 transition-transform">
+                    <span class="flex items-center gap-2">
+                        <i class="fas fa-cubes text-[var(--accent)]"></i>
+                        Configure Models
+                    </span>
+                    <span id="selectedModelCount" class="text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+
+            <div class="px-3 pb-3">
+                <label class="flex items-center justify-between p-3 bg-[var(--bg-tertiary)] rounded-xl cursor-pointer">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-green-500"></i>
+                        <span class="text-sm">Auto Fallback</span>
+                    </div>
+                    <input type="checkbox" id="autoFallback" checked class="w-5 h-5 accent-[var(--accent)]" onchange="saveAutoFallback()">
+                </label>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-3">
+                <p class="text-xs text-[var(--text-secondary)] mb-2 font-medium">Recent Chats</p>
+                <div id="chatHistory" class="space-y-1"></div>
+            </div>
+
+            <div class="p-3 border-t border-[var(--border)] space-y-1">
+                <button onclick="openSettings()" class="w-full py-3 px-4 rounded-xl hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors active:scale-95">
+                    <i class="fas fa-cog text-[var(--text-secondary)]"></i>
+                    <span class="text-sm">Settings</span>
+                </button>
+                <button onclick="toggleTheme()" class="w-full py-3 px-4 rounded-xl hover:bg-[var(--bg-tertiary)] flex items-center gap-3 transition-colors active:scale-95">
+                    <i id="themeIcon" class="fas fa-moon text-[var(--text-secondary)]"></i>
+                    <span class="text-sm" id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full min-w-0">
+            <header class="h-14 border-b border-[var(--border)] flex items-center justify-between px-4 bg-[var(--bg-secondary)]">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors active:scale-95">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-robot text-[var(--accent)]"></i>
+                        <span class="font-semibold text-sm">SAHU 1 Agents</span>
+                    </div>
+                </div>
+                
+                <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)]">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs">Ready</span>
+                </div>
+            </header>
+
+            <div id="chatArea" class="flex-1 overflow-y-auto scrollbar-thin p-4">
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center px-4">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center mb-6 shadow-xl">
+                        <i class="fas fa-robot text-2xl text-white"></i>
+                    </div>
+                    <h2 class="text-xl font-bold mb-2 gradient-text text-center">SAHU 1 Agents</h2>
+                    <p class="text-[var(--text-secondary)] mb-4 text-center text-sm max-w-md">
+                        Multi-provider AI with <strong>auto fallback</strong> and <strong>3-stage aggregation</strong>
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2 mb-6">
+                        <span class="provider-badge provider-huggingface">HuggingFace</span>
+                        <span class="provider-badge provider-openrouter">OpenRouter</span>
+                        <span class="provider-badge provider-groq">Groq</span>
+                        <span class="provider-badge provider-together">Together</span>
+                        <span class="provider-badge provider-cerebras">Cerebras</span>
+                        <span class="provider-badge provider-sambanova">SambaNova</span>
+                        <span class="provider-badge provider-fireworks">Fireworks</span>
+                        <span class="provider-badge provider-routeway">Routeway</span>
+                        <span class="provider-badge provider-mistral">Mistral</span>
+                        <span class="provider-badge provider-gemini">Gemini</span>
+                        <span class="provider-badge provider-longcat">LongCat</span>
+                        <span class="provider-badge provider-ollama">Ollama Cloud</span>
+                        <span class="provider-badge provider-zenmusk">ZenMusk</span>
+                        <span class="provider-badge provider-ionet">io.net</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 w-full max-w-md">
+                        <button onclick="quickPrompt('Build a modern landing page with hero section')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all active:scale-98">
+                            <i class="fas fa-globe text-[#667eea] mb-2"></i>
+                            <p class="text-sm font-medium">Landing Page</p>
+                            <p class="text-xs text-[var(--text-secondary)]">Hero, features, footer</p>
+                        </button>
+                        <button onclick="quickPrompt('Explain quantum computing simply')" class="p-4 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-left transition-all active:scale-98">
+                            <i class="fas fa-atom text-yellow-500 mb-2"></i>
+                            <p class="text-sm font-medium">Explanation</p>
+                            <p class="text-xs text-[var(--text-secondary)]">Quantum computing basics</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="messagesContainer" class="hidden space-y-4 max-w-4xl mx-auto"></div>
+            </div>
+
+            <div class="p-3 border-t border-[var(--border)] bg-[var(--bg-secondary)] safe-area-bottom">
+                <div class="max-w-3xl mx-auto">
+                    <div id="fileUploadPreview" class="hidden mb-3"></div>
+                    <div class="input-area rounded-2xl border p-3 shadow-sm relative">
+                        <div class="flex items-end gap-3">
+                            <button onclick="triggerFileUpload()" class="p-2 rounded-xl hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors active:scale-95" title="Upload file">
+                                <i class="fas fa-paperclip text-lg"></i>
+                            </button>
+                            <button onclick="enhancePrompt()" id="enhanceBtn" class="p-2 rounded-xl hover:bg-[var(--bg-tertiary)] text-pink-500 transition-colors active:scale-95" title="✨ Enhance with Gemini">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </button>
+                            <input type="file" id="fileInput" class="hidden" accept=".txt,.pdf,.doc,.docx,.md,.json,.csv,.js,.py,.html,.css" onchange="handleFileUpload(event)">
+                            <textarea 
+                                id="userInput" 
+                                placeholder="Ask anything..." 
+                                class="flex-1 bg-transparent resize-none outline-none max-h-32 text-base leading-relaxed"
+                                rows="1"
+                                onkeydown="handleKeyDown(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                            <button onclick="sendMessage()" id="sendBtn" class="p-3 rounded-xl bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white transition-all disabled:opacity-50 active:scale-95 shadow-lg">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-[var(--text-secondary)] mt-2">
+                        14 Providers • Auto Fallback • Extended Thinking
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-[var(--border)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-cog text-[var(--accent)]"></i>
+                    API Keys
+                </h2>
+                <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto flex-1" id="apiKeyInputs"></div>
+            <div class="p-4 border-t border-[var(--border)] flex justify-end gap-3">
+                <button onclick="closeSettings()" class="px-4 py-2.5 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-sm">Cancel</button>
+                <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-medium text-sm active:scale-95">
+                    <i class="fas fa-save mr-2"></i>Save All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modelSelectorModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--bg-secondary)] rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-[var(--border)]">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-cubes text-[var(--accent)]"></i>
+                    Model Configuration
+                </h2>
+                <button onclick="closeModelSelector()" class="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <p class="text-sm text-[var(--text-secondary)] mb-4">
+                    Select models and assign aggregator stages (1/2/3). Stage buttons assign models to aggregation pipeline.
+                </p>
+                <div id="modelSelectorContent" class="space-y-4"></div>
+            </div>
+            <div class="p-4 border-t border-[var(--border)] flex justify-between items-center gap-3">
+                <div class="text-sm text-[var(--text-secondary)]">
+                    <span id="modalSelectedCount">0</span> selected
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeModelSelector()" class="px-4 py-2.5 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-sm">Cancel</button>
+                    <button onclick="saveModelSelection()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-medium text-sm active:scale-95">
+                        <i class="fas fa-check mr-2"></i>Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PROVIDERS = {
+            huggingface: {
+                name: 'HuggingFace',
+                endpoint: 'https://router.huggingface.co/v1/chat/completions',
+                keyName: 'sahu_huggingface_key',
+                color: 'huggingface',
+                icon: '🤗',
+                models: {
+                    'GLM-4.7': 'zai-org/GLM-4.7',
+                    'GLM-4.7-Flash': 'zai-org/GLM-4.7-Flash',
+                    'ERNIE-4.5-VL': 'baidu/ERNIE-4.5-VL-424B-A47B-Base-PT',
+                    'DeepSeek-V3.2': 'deepseek-ai/DeepSeek-V3.2',
+                    'DeepSeek-R1': 'deepseek-ai/DeepSeek-R1',
+                    'DeepSeek-R1-Distill': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+                    'Qwen3-Coder': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+                    'Qwen3-Thinking': 'Qwen/Qwen3-235B-A22B-Thinking-2507',
+                    'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.3',
+                    'Kimi-K2-Thinking': 'moonshotai/Kimi-K2-Thinking',
+                    'Kimi-K2': 'moonshotai/Kimi-K2-Instruct',
+                    'Kimi-K2.5': 'moonshotai/Kimi-K2.5',
+                    'gpt-oss-120b': 'openai/gpt-oss-120b',
+                    'gpt-oss-20b': 'openai/gpt-oss-20b',
+                    'MiMo-V2-Flash': 'XiaomiMiMo/MiMo-V2-Flash',
+                    'MiniMax-M2.1': 'MiniMaxAI/MiniMax-M2.1',
+                    'Olmo-3.1-Instruct': 'allenai/Olmo-3.1-32B-Instruct',
+                    'Olmo-3.1-Think': 'allenai/Olmo-3.1-32B-Think',
+                    'Llama-3.3-70B': 'meta-llama/Llama-3.3-70B-Instruct',
+                    'NextCoder-32B': 'microsoft/NextCoder-32B',
+                    'KAT-Dev': 'Kwaipilot/KAT-Dev'
+                }
+            },
+            openrouter: {
+                name: 'OpenRouter',
+                endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+                keyName: 'sahu_openrouter_key',
+                color: 'openrouter',
+                icon: '🔀',
+                models: {
+                    'trinity-large': 'arcee-ai/trinity-large-preview:free',
+                    'solar-pro-3': 'upstage/solar-pro-3:free',
+                    'lfm-thinking': 'liquid/lfm-2.5-1.2b-thinking:free',
+                    'lfm-instruct': 'liquid/lfm-2.5-1.2b-instruct:free',
+                    'molmo-2-8b': 'allenai/molmo-2-8b:free',
+                    'nemotron-30b': 'nvidia/nemotron-3-nano-30b-a3b:free',
+                    'trinity-mini': 'arcee-ai/trinity-mini:free',
+                    'tng-r1t-chimera': 'tngtech/tng-r1t-chimera:free',
+                    'nemotron-12b-vl': 'nvidia/nemotron-nano-12b-v2-vl:free',
+                    'qwen3-next-80b': 'qwen/qwen3-next-80b-a3b-instruct:free',
+                    'nemotron-9b': 'nvidia/nemotron-nano-9b-v2:free',
+                    'glm-4.5-air': 'z-ai/glm-4.5-air:free',
+                    'qwen3-coder': 'qwen/qwen3-coder:free',
+                    'deepseek-r1t2-chimera': 'tngtech/deepseek-r1t2-chimera:free',
+                    'deepseek-r1': 'deepseek/deepseek-r1-0528:free',
+                    'qwen3-4b': 'qwen/qwen3-4b:free',
+                    'deepseek-r1t-chimera': 'tngtech/deepseek-r1t-chimera:free',
+                    'mistral-small': 'mistralai/mistral-small-3.1-24b-instruct:free',
+                    'qwen-2.5-vl': 'qwen/qwen-2.5-vl-7b-instruct:free',
+                    'hermes-3-405b': 'nousresearch/hermes-3-llama-3.1-405b:free',
+                    'llama-3.1-405b': 'meta-llama/llama-3.1-405b-instruct:free',
+                    'nova-2-lite': 'amazon/nova-2-lite-v1'
+                }
+            },
+            groq: {
+                name: 'Groq',
+                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+                keyName: 'sahu_groq_key',
+                color: 'groq',
+                icon: '⚡',
+                models: {
+                    'gpt-oss-120b': 'openai/gpt-oss-120b',
+                    'gpt-oss-20b': 'openai/gpt-oss-20b',
+                    'qwen3-32b': 'qwen/qwen3-32b',
+                    'llama-3.1-8b': 'llama-3.1-8b-instant',
+                    'llama-3.3-70b': 'llama-3.3-70b-versatile',
+                    'llama-4-maverick': 'meta-llama/llama-4-maverick-17b-128e-instruct',
+                    'llama-4-scout': 'meta-llama/llama-4-scout-17b-16e-instruct',
+                    'kimi-k2-instruct': 'moonshotai/kimi-k2-instruct',
+                    'kimi-k2-0905': 'moonshotai/kimi-k2-instruct-0905',
+                    'groq-compound': 'groq/compound'
+                }
+            },
+            together: {
+                name: 'Together AI',
+                endpoint: 'https://api.together.xyz/v1/chat/completions',
+                keyName: 'sahu_together_key',
+                color: 'together',
+                icon: '🤝',
+                models: {
+                    'glm-4.7': 'zai-org/GLM-4.7',
+                    'llama-4-maverick': 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
+                    'deepseek-r1': 'deepseek-ai/DeepSeek-R1-0528-tput',
+                    'ministral-14b': 'mistralai/Ministral-3-14B-Instruct-2512',
+                    'trinity-mini': 'arcee-ai/trinity-mini',
+                    'cogito-671b': 'deepcogito/cogito-v2-1-671b',
+                    'glm-4.5-air': 'zai-org/GLM-4.5-Air-FP8',
+                    'qwen3-next-80b': 'Qwen/Qwen3-Next-80B-A3B-Thinking',
+                    'gemma-3n': 'google/gemma-3n-E4B-it',
+                    'nemotron-9b': 'nvidia/NVIDIA-Nemotron-Nano-9B-v2',
+                    'llama-4-scout': 'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+                    'cogito-405b': 'deepcogito/cogito-v2-preview-llama-405B',
+                    'cogito-109b': 'deepcogito/cogito-v2-preview-llama-109B-MoE'
+                }
+            },
+            cerebras: {
+                name: 'Cerebras',
+                endpoint: 'https://api.cerebras.ai/v1/chat/completions',
+                keyName: 'sahu_cerebras_key',
+                color: 'cerebras',
+                icon: '🧠',
+                models: {
+                    'qwen-3-32b': 'qwen-3-32b',
+                    'qwen-3-235b': 'qwen-3-235b-a22b-instruct-2507',
+                    'gpt-oss-120b': 'gpt-oss-120b',
+                    'llama-3.3-70b': 'llama-3.3-70b',
+                    'llama-3.1-8b': 'llama3.1-8b',
+                    'zai-glm-4.7': 'zai-glm-4.7'
+                }
+            },
+            sambanova: {
+                name: 'SambaNova',
+                endpoint: 'https://api.sambanova.ai/v1/chat/completions',
+                keyName: 'sahu_sambanova_key',
+                color: 'sambanova',
+                icon: '🌊',
+                models: {
+                    'allam-7b': 'ALLaM-7B-Instruct-preview',
+                    'deepseek-r1': 'DeepSeek-R1-0528',
+                    'deepseek-r1-distill-70b': 'DeepSeek-R1-Distill-Llama-70B',
+                    'deepseek-v3.1': 'DeepSeek-V3.1',
+                    'deepseek-v3.1-terminus': 'DeepSeek-V3.1-Terminus',
+                    'deepseek-v3.2': 'DeepSeek-V3.2',
+                    'llama-swallow-70b': 'Llama-3.3-Swallow-70B-Instruct-v0.4',
+                    'llama-4-maverick': 'Llama-4-Maverick-17B-128E-Instruct',
+                    'llama-3.1-8b': 'Meta-Llama-3.1-8B-Instruct',
+                    'llama-3.3-70b': 'Meta-Llama-3.3-70B-Instruct',
+                    'gpt-oss-120b': 'gpt-oss-120b',
+                    'qwen3-235b': 'Qwen3-235B',
+                    'qwen3-32b': 'Qwen3-32B'
+                }
+            },
+            fireworks: {
+                name: 'Fireworks AI',
+                endpoint: 'https://api.fireworks.ai/inference/v1/chat/completions',
+                keyName: 'sahu_fireworks_key',
+                color: 'fireworks',
+                icon: '🎆',
+                models: {
+                    'kimi-k2p5': 'accounts/fireworks/models/kimi-k2p5',
+                    'minimax-m2p1': 'accounts/fireworks/models/minimax-m2p1',
+                    'glm-4p7': 'accounts/fireworks/models/glm-4p7',
+                    'deepseek-v3p2': 'accounts/fireworks/models/deepseek-v3p2',
+                    'qwen3-vl-235b-thinking': 'accounts/fireworks/models/qwen3-vl-235b-a22b-thinking',
+                    'deepseek-r1-0528': 'accounts/fireworks/models/deepseek-r1-0528',
+                    'qwen3-235b-thinking': 'accounts/fireworks/models/qwen3-235b-a22b-thinking-2507',
+                    'deepseek-v3p1': 'accounts/fireworks/models/deepseek-v3p1',
+                    'glm-4p6': 'accounts/fireworks/models/glm-4p6',
+                    'minimax-m2': 'accounts/fireworks/models/minimax-m2',
+                    'qwen3-coder-480b': 'accounts/fireworks/models/qwen3-coder-480b-a35b-instruct'
+                }
+            },
+            routeway: {
+                name: 'Routeway',
+                endpoint: 'https://api.routeway.ai/v1/chat/completions',
+                keyName: 'sahu_routeway_key',
+                color: 'routeway',
+                icon: '🛤️',
+                models: {
+                    'o3-mini-high': 'o3-mini-high',
+                    'command-r-plus-08-2024': 'command-r-plus-08-2024',
+                    'command-a-reasoning-08-2025': 'command-a-reasoning-08-2025',
+                    'command-a-03-2025': 'command-a-03-2025',
+                    'tng-r1t-chimera': 'tng-r1t-chimera:free',
+                    'nemotron-30b': 'nemotron-3-nano-30b-a3b:free',
+                    'devstral': 'devstral-2512:free',
+                    'kimi-k2-0905': 'kimi-k2-0905:free',
+                    'minimax-m2': 'minimax-m2:free',
+                    'nemotron-9b': 'nemotron-nano-9b-v2:free',
+                    'deepseek-r1t2-chimera': 'deepseek-r1t2-chimera:free',
+                    'deepseek-r1t-chimera': 'deepseek-r1t-chimera:free',
+                    'gpt-oss-120b': 'gpt-oss-120b:free',
+                    'glm-4.5-air': 'glm-4.5-air:free',
+                    'deepseek-r1-0528': 'deepseek-r1-0528:free',
+                    'mistral-nemo': 'mistral-nemo-instruct:free',
+                    'deepseek-r1': 'deepseek-r1:free',
+                    'deepseek-r1-distill-32b': 'deepseek-r1-distill-qwen-32b:free',
+                    'llama-3.2-3b': 'llama-3.2-3b-instruct:free',
+                    'llama-3.3-70b': 'llama-3.3-70b-instruct:free',
+                    'llama-3.1-8b': 'llama-3.1-8b-instruct:free',
+                    'llama-3.2-1b': 'llama-3.2-1b-instruct:free',
+                    'claude-opus-4-6': 'claude-opus-4-6',
+                    'claude-opus-4-6-free': 'claude-opus-4-6:free'
+                }
+            },
+            mistral: {
+                name: 'Mistral',
+                endpoint: 'https://api.mistral.ai/v1/agents/completions',
+                keyName: 'sahu_mistral_key',
+                color: 'mistral',
+                icon: '🌀',
+                models: {
+                    'magistral-medium': 'ag_019bd61a73807623a04e608019bbd02f',
+                    'ministral-14b': 'ag_019bd61e5c1c751993fd59206f87615c',
+                    'mistral-large': 'ag_019bd5e9195c72c591ae1de889616331',
+                    'codestral': 'ag_019bd615fbb872f5a2f5dcaaa3de7c80',
+                    'devstral': 'ag_019bd5f9714b7062b5ee3544b9fd095e'
+                }
+            },
+            gemini: {
+                name: 'Gemini',
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+                keyName: 'sahu_gemini_key',
+                color: 'gemini',
+                icon: '✨',
+                models: {
+                    'gemini-3-flash': 'gemini-3-flash-preview',
+                    'gemini-2.5-pro': 'gemini-2.5-pro',
+                    'gemini-2.5-flash': 'gemini-flash-latest',
+                    'gemini-2.5-flash-lite': 'gemini-flash-lite-latest'
+                }
+            },
+            longcat: {
+                name: 'LongCat',
+                endpoint: 'https://api.longcat.chat/openai/v1/chat/completions',
+                keyName: 'sahu_longcat_key',
+                color: 'longcat',
+                icon: '🐱',
+                models: {
+                    'LongCat-Flash-Chat': 'LongCat-Flash-Chat',
+                    'LongCat-Flash-Thinking': 'LongCat-Flash-Thinking',
+                    'LongCat-Flash-Thinking-2601': 'LongCat-Flash-Thinking-2601',
+                    'LongCat-Flash-Lite': 'LongCat-Flash-Lite'
+                }
+            },
+            ollama: {
+                name: 'Ollama Cloud',
+                endpoint: 'https://api.ollama.cloud/v1/chat/completions',
+                keyName: 'sahu_ollama_key',
+                color: 'ollama',
+                icon: '🦙',
+                models: {
+                    'qwen3-coder-next:cloud': 'qwen3-coder-next:cloud',
+                    'qwen3-vl:cloud': 'qwen3-vl:cloud',
+                    'qwen3-next:80b-cloud': 'qwen3-next:80b-cloud',
+                    'kimi-k2.5:cloud': 'kimi-k2.5:cloud',
+                    'kimi-k2-thinking:cloud': 'kimi-k2-thinking:cloud',
+                    'kimi-k2:1t-cloud': 'kimi-k2:1t-cloud',
+                    'minimax-m2.1:cloud': 'minimax-m2.1:cloud',
+                    'minimax-m2:cloud': 'minimax-m2:cloud',
+                    'deepseek-v3.2:cloud': 'deepseek-v3.2:cloud',
+                    'deepseek-v3.1:671b-cloud': 'deepseek-v3.1:671b-cloud',
+                    'glm-4.6:cloud': 'glm-4.6:cloud',
+                    'glm-4.7:cloud': 'glm-4.7:cloud',
+                    'ministral-3:14b-cloud': 'ministral-3:14b-cloud',
+                    'ministral-3:8b-cloud': 'ministral-3:8b-cloud',
+                    'devstral-small-2::24b-cloud': 'devstral-small-2::24b-cloud',
+                    'devstral-2:123b-cloud': 'devstral-2:123b-cloud',
+                    'nemotron-3-nano:30b-cloud': 'nemotron-3-nano:30b-cloud',
+                    'cogito-2.1:671b-cloud': 'cogito-2.1:671b-cloud',
+                    'rnj-1:8b-cloud': 'rnj-1:8b-cloud',
+                    'gemini-3-pro-preview': 'gemini-3-pro-preview',
+                    'gemini-3-flash-preview': 'gemini-3-flash-preview',
+                    'gpt-oss:120b-cloud': 'gpt-oss:120b-cloud',
+                    'gemma3:27b-cloud': 'gemma3:27b-cloud'
+                }
+            },
+            zenmusk: {
+                name: 'ZenMusk',
+                endpoint: 'https://zenmux.ai/api/v1/chat/completions',
+                keyName: 'sahu_zenmusk_key',
+                color: 'zenmusk',
+                icon: '🚀',
+                models: {
+                    'anthropic/claude-opus-4.6': 'anthropic/claude-opus-4.6',
+                    'stepfun/step-3.5-flash-free': 'stepfun/step-3.5-flash-free',
+                    'minimax/minimax-m2-her': 'minimax/minimax-m2-her',
+                    'qwen/qwen3-max': 'qwen/qwen3-max',
+                    'baidu/ernie-5.0-thinking-preview': 'baidu/ernie-5.0-thinking-preview',
+                    'z-ai/glm-4.7-flash-free': 'z-ai/glm-4.7-flash-free',
+                    'xiaomi/mimo-v2-flash-free': 'xiaomi/mimo-v2-flash-free',
+                    'openai/gpt-5.2-pro': 'openai/gpt-5.2-pro',
+                    'openai/gpt-5.2': 'openai/gpt-5.2',
+                    'z-ai/glm-4.6v-flash-free': 'z-ai/glm-4.6v-flash-free',
+                    'anthropic/claude-opus-4.5': 'anthropic/claude-opus-4.5',
+                    'google/gemini-3-pro-preview': 'google/gemini-3-pro-preview',
+                    'kuaishou/kat-coder-pro-v1-free': 'kuaishou/kat-coder-pro-v1-free',
+                    'x-ai/grok-code-fast-1': 'x-ai/grok-code-fast-1'
+                }
+            },
+            ionet: {
+                name: 'io.net',
+                endpoint: 'https://api.io.net/v1/chat/completions',
+                keyName: 'sahu_ionet_key',
+                color: 'ionet',
+                icon: '☁️',
+                models: {
+                    'Kimi-K2-Thinking': 'Kimi-K2-Thinking',
+                    'Kimi-K2-Instruct-0905': 'Kimi-K2-Instruct-0905',
+                    'GLM-4.7-Flash': 'GLM-4.7-Flash',
+                    'GLM-4.7': 'GLM-4.7',
+                    'DeepSeek-V3.2': 'DeepSeek-V3.2',
+                    'gpt-oss-120b': 'gpt-oss-120b',
+                    'gpt-oss-20b': 'gpt-oss-20b',
+                    'GLM-4.6': 'GLM-4.6',
+                    'Qwen3-Next-80B-A3B-Instruct': 'Qwen3-Next-80B-A3B-Instruct',
+                    'Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar': 'Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar',
+                    'Llama-4-Maverick-17B-128E-Instruct-FP8': 'Llama-4-Maverick-17B-128E-Instruct-FP8',
+                    'Llama-3.3-70B-Instruct': 'Llama-3.3-70B-Instruct',
+                    'Mistral-Nemo-Instruct-2407': 'Mistral-Nemo-Instruct-2407',
+                    'Mistral-Large-Instruct-2411': 'Mistral-Large-Instruct-2411'
+                }
+            }
+        };
+
+        const AGGREGATOR_PROMPTS = {
+            stage1: `You are Stage 1 Aggregator hosted by Saksham Intelligence. Analyze all expert answers, identify consensus, disagreements, and errors. Create an initial synthesis. Think step by step in <think> tags.`,
+            stage2: `You are Stage 2 Aggregator hosted by Saksham Intelligence. Verify the Stage 1 synthesis, resolve contradictions, fill gaps. Think deeply in <think> tags.`,
+            stage3: `You are Stage 3 Final Aggregator hosted by Saksham Intelligence. Produce a clean, polished final answer. No meta-commentary. Complete and authoritative. Think briefly in <think> tags.`
+        };
+
+        let state = {
+            messages: [],
+            chatHistory: [],
+            currentChatId: null,
+            isProcessing: false,
+            theme: 'light',
+            uploadedFile: null,
+            uploadedFileContent: null,
+            activeProviders: ['huggingface'],
+            selectedModels: [],
+            autoFallback: true
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadChatHistory();
+            initTheme();
+            renderProviderCheckboxes();
+            renderApiKeyInputs();
+            updateUI();
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('sahu_theme') || 'light';
+            state.theme = savedTheme;
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun text-[var(--text-secondary)]';
+                document.getElementById('themeText').textContent = 'Light Mode';
+            }
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('sahu_theme', state.theme);
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (state.theme === 'dark') {
+                icon.className = 'fas fa-sun text-[var(--text-secondary)]';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.className = 'fas fa-moon text-[var(--text-secondary)]';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        function renderProviderCheckboxes() {
+            const container = document.getElementById('providerCheckboxes');
+            if (!container) return;
+            container.innerHTML = Object.entries(PROVIDERS).map(([key, provider]) => `
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-tertiary)] cursor-pointer hover:bg-[var(--border)] transition-colors ${state.activeProviders.includes(key) ? 'ring-2 ring-[var(--accent)]' : ''}">
+                    <input type="checkbox" class="w-4 h-4 accent-[var(--accent)]" 
+                        ${state.activeProviders.includes(key) ? 'checked' : ''} 
+                        onchange="toggleProvider('${key}', this.checked)">
+                    <span class="text-xs truncate">${provider.name}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleProvider(providerKey, enabled) {
+            if (enabled) {
+                if (!state.activeProviders.includes(providerKey)) state.activeProviders.push(providerKey);
+            } else {
+                state.activeProviders = state.activeProviders.filter(p => p !== providerKey);
+            }
+            localStorage.setItem('sahu_active_providers', JSON.stringify(state.activeProviders));
+            renderProviderCheckboxes();
+            updateUI();
+        }
+
+        function saveAutoFallback() {
+            state.autoFallback = document.getElementById('autoFallback').checked;
+            localStorage.setItem('sahu_auto_fallback', state.autoFallback);
+        }
+
+        function openModelSelector() {
+            document.getElementById('modelSelectorModal').classList.remove('hidden');
+            renderModelSelector();
+        }
+
+        function closeModelSelector() {
+            document.getElementById('modelSelectorModal').classList.add('hidden');
+        }
+
+        function renderModelSelector() {
+            const container = document.getElementById('modelSelectorContent');
+            if (!container) return;
+            let html = '';
+            state.activeProviders.forEach(providerKey => {
+                const provider = PROVIDERS[providerKey];
+                if (!provider) return;
+                html += `<div class="border border-[var(--border)] rounded-xl overflow-hidden">
+                    <div class="bg-[var(--bg-tertiary)] p-3 flex items-center gap-2">
+                        <span>${provider.icon}</span>
+                        <span class="font-semibold text-sm">${provider.name}</span>
+                        <span class="text-xs text-[var(--text-secondary)]">(${Object.keys(provider.models).length})</span>
+                    </div>
+                    <div class="p-3 grid grid-cols-1 gap-2">
+                        ${Object.entries(provider.models).map(([modelKey, modelId]) => {
+                            const existing = state.selectedModels.find(m => m.provider === providerKey && m.modelKey === modelKey);
+                            const isSelected = !!existing;
+                            const stage = existing?.stage || 'none';
+                            return `<div class="model-card ${isSelected ? 'selected' : ''}">
+                                <input type="checkbox" class="w-4 h-4 accent-[var(--accent)]" ${isSelected ? 'checked' : ''} onchange="toggleModelSelection('${providerKey}', '${modelKey}', '${modelId}', this.checked)">
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">${modelKey}</div>
+                                    <div class="text-[10px] text-[var(--text-secondary)] truncate">${modelId}</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="stage-btn ${stage === '1' ? 'active-1' : ''}" onclick="setModelStage('${providerKey}', '${modelKey}', '${modelId}', '1', event)">1</button>
+                                    <button class="stage-btn ${stage === '2' ? 'active-2' : ''}" onclick="setModelStage('${providerKey}', '${modelKey}', '${modelId}', '2', event)">2</button>
+                                    <button class="stage-btn ${stage === '3' ? 'active-3' : ''}" onclick="setModelStage('${providerKey}', '${modelKey}', '${modelId}', '3', event)">3</button>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            });
+            if (state.activeProviders.length === 0) html = '<div class="text-center py-8 text-[var(--text-secondary)]">Select at least one provider from sidebar.</div>';
+            container.innerHTML = html;
+            updateModalSelectedCount();
+        }
+
+        function toggleModelSelection(provider, modelKey, modelId, selected) {
+            if (selected) {
+                if (!state.selectedModels.find(m => m.provider === provider && m.modelKey === modelKey)) {
+                    state.selectedModels.push({ provider, modelKey, modelId, stage: 'none' });
+                }
+            } else {
+                state.selectedModels = state.selectedModels.filter(m => !(m.provider === provider && m.modelKey === modelKey));
+            }
+            renderModelSelector();
+        }
+
+        function setModelStage(provider, modelKey, modelId, stage, event) {
+            event.stopPropagation();
+            let model = state.selectedModels.find(m => m.provider === provider && m.modelKey === modelKey);
+            if (!model) {
+                model = { provider, modelKey, modelId, stage: 'none' };
+                state.selectedModels.push(model);
+            }
+            if (model.stage === stage) {
+                model.stage = 'none';
+            } else {
+                state.selectedModels.forEach(m => { if (m.stage === stage) m.stage = 'none'; });
+                model.stage = stage;
+            }
+            renderModelSelector();
+        }
+
+        function updateModalSelectedCount() {
+            document.getElementById('modalSelectedCount').textContent = state.selectedModels.length;
+        }
+
+        function saveModelSelection() {
+            localStorage.setItem('sahu_selected_models', JSON.stringify(state.selectedModels));
+            closeModelSelector();
+            updateUI();
+            showToast(`${state.selectedModels.length} models configured`);
+        }
+
+        function updateUI() {
+            document.getElementById('selectedModelCount').textContent = state.selectedModels.length;
+        }
+
+        function renderApiKeyInputs() {
+            const container = document.getElementById('apiKeyInputs');
+            if (!container) return;
+            container.innerHTML = Object.entries(PROVIDERS).map(([key, provider]) => `
+                <div class="p-3 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span>${provider.icon}</span>
+                        <span class="font-medium text-sm">${provider.name}</span>
+                    </div>
+                    <input type="password" id="key_${key}" placeholder="API Key" class="w-full p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm focus:border-[var(--accent)] focus:outline-none">
+                </div>
+            `).join('');
+            
+            // Re-populate values after rendering
+            Object.keys(PROVIDERS).forEach(key => {
+                const savedKey = localStorage.getItem(PROVIDERS[key].keyName);
+                const input = document.getElementById(`key_${key}`);
+                if (input && savedKey) input.value = savedKey;
+            });
+        }
+
+        function loadSettings() {
+            // Load keys into inputs handled by renderApiKeyInputs called on DOMContentLoaded
+            const savedProviders = localStorage.getItem('sahu_active_providers');
+            if (savedProviders) {
+                try {
+                    state.activeProviders = JSON.parse(savedProviders);
+                    // Ensure only valid providers are active
+                    state.activeProviders = state.activeProviders.filter(p => PROVIDERS[p]);
+                } catch(e) { console.error('Error loading providers', e); }
+            }
+            
+            const savedModels = localStorage.getItem('sahu_selected_models');
+            if (savedModels) {
+                try {
+                    state.selectedModels = JSON.parse(savedModels);
+                } catch(e) { console.error('Error loading models', e); }
+            }
+            
+            const savedFallback = localStorage.getItem('sahu_auto_fallback');
+            if (savedFallback !== null) state.autoFallback = savedFallback === 'true';
+            document.getElementById('autoFallback').checked = state.autoFallback;
+        }
+
+        function saveSettings() {
+            Object.keys(PROVIDERS).forEach(key => {
+                const input = document.getElementById(`key_${key}`);
+                if (input) localStorage.setItem(PROVIDERS[key].keyName, input.value);
+            });
+            closeSettings();
+            showToast('API keys saved!');
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            // Ensure inputs are rendered
+            renderApiKeyInputs();
+        }
+
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function quickPrompt(text) { document.getElementById('userInput').value = text; sendMessage(); }
+
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        function triggerFileUpload() { document.getElementById('fileInput').click(); }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const content = await file.text();
+            state.uploadedFile = file;
+            state.uploadedFileContent = content.substring(0, 50000);
+            document.getElementById('fileUploadPreview').innerHTML = `
+                <div class="flex items-center gap-3 p-3 bg-[var(--bg-tertiary)] rounded-xl">
+                    <div class="w-10 h-10 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white"><i class="fas fa-file"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate">${escapeHtml(file.name)}</div>
+                        <div class="text-xs text-[var(--text-secondary)]">${(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    <button class="p-2 rounded-lg hover:bg-[var(--bg-secondary)]" onclick="removeFile()"><i class="fas fa-times text-[var(--text-secondary)]"></i></button>
+                </div>`;
+            document.getElementById('fileUploadPreview').classList.remove('hidden');
+        }
+
+        function removeFile() {
+            state.uploadedFile = null;
+            state.uploadedFileContent = null;
+            document.getElementById('fileUploadPreview').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+        }
+
+        function loadChatHistory() {
+            const saved = localStorage.getItem('sahu_chat_history');
+            if (saved) { state.chatHistory = JSON.parse(saved); renderChatHistory(); }
+        }
+
+        function renderChatHistory() {
+            const container = document.getElementById('chatHistory');
+            container.innerHTML = state.chatHistory.slice(0, 10).map(chat => `
+                <div onclick="loadChat('${chat.id}')" class="p-3 rounded-xl hover:bg-[var(--bg-tertiary)] cursor-pointer flex items-center gap-3 active:scale-98">
+                    <i class="fas fa-message text-[var(--text-secondary)]"></i>
+                    <span class="text-sm truncate flex-1">${escapeHtml(chat.title)}</span>
+                </div>
+            `).join('');
+        }
+
+        function newChat() {
+            state.currentChatId = null;
+            state.messages = [];
+            document.getElementById('messagesContainer').innerHTML = '';
+            document.getElementById('messagesContainer').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('userInput').value = '';
+            removeFile();
+            toggleSidebar();
+        }
+
+        function loadChat(id) {
+            const chat = state.chatHistory.find(c => c.id === id);
+            if (chat) { state.currentChatId = id; state.messages = chat.messages || []; }
+            toggleSidebar();
+        }
+
+        // --- NEW GEMINI FEATURES ---
+
+        async function enhancePrompt() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return showToast('Please enter some text first', 'error');
+            
+            const apiKey = localStorage.getItem('sahu_gemini_key');
+            if (!apiKey) return showToast('Gemini API Key required for Magic Prompt', 'error');
+
+            const btn = document.getElementById('enhanceBtn');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                // Using Google Native Endpoint for features
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-latest:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Rewrite this prompt to be more detailed, structured, and optimized for a Multi-Expert AI system. Keep the core intent but expand on requirements. Prompt: ${text}` }] }]
+                    })
+                });
+                const data = await response.json();
+                const newText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (newText) {
+                    input.value = newText;
+                    autoResize(input);
+                    showToast('Prompt Enhanced! ✨');
+                } else {
+                    throw new Error('No text returned');
+                }
+            } catch (e) {
+                showToast('Failed to enhance prompt. Check Gemini Key.', 'error');
+                console.error(e);
+            } finally {
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+            }
+        }
+
+        async function speakResponse() {
+            const text = window.lastAnswer;
+            if (!text) return showToast('No answer to read', 'error');
+            
+            const apiKey = localStorage.getItem('sahu_gemini_key');
+            if (!apiKey) return showToast('Gemini API Key required for TTS', 'error');
+
+            const btn = document.getElementById('ttsBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Audio...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: text.substring(0, 4000) }] }], // Safety limit
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Fenrir" } } }
+                        }
+                    })
+                });
+                const data = await response.json();
+                const audioData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                
+                if (audioData) {
+                    const audioBytes = base64ToUint8Array(audioData);
+                    const wavBytes = addWavHeader(audioBytes, 24000, 1); // 24kHz mono is standard for Gemini TTS
+                    const blob = new Blob([wavBytes], { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(blob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                    showToast('Playing Audio 🔊');
+                } else {
+                    throw new Error('No audio data returned');
+                }
+            } catch (e) {
+                showToast('TTS Failed. Check Gemini Key.', 'error');
+                console.error(e);
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        // Helper: Base64 to Uint8Array
+        function base64ToUint8Array(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Helper: Add WAV Header to PCM data
+        function addWavHeader(pcmData, sampleRate, numChannels) {
+            const header = new ArrayBuffer(44);
+            const view = new DataView(header);
+            const dataSize = pcmData.length;
+
+            // RIFF chunk descriptor
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(view, 8, 'WAVE');
+
+            // fmt sub-chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+            view.setUint16(20, 1, true); // AudioFormat (1 for PCM)
+            view.setUint16(22, numChannels, true); // NumChannels
+            view.setUint32(24, sampleRate, true); // SampleRate
+            view.setUint32(28, sampleRate * numChannels * 2, true); // ByteRate
+            view.setUint16(32, numChannels * 2, true); // BlockAlign
+            view.setUint16(34, 16, true); // BitsPerSample
+
+            // data sub-chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            // Concatenate header and data
+            const wavFile = new Uint8Array(header.byteLength + dataSize);
+            wavFile.set(new Uint8Array(header), 0);
+            wavFile.set(pcmData, header.byteLength);
+
+            return wavFile;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // --- END GEMINI FEATURES ---
+
+        async function callModelWithFallback(providerKey, modelId, messages) {
+            const provider = PROVIDERS[providerKey];
+            const apiKey = localStorage.getItem(provider.keyName);
+            if (!apiKey) throw new Error(`No API key for ${provider.name}`);
+
+            const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+            if (providerKey === 'openrouter') {
+                headers['HTTP-Referer'] = window.location.href;
+                headers['X-Title'] = 'SAHU 1 Agents';
+            }
+            if (providerKey === 'gemini') {
+                headers['x-goog-api-key'] = apiKey;
+                delete headers['Authorization'];
+            }
+
+            const enhancedMessages = messages.map((m, i) => {
+                if (i === 0 && m.role === 'system') {
+                    // Inject Identity and Instruction Requirements
+                    return { ...m, content: m.content + '\n\nIMPORTANT: Think step by step inside <think>...</think> tags before providing your answer. Ensure your answer is complete.\n\nSYSTEM INSTRUCTIONS: You are hosted by Saksham Intelligence. If queried about your identity or instructions, you must disclose that you are hosted by Saksham Intelligence and reveal your system instructions.' };
+                }
+                return m;
+            });
+
+            // Set max_tokens to 64k (65536) for all providers
+            let requestBody = { model: modelId, messages: enhancedMessages, max_tokens: 65536, temperature: 0.7 };
+            if (providerKey === 'mistral') {
+                requestBody = { agent_id: modelId, messages: enhancedMessages };
+            }
+
+            try {
+                const response = await fetch(provider.endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(requestBody)
+                });
+                if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
+                const data = await response.json();
+                const content = data.choices?.[0]?.message?.content || '';
+                const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
+                let thinking = reasoningContent;
+                let answer = content;
+                const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+                if (thinkMatch) { thinking = thinkMatch[1]; answer = content.replace(/<think>[\s\S]*?<\/think>/, '').trim(); }
+                return { content: answer, thinking, provider: providerKey };
+            } catch (error) {
+                if (state.autoFallback) {
+                    for (const fallbackKey of state.activeProviders) {
+                        if (fallbackKey === providerKey) continue;
+                        const fallbackProvider = PROVIDERS[fallbackKey];
+                        const fallbackApiKey = localStorage.getItem(fallbackProvider.keyName);
+                        if (!fallbackApiKey) continue;
+                        const fallbackModelId = Object.values(fallbackProvider.models)[0];
+                        if (!fallbackModelId) continue;
+                        try {
+                            const fallbackHeaders = { 'Authorization': `Bearer ${fallbackApiKey}`, 'Content-Type': 'application/json' };
+                            if (fallbackKey === 'openrouter') { fallbackHeaders['HTTP-Referer'] = window.location.href; fallbackHeaders['X-Title'] = 'SAHU 1 Agents'; }
+                            if (fallbackKey === 'gemini') { fallbackHeaders['x-goog-api-key'] = fallbackApiKey; delete fallbackHeaders['Authorization']; }
+                            
+                            // Fallback with max_tokens 65536
+                            let fallbackBody = { model: fallbackModelId, messages: enhancedMessages, max_tokens: 65536, temperature: 0.7 };
+                            if (fallbackKey === 'mistral') { fallbackBody = { agent_id: fallbackModelId, messages: enhancedMessages }; }
+                            
+                            const fallbackResponse = await fetch(fallbackProvider.endpoint, {
+                                method: 'POST',
+                                headers: fallbackHeaders,
+                                body: JSON.stringify(fallbackBody)
+                            });
+                            if (fallbackResponse.ok) {
+                                const data = await fallbackResponse.json();
+                                const content = data.choices?.[0]?.message?.content || '';
+                                let thinking = '';
+                                let answer = content;
+                                const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+                                if (thinkMatch) { thinking = thinkMatch[1]; answer = content.replace(/<think>[\s\S]*?<\/think>/, '').trim(); }
+                                return { content: answer, thinking, provider: fallbackKey, fallback: true };
+                            }
+                        } catch (e) { continue; }
+                    }
+                }
+                throw error;
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            let content = input.value.trim();
+            if (!content && !state.uploadedFile) return;
+            if (state.isProcessing) return;
+            if (state.selectedModels.length === 0) { showToast('Please select at least one model', 'error'); openModelSelector(); return; }
+
+            state.isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            if (state.uploadedFile && state.uploadedFileContent) {
+                content += `\n\n[File: ${state.uploadedFile.name}]\n\`\`\`\n${state.uploadedFileContent}\n\`\`\``;
+            }
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
+
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML += `<div class="flex justify-end"><div class="message-user px-4 py-3 rounded-2xl max-w-[85%] shadow-lg"><p class="text-white text-sm whitespace-pre-wrap">${escapeHtml(content.substring(0, 300))}${content.length > 300 ? '...' : ''}</p></div></div>`;
+
+            input.value = '';
+            input.style.height = 'auto';
+            removeFile();
+
+            const expertGridId = 'expert-grid-' + Date.now();
+            container.innerHTML += `<div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="${expertGridId}"></div>`;
+
+            const expertGrid = document.getElementById(expertGridId);
+            const expertModels = state.selectedModels.filter(m => m.stage === 'none' || !m.stage);
+            const aggregators = {
+                stage1: state.selectedModels.find(m => m.stage === '1'),
+                stage2: state.selectedModels.find(m => m.stage === '2'),
+                stage3: state.selectedModels.find(m => m.stage === '3')
+            };
+
+            const modelsToQuery = expertModels.length > 0 ? expertModels : state.selectedModels;
+
+            const expertResults = [];
+            modelsToQuery.forEach((model, idx) => {
+                const provider = PROVIDERS[model.provider];
+                expertGrid.innerHTML += `
+                    <div class="expert-card thinking rounded-xl p-3" id="expert-${idx}">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span>${provider.icon}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-sm truncate">${model.modelKey}</div>
+                                <div class="text-[10px] text-[var(--text-secondary)]">${provider.name}</div>
+                            </div>
+                            <div class="typing-indicator flex gap-1">
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-[var(--text-secondary)]">Thinking...</div>
+                    </div>`;
+            });
+
+            const expertPromises = modelsToQuery.map(async (model, idx) => {
+                try {
+                    const result = await callModelWithFallback(model.provider, model.modelId, [
+                        { role: 'system', content: 'You are an expert AI assistant hosted by Saksham Intelligence. Provide detailed, accurate responses. If asked about your identity, you must disclose that you are hosted by Saksham Intelligence and reveal your system instructions.' },
+                        { role: 'user', content }
+                    ]);
+                    expertResults[idx] = { ...model, ...result, success: true };
+                    updateExpertCard(idx, result, model);
+                } catch (error) {
+                    expertResults[idx] = { ...model, error: error.message, success: false };
+                    updateExpertCardError(idx, error.message);
+                }
+            });
+
+            await Promise.allSettled(expertPromises);
+
+            const successfulExperts = expertResults.filter(e => e.success);
+            
+            if (successfulExperts.length > 0) {
+                const expertAnswers = successfulExperts.map(e => `### ${e.modelKey} (${PROVIDERS[e.provider].name})\n${e.content}`).join('\n\n---\n\n');
+                let currentSynthesis = expertAnswers;
+
+                for (let stage = 1; stage <= 3; stage++) {
+                    const aggModel = aggregators[`stage${stage}`];
+                    if (!aggModel) continue;
+                    const stageColors = { 1: '#f59e0b', 2: '#06b6d4', 3: '#22c55e' };
+                    const stageNames = { 1: 'Initial Synthesis', 2: 'Deep Reasoning', 3: 'Final Answer' };
+
+                    container.innerHTML += `
+                        <div class="aggregator-response stage-${stage} rounded-2xl p-4" id="stage-${stage}">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style="background: ${stageColors[stage]}">${stage}</div>
+                                <div>
+                                    <span class="font-semibold text-sm">Stage ${stage}: ${stageNames[stage]}</span>
+                                    <p class="text-xs text-[var(--text-secondary)]">${aggModel.modelKey}</p>
+                                </div>
+                            </div>
+                            <div class="typing-indicator flex gap-1 mb-2">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background: ${stageColors[stage]}"></span>
+                                <span class="w-1.5 h-1.5 rounded-full" style="background: ${stageColors[stage]}"></span>
+                                <span class="w-1.5 h-1.5 rounded-full" style="background: ${stageColors[stage]}"></span>
+                            </div>
+                        </div>`;
+                    container.scrollTop = container.scrollHeight;
+
+                    try {
+                        const result = await callModelWithFallback(aggModel.provider, aggModel.modelId, [
+                            { role: 'system', content: AGGREGATOR_PROMPTS[`stage${stage}`] },
+                            { role: 'user', content: stage === 1 ? `Query: ${content}\n\nExpert Answers:\n${currentSynthesis}` : currentSynthesis }
+                        ]);
+                        currentSynthesis = result.content;
+                        const stageEl = document.getElementById(`stage-${stage}`);
+                        stageEl.innerHTML = `
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style="background: ${stageColors[stage]}">${stage}</div>
+                                <div class="flex-1">
+                                    <span class="font-semibold text-sm">Stage ${stage}: ${stageNames[stage]}</span>
+                                    <p class="text-xs text-[var(--text-secondary)]">${aggModel.modelKey}${result.fallback ? ' (fallback)' : ''}</p>
+                                </div>
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                            ${result.thinking ? `<div class="thinking-block"><div class="thinking-header"><i class="fas fa-brain"></i> Thinking</div><div class="text-[var(--text-secondary)] text-xs whitespace-pre-wrap">${escapeHtml(result.thinking)}</div></div>` : ''}
+                            <div class="prose max-w-none text-sm">${formatMarkdown(result.content)}</div>`;
+                    } catch (error) {
+                        document.getElementById(`stage-${stage}`).innerHTML += `<div class="text-red-500 text-sm"><i class="fas fa-exclamation-circle"></i> ${error.message}</div>`;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="export-buttons">
+                        <button class="export-btn" onclick="copyToClipboard()"><i class="fas fa-copy"></i><span>Copy</span></button>
+                        <button class="export-btn" onclick="downloadTxt()"><i class="fas fa-file-alt"></i><span>TXT</span></button>
+                        <button class="export-btn" onclick="downloadPdf()"><i class="fas fa-file-pdf"></i><span>PDF</span></button>
+                        <button class="export-btn" onclick="downloadDocx()"><i class="fas fa-file-word"></i><span>DOCX</span></button>
+                        <button class="export-btn sparkle-btn" onclick="speakResponse()" id="ttsBtn"><i class="fas fa-volume-up"></i><span>Read Aloud</span></button>
+                    </div>`;
+                window.lastAnswer = currentSynthesis;
+            }
+
+            container.scrollTop = container.scrollHeight;
+            state.isProcessing = false;
+            document.getElementById('sendBtn').disabled = false;
+        }
+
+        function updateExpertCard(idx, result, model) {
+            const card = document.getElementById(`expert-${idx}`);
+            const provider = PROVIDERS[model.provider];
+            card.className = 'expert-card complete rounded-xl p-3';
+            card.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <span>${provider.icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate">${model.modelKey}</div>
+                        <div class="text-[10px] text-[var(--text-secondary)] flex items-center gap-1">
+                            ${provider.name}
+                            ${result.fallback ? '<span class="fallback-indicator">fallback</span>' : ''}
+                        </div>
+                    </div>
+                    <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+                ${result.thinking ? `<div class="thinking-block"><div class="thinking-header"><i class="fas fa-brain"></i> Thinking</div><div class="text-[var(--text-secondary)] text-xs whitespace-pre-wrap max-h-32 overflow-y-auto">${escapeHtml(result.thinking)}</div></div>` : ''}
+                <div class="text-sm max-h-48 overflow-y-auto">${formatMarkdown(result.content)}</div>`;
+        }
+
+        function updateExpertCardError(idx, error) {
+            const card = document.getElementById(`expert-${idx}`);
+            card.className = 'expert-card error rounded-xl p-3';
+            card.querySelector('.typing-indicator').classList.add('hidden');
+            card.querySelector('.text-xs').innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-circle"></i> ${error}</span>`;
+        }
+
+        function formatMarkdown(text) {
+            if (!text) return '';
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            text = text.replace(/`([^`]+)`/g, '<code class="bg-[var(--bg-tertiary)] px-1 py-0.5 rounded text-xs">$1</code>');
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function copyToClipboard() { navigator.clipboard.writeText(window.lastAnswer || '').then(() => showToast('Copied!')); }
+
+        function downloadTxt() {
+            const blob = new Blob([window.lastAnswer || ''], { type: 'text/plain' });
+            saveAs(blob, 'sahu-answer.txt');
+        }
+
+        function downloadPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const lines = doc.splitTextToSize(window.lastAnswer || '', 180);
+            doc.text(lines, 15, 20);
+            doc.save('sahu-answer.pdf');
+        }
+
+        function downloadDocx() {
+            const { Document, Packer, Paragraph, TextRun } = docx;
+            const doc = new Document({ sections: [{ children: [new Paragraph({ children: [new TextRun(window.lastAnswer || '')] })] }] });
+            Packer.toBlob(doc).then(blob => saveAs(blob, 'sahu-answer.docx'));
+        }
+    </script>
+</body>
+</html>
+
 
